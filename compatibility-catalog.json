@@ -1,0 +1,3236 @@
+[
+  {
+    "Name": "A4Tech Device",
+    "Publisher": "WhirlwindFx",
+    "Kind": "mouse",
+    "VendorId": 2522,
+    "ProductId": null
+  },
+  {
+    "Name": "Airgoo DRGB Controller",
+    "Publisher": "Airgoo",
+    "Kind": "lightingcontroller",
+    "VendorId": 9350,
+    "ProductId": null
+  },
+  {
+    "Name": "Alienware 15 R3",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 6268,
+    "ProductId": 1328
+  },
+  {
+    "Name": "Alienware AW558",
+    "Publisher": "Orion Nelson & WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 1226,
+    "ProductId": 165
+  },
+  {
+    "Name": "Alienware Device",
+    "Publisher": "WhirlwindFx & Thanatos",
+    "Kind": "other",
+    "VendorId": 1060,
+    "ProductId": null
+  },
+  {
+    "Name": "Alienware Device",
+    "Publisher": "WhirlwindFx & Bruno St. John",
+    "Kind": "other",
+    "VendorId": 6268,
+    "ProductId": null
+  },
+  {
+    "Name": "Alienware Device",
+    "Publisher": "WhirlwindFx & Fefe_du_973",
+    "Kind": "other",
+    "VendorId": 6268,
+    "ProductId": null
+  },
+  {
+    "Name": "AMD Wraith Prism",
+    "Publisher": "WhirlwindFX",
+    "Kind": "aio",
+    "VendorId": 9494,
+    "ProductId": 81
+  },
+  {
+    "Name": "Anne Pro 2",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 13073,
+    "ProductId": 41623
+  },
+  {
+    "Name": "Anne Pro 2",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 1241,
+    "ProductId": null
+  },
+  {
+    "Name": "Aqua Computer D5 Next",
+    "Publisher": "FeuerSturm & JBrutWhat",
+    "Kind": "lightingcontroller",
+    "VendorId": 3184,
+    "ProductId": 61454
+  },
+  {
+    "Name": "Aqua Computer Farbwerk 360",
+    "Publisher": "FeuerSturm",
+    "Kind": "lightingcontroller",
+    "VendorId": 3184,
+    "ProductId": 61456
+  },
+  {
+    "Name": "Aqua Computer Farbwerk Nano",
+    "Publisher": "FeuerSturm",
+    "Kind": "lightingcontroller",
+    "VendorId": 3184,
+    "ProductId": 61455
+  },
+  {
+    "Name": "Aqua Computer High Flow Next",
+    "Publisher": "FeuerSturm & JBrutWhat",
+    "Kind": "lightingcontroller",
+    "VendorId": 3184,
+    "ProductId": 61458
+  },
+  {
+    "Name": "Arctic Fan Controller",
+    "Publisher": "WhirlwindFX",
+    "Kind": "lightingcontroller",
+    "VendorId": 14596,
+    "ProductId": 61441
+  },
+  {
+    "Name": "ASRock GPU",
+    "Publisher": "WhirlwindFX",
+    "Kind": "gpu",
+    "VendorId": null,
+    "ProductId": null
+  },
+  {
+    "Name": "ASRock LCD",
+    "Publisher": "WhirlwindFX",
+    "Kind": "lcd",
+    "VendorId": 9934,
+    "ProductId": null
+  },
+  {
+    "Name": "ASRock LCD",
+    "Publisher": "WhirlwindFX",
+    "Kind": "lcd",
+    "VendorId": 7531,
+    "ProductId": null
+  },
+  {
+    "Name": "Asrock Monitor Controller",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mousepad",
+    "VendorId": 9934,
+    "ProductId": 452
+  },
+  {
+    "Name": "Asrock Motherboard",
+    "Publisher": "WhirlwindFX",
+    "Kind": "motherboard",
+    "VendorId": 9934,
+    "ProductId": 418
+  },
+  {
+    "Name": "ASUS Aura ARGB Header Controller",
+    "Publisher": "WhirlwindFX",
+    "Kind": "motherboard",
+    "VendorId": 2821,
+    "ProductId": null
+  },
+  {
+    "Name": "Asus Aura Terminal",
+    "Publisher": "WhirlwindFX",
+    "Kind": "lightingcontroller",
+    "VendorId": 2821,
+    "ProductId": 6281
+  },
+  {
+    "Name": "Asus Keyboard",
+    "Publisher": "WhirlwindFx",
+    "Kind": "keyboard",
+    "VendorId": 2821,
+    "ProductId": null
+  },
+  {
+    "Name": "ASUS Monitor",
+    "Publisher": "WhirlwindFx",
+    "Kind": "other",
+    "VendorId": 2821,
+    "ProductId": null
+  },
+  {
+    "Name": "ASUS Monitor",
+    "Publisher": "WhirlwindFx",
+    "Kind": "other",
+    "VendorId": 2821,
+    "ProductId": null
+  },
+  {
+    "Name": "Asus Mouse",
+    "Publisher": "WhirlwindFx",
+    "Kind": "mouse",
+    "VendorId": 2821,
+    "ProductId": null
+  },
+  {
+    "Name": "ASUS Device",
+    "Publisher": "WhirlwindFx",
+    "Kind": "dongle",
+    "VendorId": 2821,
+    "ProductId": null
+  },
+  {
+    "Name": "Asus ROG Balteus",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mousepad",
+    "VendorId": 2821,
+    "ProductId": 6289
+  },
+  {
+    "Name": "Asus ROG Balteus Qi",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mousepad",
+    "VendorId": 2821,
+    "ProductId": 6288
+  },
+  {
+    "Name": "ASUS ROG Claymore",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 2821,
+    "ProductId": null
+  },
+  {
+    "Name": "ASUS ROG Claymore II",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 2821,
+    "ProductId": null
+  },
+  {
+    "Name": "ASUS ROG Spotlight",
+    "Publisher": "WhirlwindFX",
+    "Kind": "other",
+    "VendorId": 2821,
+    "ProductId": 6273
+  },
+  {
+    "Name": "ASUS ROG Strix LC",
+    "Publisher": "WhirlwindFX",
+    "Kind": "aio",
+    "VendorId": 2821,
+    "ProductId": null
+  },
+  {
+    "Name": "Asus ROG Throne",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mousepad",
+    "VendorId": 2821,
+    "ProductId": null
+  },
+  {
+    "Name": "ASUS Ryujin Device",
+    "Publisher": "WhirlwindFx",
+    "Kind": "aio",
+    "VendorId": 2821,
+    "ProductId": null
+  },
+  {
+    "Name": "ASUS Ryuo Device",
+    "Publisher": "WhirlwindFx & svenigan",
+    "Kind": "lcd",
+    "VendorId": 2821,
+    "ProductId": null
+  },
+  {
+    "Name": "Asus TUF K1",
+    "Publisher": "Delid4ve",
+    "Kind": "keyboard",
+    "VendorId": 2821,
+    "ProductId": 6469
+  },
+  {
+    "Name": "Aura Compatible RAM",
+    "Publisher": "WhirlwindFX",
+    "Kind": "ram",
+    "VendorId": null,
+    "ProductId": null
+  },
+  {
+    "Name": "Asus Ampere/Lovelace GPU",
+    "Publisher": "WhirlwindFX",
+    "Kind": "gpu",
+    "VendorId": null,
+    "ProductId": null
+  },
+  {
+    "Name": "ASUS Legacy GPU",
+    "Publisher": "WhirlwindFX",
+    "Kind": "gpu",
+    "VendorId": null,
+    "ProductId": null
+  },
+  {
+    "Name": "ASUS Aura Motherboard Controller",
+    "Publisher": "WhirlwindFX",
+    "Kind": "motherboard",
+    "VendorId": 2821,
+    "ProductId": null
+  },
+  {
+    "Name": "ASUS Aura Motherboard Controller",
+    "Publisher": "WhirlwindFX",
+    "Kind": "motherboard",
+    "VendorId": 2821,
+    "ProductId": null
+  },
+  {
+    "Name": "Asus SMBus Motherboard Controller",
+    "Publisher": "WhirlwindFX",
+    "Kind": "motherboard",
+    "VendorId": null,
+    "ProductId": null
+  },
+  {
+    "Name": "ASUS_Keyboard_Protocol",
+    "Publisher": "",
+    "Kind": "",
+    "VendorId": null,
+    "ProductId": null
+  },
+  {
+    "Name": "ASUS_Mouse_Protocol",
+    "Publisher": "",
+    "Kind": "",
+    "VendorId": null,
+    "ProductId": null
+  },
+  {
+    "Name": "ASUS Omni Device",
+    "Publisher": "WhirlwindFx",
+    "Kind": "dongle",
+    "VendorId": 2821,
+    "ProductId": 6862
+  },
+  {
+    "Name": "Attack Shark X68 Pro HE",
+    "Publisher": "WhirlwindFX & 666yasir98",
+    "Kind": "keyboard",
+    "VendorId": 12625,
+    "ProductId": 20518
+  },
+  {
+    "Name": "Aula Device",
+    "Publisher": "Sergio + IA Gemini",
+    "Kind": "keyboard",
+    "VendorId": 11836,
+    "ProductId": null
+  },
+  {
+    "Name": "BYTech Device",
+    "Publisher": "WhirlwindFx",
+    "Kind": "keyboard",
+    "VendorId": 14126,
+    "ProductId": null
+  },
+  {
+    "Name": "Colorful Ampere GPU",
+    "Publisher": "WhirlwindFX",
+    "Kind": "gpu",
+    "VendorId": null,
+    "ProductId": null
+  },
+  {
+    "Name": "ACER P09-600 RGB controller",
+    "Publisher": "WhirlwindFX",
+    "Kind": "lightingcontroller",
+    "VendorId": 9494,
+    "ProductId": 267
+  },
+  {
+    "Name": "Cooler Master A-RGB LED Small Controller",
+    "Publisher": "FeuerSturm",
+    "Kind": "lightingcontroller",
+    "VendorId": 9494,
+    "ProductId": 4096
+  },
+  {
+    "Name": "Cooler Master ARGB Controller",
+    "Publisher": "WhirlwindFX",
+    "Kind": "lightingcontroller",
+    "VendorId": 9494,
+    "ProductId": 4113
+  },
+  {
+    "Name": "Cooler Master Gen2 LED Controller A1",
+    "Publisher": "FeuerSturm",
+    "Kind": "lightingcontroller",
+    "VendorId": 9494,
+    "ProductId": null
+  },
+  {
+    "Name": "CoolerMaster Atmos II Pixel",
+    "Publisher": "WhirlwindFx",
+    "Kind": "lcd",
+    "VendorId": 9494,
+    "ProductId": 540
+  },
+  {
+    "Name": "CoolerMaster CK530 V2",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 9494,
+    "ProductId": 327
+  },
+  {
+    "Name": "CoolerMaster CK550 V2",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 9494,
+    "ProductId": 325
+  },
+  {
+    "Name": "CoolerMaster CK552 V2",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 9494,
+    "ProductId": 127
+  },
+  {
+    "Name": "CoolerMaster CK720",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 9494,
+    "ProductId": 363
+  },
+  {
+    "Name": "CoolerMaster CK721",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 9494,
+    "ProductId": 365
+  },
+  {
+    "Name": "CoolerMaster MK730",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 9494,
+    "ProductId": 143
+  },
+  {
+    "Name": "CoolerMaster MK750",
+    "Publisher": "KillerCode PT",
+    "Kind": "keyboard",
+    "VendorId": 9494,
+    "ProductId": 103
+  },
+  {
+    "Name": "CoolerMaster MK850",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 9494,
+    "ProductId": 105
+  },
+  {
+    "Name": "Cooler Master MM711 Gaming Mouse",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 9494,
+    "ProductId": 257
+  },
+  {
+    "Name": "Cooler Master MP750L Mouse Pad",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mousepad",
+    "VendorId": 9494,
+    "ProductId": 263
+  },
+  {
+    "Name": "Cooler Master MP750m Mouse Pad",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mousepad",
+    "VendorId": 9494,
+    "ProductId": 261
+  },
+  {
+    "Name": "Cooler Master MP750XL Mouse Pad",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mousepad",
+    "VendorId": 9494,
+    "ProductId": 265
+  },
+  {
+    "Name": "Cooler Master MP860 Mouse Pad",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mousepad",
+    "VendorId": 9494,
+    "ProductId": 109
+  },
+  {
+    "Name": "CoolerMaster SK620",
+    "Publisher": "WhirlwindFX && saxXxekaf",
+    "Kind": "keyboard",
+    "VendorId": 9494,
+    "ProductId": null
+  },
+  {
+    "Name": "CoolerMaster SK650",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 9494,
+    "ProductId": null
+  },
+  {
+    "Name": "CoolerMaster SK652",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 9494,
+    "ProductId": 349
+  },
+  {
+    "Name": "CoolerMaster SK653",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 9494,
+    "ProductId": null
+  },
+  {
+    "Name": "Intel Arc 770",
+    "Publisher": "WhirlwindFX",
+    "Kind": "gpu",
+    "VendorId": 9494,
+    "ProductId": 437
+  },
+  {
+    "Name": "Corsair Elite Capellix LCD",
+    "Publisher": "WhirlwindFX",
+    "Kind": "lcd",
+    "VendorId": 6940,
+    "ProductId": null
+  },
+  {
+    "Name": "Corsair Link LCD",
+    "Publisher": "WhirlwindFX",
+    "Kind": "lcd",
+    "VendorId": 6940,
+    "ProductId": 3150
+  },
+  {
+    "Name": "Corsair Nautilus RS LCD",
+    "Publisher": "WhirlwindFX",
+    "Kind": "lcd",
+    "VendorId": 6940,
+    "ProductId": 3157
+  },
+  {
+    "Name": "Corsair Nexus",
+    "Publisher": "WhirlwindFX",
+    "Kind": "lcd",
+    "VendorId": 6940,
+    "ProductId": 7054
+  },
+  {
+    "Name": "Corsair Void Headset Device",
+    "Publisher": "WhirlwindFx",
+    "Kind": "headphones",
+    "VendorId": 6940,
+    "ProductId": null
+  },
+  {
+    "Name": "Corsair XC7 RGB ELITE LCD",
+    "Publisher": "WhirlwindFX",
+    "Kind": "lcd",
+    "VendorId": 6940,
+    "ProductId": 3138
+  },
+  {
+    "Name": "Corsair XD6 Elite LCD",
+    "Publisher": "WhirlwindFX",
+    "Kind": "lcd",
+    "VendorId": 6940,
+    "ProductId": 3139
+  },
+  {
+    "Name": "Corsair Legacy Keyboard",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 6940,
+    "ProductId": null
+  },
+  {
+    "Name": "Legacy Corsair Mouse",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 6940,
+    "ProductId": null
+  },
+  {
+    "Name": "Corsair_Legacy_Mouse.test",
+    "Publisher": "",
+    "Kind": "",
+    "VendorId": null,
+    "ProductId": null
+  },
+  {
+    "Name": "Corsair_Legacy_Mouse_Input_Protocol",
+    "Publisher": "",
+    "Kind": "",
+    "VendorId": null,
+    "ProductId": null
+  },
+  {
+    "Name": "Corsair_Legacy_Mouse_Input_Protocol.test",
+    "Publisher": "",
+    "Kind": "",
+    "VendorId": null,
+    "ProductId": null
+  },
+  {
+    "Name": "Corsair MM800 RGB Polaris",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mousepad",
+    "VendorId": 6940,
+    "ProductId": 6971
+  },
+  {
+    "Name": "Corsair ST100 HeadSet Stand",
+    "Publisher": "WhirlwindFX",
+    "Kind": "other",
+    "VendorId": 6940,
+    "ProductId": 2612
+  },
+  {
+    "Name": "Corsair Commander Pro",
+    "Publisher": "WhirlwindFX",
+    "Kind": "lightingcontroller",
+    "VendorId": 6940,
+    "ProductId": null
+  },
+  {
+    "Name": "Corsair Lighting Node Core ",
+    "Publisher": "WhirlwindFX",
+    "Kind": "lightingcontroller",
+    "VendorId": 6940,
+    "ProductId": 3098
+  },
+  {
+    "Name": "Corsair Lighting Node Pro",
+    "Publisher": "WhirlwindFX",
+    "Kind": "lightingcontroller",
+    "VendorId": 6940,
+    "ProductId": 3083
+  },
+  {
+    "Name": "Corsair LS100 Light Strips",
+    "Publisher": "WhirlwindFX",
+    "Kind": "lightingcontroller",
+    "VendorId": 6940,
+    "ProductId": 3102
+  },
+  {
+    "Name": "Corsair LT100 Lighting Tower Controller",
+    "Publisher": "WhirlwindFX",
+    "Kind": "lightingcontroller",
+    "VendorId": 6940,
+    "ProductId": 3107
+  },
+  {
+    "Name": "Corsair Spec Omega Case",
+    "Publisher": "WhirlwindFX",
+    "Kind": "lightingcontroller",
+    "VendorId": 6940,
+    "ProductId": 7428
+  },
+  {
+    "Name": "Corsair Bragi Device",
+    "Publisher": "WhirlwindFX",
+    "Kind": "dongle",
+    "VendorId": 6940,
+    "ProductId": null
+  },
+  {
+    "Name": "Corsair Headset Device",
+    "Publisher": "WhirlwindFx",
+    "Kind": "headphones",
+    "VendorId": 6940,
+    "ProductId": null
+  },
+  {
+    "Name": "Corsair Bragi Headset",
+    "Publisher": "WhirlwindFX",
+    "Kind": "dongle",
+    "VendorId": 6940,
+    "ProductId": null
+  },
+  {
+    "Name": "Corsair HS80 RGB Wired Gaming Headset",
+    "Publisher": "FeuerSturm",
+    "Kind": "headphones",
+    "VendorId": 6940,
+    "ProductId": 2696
+  },
+  {
+    "Name": "Corsair iCUE LINK Device",
+    "Publisher": "WhirlwindFX",
+    "Kind": "lightingcontroller",
+    "VendorId": 6940,
+    "ProductId": null
+  },
+  {
+    "Name": "Corsair Commander Core",
+    "Publisher": "WhirlwindFX",
+    "Kind": "lightingcontroller",
+    "VendorId": 6940,
+    "ProductId": null
+  },
+  {
+    "Name": "Corsair Commander Core XT",
+    "Publisher": "WhirlwindFX",
+    "Kind": "lightingcontroller",
+    "VendorId": 6940,
+    "ProductId": 3114
+  },
+  {
+    "Name": "Corsair MM700 RGB",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mousepad",
+    "VendorId": 6940,
+    "ProductId": null
+  },
+  {
+    "Name": "Corsair Vanguard 96",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 6940,
+    "ProductId": 11021
+  },
+  {
+    "Name": "Corsair_Vanguard_96_Input_Protocol",
+    "Publisher": "",
+    "Kind": "",
+    "VendorId": null,
+    "ProductId": null
+  },
+  {
+    "Name": "Corsair_Vanguard_96_Input_Protocol.test",
+    "Publisher": "",
+    "Kind": "",
+    "VendorId": null,
+    "ProductId": null
+  },
+  {
+    "Name": "Corsair Platinum/Pro XT/Elite Cooler",
+    "Publisher": "WhirlwindFX",
+    "Kind": "aio",
+    "VendorId": 6940,
+    "ProductId": null
+  },
+  {
+    "Name": "Corsair Dominator Ram",
+    "Publisher": "WhirlwindFX",
+    "Kind": "ram",
+    "VendorId": null,
+    "ProductId": null
+  },
+  {
+    "Name": "Corsair_Dominator_Ram.test.bak",
+    "Publisher": "",
+    "Kind": "",
+    "VendorId": null,
+    "ProductId": null
+  },
+  {
+    "Name": "Corsair Dominator Titanium Ram",
+    "Publisher": "WhirlwindFX",
+    "Kind": "ram",
+    "VendorId": null,
+    "ProductId": null
+  },
+  {
+    "Name": "Corsair Vengeance Pro Ram",
+    "Publisher": "WhirlwindFX",
+    "Kind": "ram",
+    "VendorId": null,
+    "ProductId": null
+  },
+  {
+    "Name": "Corsair Void Elite Headset",
+    "Publisher": "WhirlwindFX",
+    "Kind": "headphones",
+    "VendorId": 6940,
+    "ProductId": 2646
+  },
+  {
+    "Name": "Corsair Void Elite Headset",
+    "Publisher": "WhirlwindFX",
+    "Kind": "headphones",
+    "VendorId": 6940,
+    "ProductId": 2642
+  },
+  {
+    "Name": "Corsair Void Elite Wireless Headset",
+    "Publisher": "WhirlwindFX",
+    "Kind": "headphones",
+    "VendorId": 6940,
+    "ProductId": 2677
+  },
+  {
+    "Name": "Corsair Void Pro Headset",
+    "Publisher": "WhirlwindFX",
+    "Kind": "headphones",
+    "VendorId": 6940,
+    "ProductId": 2580
+  },
+  {
+    "Name": "Corsair Void Pro Headset",
+    "Publisher": "WhirlwindFX",
+    "Kind": "headphones",
+    "VendorId": 6940,
+    "ProductId": 2583
+  },
+  {
+    "Name": "Corsair Void Pro Headset",
+    "Publisher": "WhirlwindFX",
+    "Kind": "headphones",
+    "VendorId": 6940,
+    "ProductId": 2585
+  },
+  {
+    "Name": "Corsair Void Pro Headset",
+    "Publisher": "WhirlwindFX",
+    "Kind": "headphones",
+    "VendorId": 6940,
+    "ProductId": 2586
+  },
+  {
+    "Name": "Corsair Void Pro Headset",
+    "Publisher": "WhirlwindFX",
+    "Kind": "headphones",
+    "VendorId": 6940,
+    "ProductId": 2589
+  },
+  {
+    "Name": "Corsair Void Pro Headset",
+    "Publisher": "WhirlwindFX",
+    "Kind": "headphones",
+    "VendorId": 6940,
+    "ProductId": 6947
+  },
+  {
+    "Name": "Sound BlasterX Katana",
+    "Publisher": "WhirlwindFX",
+    "Kind": "speakers",
+    "VendorId": 1054,
+    "ProductId": 12871
+  },
+  {
+    "Name": "Crucial Ballistix Ram",
+    "Publisher": "WhirlwindFX",
+    "Kind": "ram",
+    "VendorId": null,
+    "ProductId": null
+  },
+  {
+    "Name": "Dareu Cool68",
+    "Publisher": "WhirlwindFx",
+    "Kind": "keyboard",
+    "VendorId": 14126,
+    "ProductId": null
+  },
+  {
+    "Name": "DarkProject 87",
+    "Publisher": "WhirlwindFX & Marek Zlatos",
+    "Kind": "keyboard",
+    "VendorId": 13357,
+    "ProductId": null
+  },
+  {
+    "Name": "DREVO BladeMaster TE 88K",
+    "Publisher": "Jordan && WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 6700,
+    "ProductId": 46479
+  },
+  {
+    "Name": "EVGA Ampere GPU",
+    "Publisher": "WhirlwindFX",
+    "Kind": "gpu",
+    "VendorId": null,
+    "ProductId": null
+  },
+  {
+    "Name": "EVGA Pascal GPU",
+    "Publisher": "WhirlwindFX",
+    "Kind": "gpu",
+    "VendorId": null,
+    "ProductId": null
+  },
+  {
+    "Name": "EVGA Turing GPU",
+    "Publisher": "WhirlwindFX",
+    "Kind": "gpu",
+    "VendorId": null,
+    "ProductId": null
+  },
+  {
+    "Name": "EVGA X15 Mouse",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 14402,
+    "ProductId": 9237
+  },
+  {
+    "Name": "EVGA X17 Mouse",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 14402,
+    "ProductId": 9229
+  },
+  {
+    "Name": "EVGA Z15 Keyboard",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 14402,
+    "ProductId": 9742
+  },
+  {
+    "Name": "EVGA Z15 Keyboard",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 14402,
+    "ProductId": 9736
+  },
+  {
+    "Name": "EVGA Z20 Keyboard",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 14402,
+    "ProductId": 9744
+  },
+  {
+    "Name": "EVGA Z20 Keyboard",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 14402,
+    "ProductId": 9738
+  },
+  {
+    "Name": "EVision Device",
+    "Publisher": "WhirlwindFx & Nuonuo",
+    "Kind": "keyboard",
+    "VendorId": 12815,
+    "ProductId": null
+  },
+  {
+    "Name": "Flydigi Wireless Charger Dock 2 Pro",
+    "Publisher": "vermis & WhirlwindFX",
+    "Kind": "other",
+    "VendorId": 14295,
+    "ProductId": 24577
+  },
+  {
+    "Name": "Fnatic MiniSTREAK",
+    "Publisher": "BHX",
+    "Kind": "keyboard",
+    "VendorId": 12046,
+    "ProductId": null
+  },
+  {
+    "Name": "Fnatic STREAK65",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 12046,
+    "ProductId": 261
+  },
+  {
+    "Name": "Fnatic STREAK",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 12046,
+    "ProductId": 257
+  },
+  {
+    "Name": "Gigabyte Aorus ATC800",
+    "Publisher": "serega6531",
+    "Kind": "aio",
+    "VendorId": 4164,
+    "ProductId": 31298
+  },
+  {
+    "Name": "Gigabyte Aorus Liquid Cooler 360",
+    "Publisher": "Nogait",
+    "Kind": "aio",
+    "VendorId": 4164,
+    "ProductId": 31302
+  },
+  {
+    "Name": "Gigabyte Aorus Waterforce X I",
+    "Publisher": "WhirlwindFX",
+    "Kind": "aio",
+    "VendorId": 4164,
+    "ProductId": 31309
+  },
+  {
+    "Name": "Gigabyte Aorus Waterforce X II",
+    "Publisher": "WhirlwindFX",
+    "Kind": "aio",
+    "VendorId": 1044,
+    "ProductId": 31326
+  },
+  {
+    "Name": "Gigabyte Vision GPU",
+    "Publisher": "WhirlwindFX",
+    "Kind": "gpu",
+    "VendorId": null,
+    "ProductId": null
+  },
+  {
+    "Name": "Gigabyte Master GPU",
+    "Publisher": "WhirlwindFX",
+    "Kind": "gpu",
+    "VendorId": null,
+    "ProductId": null
+  },
+  {
+    "Name": "Gigabyte XTREME GPU",
+    "Publisher": "WhirlwindFX",
+    "Kind": "gpu",
+    "VendorId": null,
+    "ProductId": null
+  },
+  {
+    "Name": "Gigabyte Gen 4 GPU",
+    "Publisher": "WhirlwindFX",
+    "Kind": "gpu",
+    "VendorId": null,
+    "ProductId": null
+  },
+  {
+    "Name": "GIGABYTE Motherboard LED Controller",
+    "Publisher": "WhirlwindFX",
+    "Kind": "motherboard",
+    "VendorId": 1165,
+    "ProductId": null
+  },
+  {
+    "Name": "GIGABYTE Motherboard LED Controller",
+    "Publisher": "WhirlwindFX",
+    "Kind": "motherboard",
+    "VendorId": 1165,
+    "ProductId": 22289
+  },
+  {
+    "Name": "Glorious Model D Wireless",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 9610,
+    "ProductId": 8229
+  },
+  {
+    "Name": "Glorious Model D Wireless - Wired ",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 9610,
+    "ProductId": 8212
+  },
+  {
+    "Name": "Glorious Model D Wireless - Wired ",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 9610,
+    "ProductId": 8210
+  },
+  {
+    "Name": "Glorious Model D Wireless",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 9610,
+    "ProductId": 8227
+  },
+  {
+    "Name": "Glorious Model O Wireless",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 9610,
+    "ProductId": null
+  },
+  {
+    "Name": "Glorious Model O Wireless - Wired ",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 9610,
+    "ProductId": null
+  },
+  {
+    "Name": "HyperX Alloy Elite RGB",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 2385,
+    "ProductId": 5822
+  },
+  {
+    "Name": "HyperX Elite 2 RGB",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 2385,
+    "ProductId": 5905
+  },
+  {
+    "Name": "HyperX Elite 2 RGB",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 1008,
+    "ProductId": 1423
+  },
+  {
+    "Name": "HyperX Alloy FPS RGB",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 2385,
+    "ProductId": 5852
+  },
+  {
+    "Name": "HyperX Alloy Origins",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 2385,
+    "ProductId": 5861
+  },
+  {
+    "Name": "HyperX Alloy Origins",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 1008,
+    "ProductId": 1425
+  },
+  {
+    "Name": "HyperX Alloy Origins 60",
+    "Publisher": "Derek Huber",
+    "Kind": "keyboard",
+    "VendorId": 2385,
+    "ProductId": 5940
+  },
+  {
+    "Name": "HyperX Alloy Origins 60",
+    "Publisher": "Derek Huber",
+    "Kind": "keyboard",
+    "VendorId": 1008,
+    "ProductId": 3214
+  },
+  {
+    "Name": "HyperX Alloy Origins 65",
+    "Publisher": "Derek Huber",
+    "Kind": "keyboard",
+    "VendorId": 1008,
+    "ProductId": 911
+  },
+  {
+    "Name": "HyperX Alloy Origins Core",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 2385,
+    "ProductId": 5862
+  },
+  {
+    "Name": "HyperX Alloy Origins Core",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 1008,
+    "ProductId": 2447
+  },
+  {
+    "Name": "HyperX Cloud Flight",
+    "Publisher": "Derek Huber",
+    "Kind": "headphones",
+    "VendorId": 2385,
+    "ProductId": null
+  },
+  {
+    "Name": "HyperX Duocast",
+    "Publisher": "WhirlwindFX",
+    "Kind": "microphone",
+    "VendorId": 1008,
+    "ProductId": 2444
+  },
+  {
+    "Name": "HyperX Fury Ultra",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mousepad",
+    "VendorId": 2385,
+    "ProductId": 5893
+  },
+  {
+    "Name": "HyperX Device",
+    "Publisher": "WhirlwindFx",
+    "Kind": "mouse",
+    "VendorId": 2385,
+    "ProductId": null
+  },
+  {
+    "Name": "HyperX PulseFire Core",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 2385,
+    "ProductId": 5854
+  },
+  {
+    "Name": "HyperX PulseFire Core",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 1008,
+    "ProductId": 3471
+  },
+  {
+    "Name": "HyperX PulseFire Dart Wired Mode",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 2385,
+    "ProductId": 5858
+  },
+  {
+    "Name": "HyperX PulseFire Dart Wireless Mode",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 2385,
+    "ProductId": 5857
+  },
+  {
+    "Name": "HyperX PulseFire Dart Wireless Mode",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 1008,
+    "ProductId": 1678
+  },
+  {
+    "Name": "HyperX PulseFire FPS Pro",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 2385,
+    "ProductId": null
+  },
+  {
+    "Name": "HyperX Pulsefire Haste",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 2385,
+    "ProductId": 5927
+  },
+  {
+    "Name": "HyperX Pulsefire Haste",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 1008,
+    "ProductId": 3983
+  },
+  {
+    "Name": "HyperX Pulsefire 2",
+    "Publisher": "WhirlwindFx",
+    "Kind": "mouse",
+    "VendorId": 1008,
+    "ProductId": null
+  },
+  {
+    "Name": "HyperX Pulsefire Haste Wireless",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 1008,
+    "ProductId": null
+  },
+  {
+    "Name": "HyperX PulseFire Mat",
+    "Publisher": "Darkest#3270 & HarD#9999",
+    "Kind": "mousepad",
+    "VendorId": 1008,
+    "ProductId": 3981
+  },
+  {
+    "Name": "HyperX PulseFire Mat",
+    "Publisher": "Darkest#3270 & HarD#9999",
+    "Kind": "mousepad",
+    "VendorId": 2385,
+    "ProductId": 5953
+  },
+  {
+    "Name": "HyperX PulseFire Raid",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 2385,
+    "ProductId": 5860
+  },
+  {
+    "Name": "HyperX PulseFire Surge",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 2385,
+    "ProductId": 5843
+  },
+  {
+    "Name": "HyperX PulseFire Surge",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 1008,
+    "ProductId": 1168
+  },
+  {
+    "Name": "HyperX Quadcast 2 S",
+    "Publisher": "WhirlwindFX",
+    "Kind": "microphone",
+    "VendorId": 1008,
+    "ProductId": 693
+  },
+  {
+    "Name": "HyperX Quadcast S",
+    "Publisher": "WhirlwindFX",
+    "Kind": "microphone",
+    "VendorId": 2385,
+    "ProductId": null
+  },
+  {
+    "Name": "HyperX Quadcast S",
+    "Publisher": "WhirlwindFX",
+    "Kind": "microphone",
+    "VendorId": 1008,
+    "ProductId": null
+  },
+  {
+    "Name": "HYTE CNVS",
+    "Publisher": "0xGoldstar",
+    "Kind": "mousepad",
+    "VendorId": 13314,
+    "ProductId": null
+  },
+  {
+    "Name": "Hyte Keeb TKL",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 13314,
+    "ProductId": null
+  },
+  {
+    "Name": "ID-Cooling FX-LCD",
+    "Publisher": "WhirlwindFX",
+    "Kind": "lcd",
+    "VendorId": 8192,
+    "ProductId": 12288
+  },
+  {
+    "Name": "KBM! Gaming Device",
+    "Publisher": "WhirlwindFx",
+    "Kind": "keyboard",
+    "VendorId": 19020,
+    "ProductId": null
+  },
+  {
+    "Name": "Kingston Hyper Fury Ram",
+    "Publisher": "WhirlwindFX",
+    "Kind": "ram",
+    "VendorId": null,
+    "ProductId": null
+  },
+  {
+    "Name": "ProMedia Lumina",
+    "Publisher": "Klipsch Group, Inc",
+    "Kind": "speakers",
+    "VendorId": 6325,
+    "ProductId": 112
+  },
+  {
+    "Name": "PCDOCK Light strip",
+    "Publisher": "PCDOCK",
+    "Kind": "lightingcontroller",
+    "VendorId": 7169,
+    "ProductId": 4097
+  },
+  {
+    "Name": "Lenovo Legion 5 Pro Keyboard",
+    "Publisher": "RickOfficial",
+    "Kind": "keyboard",
+    "VendorId": 1165,
+    "ProductId": null
+  },
+  {
+    "Name": "Lenovo Legion 7",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 1165,
+    "ProductId": 51560
+  },
+  {
+    "Name": "LG UltraGear 27GN950",
+    "Publisher": "Jazo Mannucci",
+    "Kind": "other",
+    "VendorId": 1086,
+    "ProductId": 39562
+  },
+  {
+    "Name": "LG UltraGear 38GL950G",
+    "Publisher": "Jazo Mannucci",
+    "Kind": "other",
+    "VendorId": 1086,
+    "ProductId": 39511
+  },
+  {
+    "Name": "Lian Li Galahad II LCD",
+    "Publisher": "WhirlwindFX",
+    "Kind": "",
+    "VendorId": 1046,
+    "ProductId": 29589
+  },
+  {
+    "Name": "Lian Li Uni Fan Controller",
+    "Publisher": "WhirlwindFX",
+    "Kind": "lightingcontroller",
+    "VendorId": 3314,
+    "ProductId": 30544
+  },
+  {
+    "Name": "Lian Li Uni Fan Controller AL 1.1",
+    "Publisher": "WhirlwindFX",
+    "Kind": "lightingcontroller",
+    "VendorId": 3314,
+    "ProductId": 41217
+  },
+  {
+    "Name": "Lian Li Uni Fan Controller AL V2",
+    "Publisher": "WhirlwindFX",
+    "Kind": "lightingcontroller",
+    "VendorId": 3314,
+    "ProductId": 41220
+  },
+  {
+    "Name": "Lian Li Uni Fan Controller SL 1.2",
+    "Publisher": "WhirlwindFX",
+    "Kind": "lightingcontroller",
+    "VendorId": 3314,
+    "ProductId": null
+  },
+  {
+    "Name": "Lian Li Uni Fan Controller SL V2",
+    "Publisher": "WhirlwindFX",
+    "Kind": "lightingcontroller",
+    "VendorId": 3314,
+    "ProductId": null
+  },
+  {
+    "Name": "Lian Li Uni Fan TL LCD",
+    "Publisher": "WhirlwindFX",
+    "Kind": "lcd",
+    "VendorId": 1276,
+    "ProductId": 29587
+  },
+  {
+    "Name": "Lian Li Universal Screen 8.8",
+    "Publisher": "WhirlwindFX",
+    "Kind": "lcd",
+    "VendorId": 7358,
+    "ProductId": 41096
+  },
+  {
+    "Name": "Lian Li Universal Screen 8.8 LED",
+    "Publisher": "WhirlwindFX",
+    "Kind": "LCD",
+    "VendorId": 1046,
+    "ProductId": 32848
+  },
+  {
+    "Name": "Lian Li Uni Fan Controller SL Infinity",
+    "Publisher": "WhirlwindFX",
+    "Kind": "lightingcontroller",
+    "VendorId": 3314,
+    "ProductId": 41218
+  },
+  {
+    "Name": "LianLi L-Connect 3 Strimer Controller",
+    "Publisher": "WhirlwindFX",
+    "Kind": "lightingcontroller",
+    "VendorId": 3314,
+    "ProductId": 41472
+  },
+  {
+    "Name": "Logitech G213",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 1133,
+    "ProductId": 49974
+  },
+  {
+    "Name": "Logitech G402 Hyperion",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 1133,
+    "ProductId": 49278
+  },
+  {
+    "Name": "Logitech G410 Atlas Spectrum",
+    "Publisher": "TheDongster",
+    "Kind": "keyboard",
+    "VendorId": 1133,
+    "ProductId": 49968
+  },
+  {
+    "Name": "Logitech G413",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 1133,
+    "ProductId": 49978
+  },
+  {
+    "Name": "Logitech G512 SE",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 1133,
+    "ProductId": 49986
+  },
+  {
+    "Name": "Logitech G513",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 1133,
+    "ProductId": 49980
+  },
+  {
+    "Name": "Logitech G560 Gaming Speakers",
+    "Publisher": "WhirlwindFX",
+    "Kind": "speakers",
+    "VendorId": 1133,
+    "ProductId": 2680
+  },
+  {
+    "Name": "Logitech G810",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 1133,
+    "ProductId": null
+  },
+  {
+    "Name": "Logitech G815 Lightsync",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 1133,
+    "ProductId": 49983
+  },
+  {
+    "Name": "Logitech G910",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 1133,
+    "ProductId": null
+  },
+  {
+    "Name": "Logitech Headset Device",
+    "Publisher": "WhirlwindFx",
+    "Kind": "headphones",
+    "VendorId": 1133,
+    "ProductId": null
+  },
+  {
+    "Name": "Logitech Pro TKL",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 1133,
+    "ProductId": 49977
+  },
+  {
+    "Name": "Logitech G13",
+    "Publisher": "HarD#9835",
+    "Kind": "keyboard",
+    "VendorId": 1133,
+    "ProductId": 49692
+  },
+  {
+    "Name": "Logitech G19",
+    "Publisher": "HarD#9835",
+    "Kind": "keyboard",
+    "VendorId": 1133,
+    "ProductId": 49705
+  },
+  {
+    "Name": "Logitech G600 Mouse",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 1133,
+    "ProductId": 49738
+  },
+  {
+    "Name": "Logitech Device",
+    "Publisher": "WhirlwindFX",
+    "Kind": "dongle",
+    "VendorId": 1133,
+    "ProductId": null
+  },
+  {
+    "Name": "Logitech_Wireless_Dongle.test",
+    "Publisher": "",
+    "Kind": "",
+    "VendorId": null,
+    "ProductId": null
+  },
+  {
+    "Name": "Logitech X56 H.O.T.A.S. Stick",
+    "Publisher": "Franco Roura",
+    "Kind": "other",
+    "VendorId": 1848,
+    "ProductId": 8737
+  },
+  {
+    "Name": "Logitech X56 H.O.T.A.S. Throttle",
+    "Publisher": "Franco Roura",
+    "Kind": "other",
+    "VendorId": 1848,
+    "ProductId": 41505
+  },
+  {
+    "Name": "Madlions MAD 68HE",
+    "Publisher": "WhirlwindFX & Thushar",
+    "Kind": "keyboard",
+    "VendorId": 14139,
+    "ProductId": null
+  },
+  {
+    "Name": "Mountain Everest 60 Keyboard",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 12930,
+    "ProductId": 5
+  },
+  {
+    "Name": "Mountain Everest Max Keyboard",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 12930,
+    "ProductId": 1
+  },
+  {
+    "Name": "Mountain Macropad",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 12930,
+    "ProductId": 8
+  },
+  {
+    "Name": "Mountain Makalu 67",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 12930,
+    "ProductId": 3
+  },
+  {
+    "Name": "MSI Mystic Light Controller (162 Byte)",
+    "Publisher": "WhirlwindFX",
+    "Kind": "motherboard",
+    "VendorId": 5218,
+    "ProductId": 5920
+  },
+  {
+    "Name": "MSI Mystic Light Controller (162 Byte)",
+    "Publisher": "LIGHTVORTEX",
+    "Kind": "motherboard",
+    "VendorId": 5218,
+    "ProductId": 31511
+  },
+  {
+    "Name": "MSI Mystic Light Controller (162 Byte)",
+    "Publisher": "LIGHTVORTEX",
+    "Kind": "motherboard",
+    "VendorId": 5218,
+    "ProductId": 31512
+  },
+  {
+    "Name": "MSI B450 GAMING PRO CARBON AC (162 Byte)",
+    "Publisher": "LIGHTVORTEX",
+    "Kind": "motherboard",
+    "VendorId": 5218,
+    "ProductId": 31621
+  },
+  {
+    "Name": "MSI Mystic Light Controller (162 Byte)",
+    "Publisher": "LIGHTVORTEX",
+    "Kind": "motherboard",
+    "VendorId": 5218,
+    "ProductId": 47398
+  },
+  {
+    "Name": "MSI Mystic Light Controller",
+    "Publisher": "WhirlwindFX",
+    "Kind": "motherboard",
+    "VendorId": 5218,
+    "ProductId": null
+  },
+  {
+    "Name": "MSI Mystic Light Controller",
+    "Publisher": "WhirlwindFX",
+    "Kind": "motherboard",
+    "VendorId": 3504,
+    "ProductId": null
+  },
+  {
+    "Name": "MSI GS63 Keyboard",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 6000,
+    "ProductId": 65280
+  },
+  {
+    "Name": "MSI GPU",
+    "Publisher": "WhirlwindFX",
+    "Kind": "gpu",
+    "VendorId": null,
+    "ProductId": null
+  },
+  {
+    "Name": "MSI Blackwell GPU",
+    "Publisher": "WhirlwindFX",
+    "Kind": "gpu",
+    "VendorId": null,
+    "ProductId": null
+  },
+  {
+    "Name": "MSI Lovelace GPU",
+    "Publisher": "WhirlwindFX",
+    "Kind": "gpu",
+    "VendorId": null,
+    "ProductId": null
+  },
+  {
+    "Name": "MSI Keyboard Device",
+    "Publisher": "WhirlwindFx",
+    "Kind": "keyboard",
+    "VendorId": 3504,
+    "ProductId": null
+  },
+  {
+    "Name": "MSI Monitor Controller",
+    "Publisher": "WhirlwindFX",
+    "Kind": "other",
+    "VendorId": 4152,
+    "ProductId": 4392
+  },
+  {
+    "Name": "MSI Monitor Controller",
+    "Publisher": "Derek Huber & WhirlwindFX",
+    "Kind": "other",
+    "VendorId": 5218,
+    "ProductId": 16292
+  },
+  {
+    "Name": "Nollie1 CDC Nos2.1",
+    "Publisher": "Nollie",
+    "Kind": "lightingcontroller",
+    "VendorId": 5845,
+    "ProductId": 10753
+  },
+  {
+    "Name": "Nollie1",
+    "Publisher": "Nollie",
+    "Kind": "lightingcontroller",
+    "VendorId": 5842,
+    "ProductId": 7953
+  },
+  {
+    "Name": "Nollie16v3",
+    "Publisher": "Nollie",
+    "Kind": "lightingcontroller",
+    "VendorId": 12385,
+    "ProductId": 18198
+  },
+  {
+    "Name": "Nollie16v3",
+    "Publisher": "Nollie",
+    "Kind": "lightingcontroller",
+    "VendorId": 5845,
+    "ProductId": null
+  },
+  {
+    "Name": "Nollie32",
+    "Publisher": "Nollie",
+    "Kind": "lightingcontroller",
+    "VendorId": 12385,
+    "ProductId": 18196
+  },
+  {
+    "Name": "Nollie32",
+    "Publisher": "Nollie",
+    "Kind": "lightingcontroller",
+    "VendorId": 5845,
+    "ProductId": null
+  },
+  {
+    "Name": "Nollie8 CDC Nos2.1",
+    "Publisher": "Nollie",
+    "Kind": "lightingcontroller",
+    "VendorId": 5845,
+    "ProductId": 10760
+  },
+  {
+    "Name": "Nollie 8 v2",
+    "Publisher": "Nollie",
+    "Kind": "lightingcontroller",
+    "VendorId": 5842,
+    "ProductId": 7937
+  },
+  {
+    "Name": "Nuvoton Device",
+    "Publisher": "WhirlwindFx",
+    "Kind": "keyboard",
+    "VendorId": 1046,
+    "ProductId": null
+  },
+  {
+    "Name": "Nuvoton Device",
+    "Publisher": "WhirlwindFx",
+    "Kind": "keyboard",
+    "VendorId": 1046,
+    "ProductId": null
+  },
+  {
+    "Name": "NZXT Kraken",
+    "Publisher": "WhirlwindFX",
+    "Kind": "aio",
+    "VendorId": 7793,
+    "ProductId": null
+  },
+  {
+    "Name": "NZXT Kraken Elite v2",
+    "Publisher": "WhirlwindFX, Cryptofyre, and RickOfficial",
+    "Kind": "aio",
+    "VendorId": 7793,
+    "ProductId": null
+  },
+  {
+    "Name": "NZXT Kraken X2/M2",
+    "Publisher": "WhirlwindFX",
+    "Kind": "aio",
+    "VendorId": 7793,
+    "ProductId": null
+  },
+  {
+    "Name": "NZXT Kraken X3",
+    "Publisher": "WhirlwindFX",
+    "Kind": "aio",
+    "VendorId": 7793,
+    "ProductId": null
+  },
+  {
+    "Name": "NZXT Kraken Z3",
+    "Publisher": "WhirlwindFX",
+    "Kind": "aio",
+    "VendorId": 7793,
+    "ProductId": 12296
+  },
+  {
+    "Name": "NZXT Motherboard",
+    "Publisher": "WhirlwindFx",
+    "Kind": "motherboard",
+    "VendorId": 7793,
+    "ProductId": null
+  },
+  {
+    "Name": "NZXT Smart Device V1",
+    "Publisher": "WhirlwindFX",
+    "Kind": "lightingcontroller",
+    "VendorId": 7793,
+    "ProductId": 5908
+  },
+  {
+    "Name": "NZXT Smart Device V2",
+    "Publisher": "WhirlwindFX",
+    "Kind": "lightingcontroller",
+    "VendorId": 7793,
+    "ProductId": null
+  },
+  {
+    "Name": "NZXT Keyboard",
+    "Publisher": "WhirlwindFx",
+    "Kind": "keyboard",
+    "VendorId": 7793,
+    "ProductId": null
+  },
+  {
+    "Name": "NZXT Lift",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 7793,
+    "ProductId": 8448
+  },
+  {
+    "Name": "Vertagear RGB LED Upgrade Kits",
+    "Publisher": "WhirlwindFX",
+    "Kind": "lightingcontroller",
+    "VendorId": 7793,
+    "ProductId": 8196
+  },
+  {
+    "Name": "Serial Devices",
+    "Publisher": "WhirlwindFX",
+    "Kind": "other",
+    "VendorId": 6790,
+    "ProductId": 29987
+  },
+  {
+    "Name": "OEM Device",
+    "Publisher": "WhirlwindFx",
+    "Kind": "keyboard",
+    "VendorId": 13652,
+    "ProductId": null
+  },
+  {
+    "Name": "Patriot Viper RAM",
+    "Publisher": "WhirlwindFX",
+    "Kind": "ram",
+    "VendorId": null,
+    "ProductId": null
+  },
+  {
+    "Name": "Patriot Viper Steel RGB RAM",
+    "Publisher": "WhirlwindFX",
+    "Kind": "ram",
+    "VendorId": null,
+    "ProductId": null
+  },
+  {
+    "Name": "Patriot Viper V380 Headset",
+    "Publisher": "WhirlwindFX",
+    "Kind": "headphones",
+    "VendorId": 9741,
+    "ProductId": 8194
+  },
+  {
+    "Name": "PNY Blackwell GPU",
+    "Publisher": "WhirlwindFX & Ben",
+    "Kind": "gpu",
+    "VendorId": null,
+    "ProductId": null
+  },
+  {
+    "Name": "PNY Ampere GPU",
+    "Publisher": "WhirlwindFX",
+    "Kind": "gpu",
+    "VendorId": null,
+    "ProductId": null
+  },
+  {
+    "Name": "PNY XLR8 GPU",
+    "Publisher": "WhirlwindFX",
+    "Kind": "gpu",
+    "VendorId": null,
+    "ProductId": null
+  },
+  {
+    "Name": "PNY GPU",
+    "Publisher": "WhirlwindFX",
+    "Kind": "gpu",
+    "VendorId": null,
+    "ProductId": null
+  },
+  {
+    "Name": "Prism Mini",
+    "Publisher": "PrismRGB",
+    "Kind": "lightingcontroller",
+    "VendorId": 5840,
+    "ProductId": 5127
+  },
+  {
+    "Name": "Prism S",
+    "Publisher": "PrismRGB",
+    "Kind": "lightingcontroller",
+    "VendorId": 5840,
+    "ProductId": 4756
+  },
+  {
+    "Name": "Prism 8",
+    "Publisher": "PrismRGB",
+    "Kind": "lightingcontroller",
+    "VendorId": 5845,
+    "ProductId": 7937
+  },
+  {
+    "Name": "Rama Works M65-B",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 21057,
+    "ProductId": 1627
+  },
+  {
+    "Name": "Razer Addressable RGB Controller",
+    "Publisher": "WhirlwindFX",
+    "Kind": "lightingcontroller",
+    "VendorId": 5426,
+    "ProductId": 3871
+  },
+  {
+    "Name": "Razer Barracuda X Chroma",
+    "Publisher": "WhirlwindFX",
+    "Kind": "headphones",
+    "VendorId": 5426,
+    "ProductId": 1396
+  },
+  {
+    "Name": "Razer Base Station Chroma",
+    "Publisher": "WhirlwindFX",
+    "Kind": "other",
+    "VendorId": 5426,
+    "ProductId": 3848
+  },
+  {
+    "Name": "Razer Base Station V2",
+    "Publisher": "WhirlwindFX",
+    "Kind": "other",
+    "VendorId": 5426,
+    "ProductId": 3872
+  },
+  {
+    "Name": "Razer Blackwidow 2019",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 5426,
+    "ProductId": 577
+  },
+  {
+    "Name": "Razer Blackwidow Chroma Overwatch",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 5426,
+    "ProductId": 529
+  },
+  {
+    "Name": "Razer Blackwidow T Chroma",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 5426,
+    "ProductId": 521
+  },
+  {
+    "Name": "Razer Blackwidow Ultimate 2013/2014",
+    "Publisher": "BlackSwan",
+    "Kind": "keyboard",
+    "VendorId": 5426,
+    "ProductId": 282
+  },
+  {
+    "Name": "Razer Blackwidow V3 Pro",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 5426,
+    "ProductId": 602
+  },
+  {
+    "Name": "Razer Blackwidow V3 Pro Wireless Mode",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 5426,
+    "ProductId": 604
+  },
+  {
+    "Name": "Razer Blackwidow X Chroma",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 5426,
+    "ProductId": 534
+  },
+  {
+    "Name": "Razer Charging Pad",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mousepad",
+    "VendorId": 5426,
+    "ProductId": 3878
+  },
+  {
+    "Name": "Razer Chroma HDK",
+    "Publisher": "Kratheus",
+    "Kind": "lightingcontroller",
+    "VendorId": 5426,
+    "ProductId": 3849
+  },
+  {
+    "Name": "Razer Chroma Light Strip Set",
+    "Publisher": "FeuerSturm",
+    "Kind": "lightingcontroller",
+    "VendorId": 5426,
+    "ProductId": 3884
+  },
+  {
+    "Name": "Razer Chroma Lighting Kit",
+    "Publisher": "WhirlwindFX",
+    "Kind": "lightingcontroller",
+    "VendorId": 5426,
+    "ProductId": 3854
+  },
+  {
+    "Name": "Razer Cynosa Chroma Pro",
+    "Publisher": "Kashall",
+    "Kind": "keyboard",
+    "VendorId": 5426,
+    "ProductId": 556
+  },
+  {
+    "Name": "Razer Cynosa Lite",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 5426,
+    "ProductId": 575
+  },
+  {
+    "Name": "Razer Deathadder Essential",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 5426,
+    "ProductId": null
+  },
+  {
+    "Name": "Razer Deathadder Essential",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 5426,
+    "ProductId": 110
+  },
+  {
+    "Name": "Razer Deathstalker V2 Pro TKL Wired",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 5426,
+    "ProductId": 664
+  },
+  {
+    "Name": "Razer Deathstalker V2 Pro TKL Wireless",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 5426,
+    "ProductId": 662
+  },
+  {
+    "Name": "Razer Diamondback Chroma",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 5426,
+    "ProductId": 76
+  },
+  {
+    "Name": "Razer Goliathus Chroma 3XL",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mousepad",
+    "VendorId": 5426,
+    "ProductId": 3078
+  },
+  {
+    "Name": "Razer Goliathus Chroma",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mousepad",
+    "VendorId": 5426,
+    "ProductId": 3073
+  },
+  {
+    "Name": "Razer Goliathus Extended Chroma",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mousepad",
+    "VendorId": 5426,
+    "ProductId": 3074
+  },
+  {
+    "Name": "Razer Hanbo AIO",
+    "Publisher": "WhirlwindFX",
+    "Kind": "aio",
+    "VendorId": 5426,
+    "ProductId": 3893
+  },
+  {
+    "Name": "Razer Huntsman V2 TKL",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 5426,
+    "ProductId": 619
+  },
+  {
+    "Name": "Razer Kraken 7.1 V2",
+    "Publisher": "WhirlwindFX",
+    "Kind": "headphones",
+    "VendorId": 5426,
+    "ProductId": null
+  },
+  {
+    "Name": "Razer Headset Device",
+    "Publisher": "WhirlwindFx",
+    "Kind": "headphones",
+    "VendorId": 5426,
+    "ProductId": null
+  },
+  {
+    "Name": "Razer Kraken Kitty Edition",
+    "Publisher": "WhirlwindFX",
+    "Kind": "headphones",
+    "VendorId": 5426,
+    "ProductId": 3865
+  },
+  {
+    "Name": "Razer Headset Device",
+    "Publisher": "WhirlwindFx",
+    "Kind": "headphones",
+    "VendorId": 5426,
+    "ProductId": null
+  },
+  {
+    "Name": "Razer Laptop Cooling Pad",
+    "Publisher": "WhirlwindFX",
+    "Kind": "other",
+    "VendorId": 5426,
+    "ProductId": 3907
+  },
+  {
+    "Name": "Razer Laptop Stand Chroma",
+    "Publisher": "WhirlwindFX",
+    "Kind": "other",
+    "VendorId": 5426,
+    "ProductId": 3853
+  },
+  {
+    "Name": "Razer Laptop Stand Chroma V2",
+    "Publisher": "WhirlwindFX",
+    "Kind": "other",
+    "VendorId": 5426,
+    "ProductId": 3883
+  },
+  {
+    "Name": "Razer Mouse",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 5426,
+    "ProductId": null
+  },
+  {
+    "Name": "Razer Lian Li Case",
+    "Publisher": "WhirlwindFX",
+    "Kind": "case",
+    "VendorId": 5426,
+    "ProductId": 3859
+  },
+  {
+    "Name": "Razer Mamba TE",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 5426,
+    "ProductId": null
+  },
+  {
+    "Name": "Razer Keyboard",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 5426,
+    "ProductId": null
+  },
+  {
+    "Name": "Razer Mouse",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 5426,
+    "ProductId": null
+  },
+  {
+    "Name": "Razer_Modern_Mouse.test",
+    "Publisher": "",
+    "Kind": "",
+    "VendorId": null,
+    "ProductId": null
+  },
+  {
+    "Name": "Razer Device",
+    "Publisher": "WhirlwindFX",
+    "Kind": "other",
+    "VendorId": 5426,
+    "ProductId": null
+  },
+  {
+    "Name": "Razer Mouse Bungee V3",
+    "Publisher": "WhirlwindFX",
+    "Kind": "other",
+    "VendorId": 5426,
+    "ProductId": 3869
+  },
+  {
+    "Name": "Razer Mouse Dock",
+    "Publisher": "WhirlwindFX",
+    "Kind": "other",
+    "VendorId": 5426,
+    "ProductId": 126
+  },
+  {
+    "Name": "Razer Mouse Dock Pro",
+    "Publisher": "vermis",
+    "Kind": "other",
+    "VendorId": 5426,
+    "ProductId": 164
+  },
+  {
+    "Name": "Razer Mousepad",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mousepad",
+    "VendorId": 5426,
+    "ProductId": null
+  },
+  {
+    "Name": "Razer Naga Hex V2",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 5426,
+    "ProductId": 80
+  },
+  {
+    "Name": "Razer Headset Device",
+    "Publisher": "WhirlwindFx",
+    "Kind": "headphones",
+    "VendorId": 5426,
+    "ProductId": null
+  },
+  {
+    "Name": "Razer Nommo",
+    "Publisher": "WhirlwindFX",
+    "Kind": "speakers",
+    "VendorId": 5426,
+    "ProductId": null
+  },
+  {
+    "Name": "Razer Orbweaver Chroma",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 5426,
+    "ProductId": 519
+  },
+  {
+    "Name": "Razer Ornata Chroma",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 5426,
+    "ProductId": 542
+  },
+  {
+    "Name": "Razer Ornata V3 X",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 5426,
+    "ProductId": null
+  },
+  {
+    "Name": "Razer PWM Controller",
+    "Publisher": "WhirlwindFX",
+    "Kind": "lightingcontroller",
+    "VendorId": 5426,
+    "ProductId": 3900
+  },
+  {
+    "Name": "Razer Raptor 27 Inch",
+    "Publisher": "WhirlwindFX",
+    "Kind": "other",
+    "VendorId": 5426,
+    "ProductId": null
+  },
+  {
+    "Name": "Razer Seiren V3",
+    "Publisher": "WhirlwindFX",
+    "Kind": "microphone",
+    "VendorId": 5426,
+    "ProductId": 1391
+  },
+  {
+    "Name": "Razer Soundbar",
+    "Publisher": "WhirlwindFx",
+    "Kind": "speakers",
+    "VendorId": 5426,
+    "ProductId": null
+  },
+  {
+    "Name": "Razer Tartarus Pro",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 5426,
+    "ProductId": 580
+  },
+  {
+    "Name": "Razer Tartarus V2",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 5426,
+    "ProductId": 555
+  },
+  {
+    "Name": "Razer Thunderbolt Dock",
+    "Publisher": "WhirlwindFX",
+    "Kind": "other",
+    "VendorId": 5426,
+    "ProductId": 3873
+  },
+  {
+    "Name": "Razer Tomahawk ATX Case",
+    "Publisher": "Draxi",
+    "Kind": "case",
+    "VendorId": 5426,
+    "ProductId": 3863
+  },
+  {
+    "Name": "Roccat AIMO Pad",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mousepad",
+    "VendorId": 7805,
+    "ProductId": 13370
+  },
+  {
+    "Name": "Roccat AIMO Pad Wide",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mousepad",
+    "VendorId": 7805,
+    "ProductId": 13371
+  },
+  {
+    "Name": "Roccat Burst Core",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 7805,
+    "ProductId": 11750
+  },
+  {
+    "Name": "Roccat Burst Pro Air - Wired",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 7805,
+    "ProductId": 11435
+  },
+  {
+    "Name": "Roccat Burst Pro Air",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 7805,
+    "ProductId": 11430
+  },
+  {
+    "Name": "Roccat Burst Pro",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 7805,
+    "ProductId": 11745
+  },
+  {
+    "Name": "Roccat Elo 7.1 USB",
+    "Publisher": "WhirlwindFX",
+    "Kind": "headphones",
+    "VendorId": 7805,
+    "ProductId": 14900
+  },
+  {
+    "Name": "Roccat Elo 7.1 Air",
+    "Publisher": "WhirlwindFX",
+    "Kind": "headphones",
+    "VendorId": 7805,
+    "ProductId": 14903
+  },
+  {
+    "Name": "Roccat Kain 100",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 7805,
+    "ProductId": 11520
+  },
+  {
+    "Name": "Roccat Kain 120",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 7805,
+    "ProductId": 11612
+  },
+  {
+    "Name": "Roccat Kain 200",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 7805,
+    "ProductId": 11615
+  },
+  {
+    "Name": "Roccat Kain 200",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 7805,
+    "ProductId": 11616
+  },
+  {
+    "Name": "Roccat Kone",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 7805,
+    "ProductId": 11815
+  },
+  {
+    "Name": "Roccat Kone Pro Air",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 7805,
+    "ProductId": 11406
+  },
+  {
+    "Name": "Roccat Kone Pro Air Wired Mode",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 7805,
+    "ProductId": 11410
+  },
+  {
+    "Name": "Roccat Kone Pro",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 7805,
+    "ProductId": 11400
+  },
+  {
+    "Name": "Roccat Kone Remastered",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 7805,
+    "ProductId": 11820
+  },
+  {
+    "Name": "Roccat Kone XP Air",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 7805,
+    "ProductId": 11446
+  },
+  {
+    "Name": "Roccat Kone XP Air Dock",
+    "Publisher": "WhirlwindFX",
+    "Kind": "other",
+    "VendorId": 7805,
+    "ProductId": 11448
+  },
+  {
+    "Name": "Roccat Kone XP Air - Wired",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 7805,
+    "ProductId": 11442
+  },
+  {
+    "Name": "Roccat Kone XP",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 7805,
+    "ProductId": 11403
+  },
+  {
+    "Name": "Roccat Kova Aimo",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 7805,
+    "ProductId": 11505
+  },
+  {
+    "Name": "Roccat Magma",
+    "Publisher": "FeuerSturm",
+    "Kind": "keyboard",
+    "VendorId": 7805,
+    "ProductId": 12580
+  },
+  {
+    "Name": "Roccat Pyro",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 7805,
+    "ProductId": 12620
+  },
+  {
+    "Name": "Roccat Syn Pro Air",
+    "Publisher": "WhirlwindFX",
+    "Kind": "headphones",
+    "VendorId": 7805,
+    "ProductId": 14907
+  },
+  {
+    "Name": "Roccat Torch",
+    "Publisher": "WhirlwindFX",
+    "Kind": "microphone",
+    "VendorId": 7805,
+    "ProductId": 14934
+  },
+  {
+    "Name": "Roccat Vulcan 100",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 7805,
+    "ProductId": 12410
+  },
+  {
+    "Name": "Roccat Vulcan 120",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 7805,
+    "ProductId": 12440
+  },
+  {
+    "Name": "Roccat Vulcan II",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 7805,
+    "ProductId": 12110
+  },
+  {
+    "Name": "Roccat Vulcan II MAX",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 7805,
+    "ProductId": 12002
+  },
+  {
+    "Name": "Roccat Vulcan II Mini Air",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 7805,
+    "ProductId": null
+  },
+  {
+    "Name": "Roccat Vulcan II Mini",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 7805,
+    "ProductId": 12041
+  },
+  {
+    "Name": "Roccat Vulcan Pro",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 7805,
+    "ProductId": 12535
+  },
+  {
+    "Name": "Roccat Vulcan Pro TKL",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 7805,
+    "ProductId": 12570
+  },
+  {
+    "Name": "Roccat Vulcan TKL",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 7805,
+    "ProductId": 12270
+  },
+  {
+    "Name": "Royal Kludge Keyboard",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 9610,
+    "ProductId": null
+  },
+  {
+    "Name": "Royuan Device",
+    "Publisher": "WhirlwindFx",
+    "Kind": "keyboard",
+    "VendorId": 12625,
+    "ProductId": null
+  },
+  {
+    "Name": "Sinowealth Device",
+    "Publisher": "WhirlwindFx",
+    "Kind": "keyboard",
+    "VendorId": 9610,
+    "ProductId": null
+  },
+  {
+    "Name": "Sinowealth Device 2",
+    "Publisher": "WhirlwindFx",
+    "Kind": "keyboard",
+    "VendorId": 9610,
+    "ProductId": null
+  },
+  {
+    "Name": "Skydimo Strip",
+    "Publisher": "WhirlwindFX",
+    "Kind": "lightingcontroller",
+    "VendorId": 6790,
+    "ProductId": null
+  },
+  {
+    "Name": "SONIX Device",
+    "Publisher": "WhirlwindFx",
+    "Kind": "keyboard",
+    "VendorId": 1452,
+    "ProductId": null
+  },
+  {
+    "Name": "SONIX Device 2",
+    "Publisher": "WhirlwindFx",
+    "Kind": "keyboard",
+    "VendorId": 3141,
+    "ProductId": null
+  },
+  {
+    "Name": "Sony Dualsense Controller",
+    "Publisher": "WhirlwindFX",
+    "Kind": "other",
+    "VendorId": 1356,
+    "ProductId": 3302
+  },
+  {
+    "Name": "Sony Dualshock 4",
+    "Publisher": "Rafee/Derek Huber",
+    "Kind": "other",
+    "VendorId": 1356,
+    "ProductId": null
+  },
+  {
+    "Name": "Speedlink ORIOS RGB Gaming Mouse",
+    "Publisher": "FeuerSturm",
+    "Kind": "mouse",
+    "VendorId": 3141,
+    "ProductId": 24321
+  },
+  {
+    "Name": "Speedlink ORIOS RGB Gaming Mousepad",
+    "Publisher": "FeuerSturm",
+    "Kind": "mousepad",
+    "VendorId": 3141,
+    "ProductId": 30269
+  },
+  {
+    "Name": "Speedlink ORIOS RGB Opto-Mech KB",
+    "Publisher": "FeuerSturm",
+    "Kind": "keyboard",
+    "VendorId": 3141,
+    "ProductId": 30270
+  },
+  {
+    "Name": "SteelSeries Aerox Mouse Wired",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 4152,
+    "ProductId": null
+  },
+  {
+    "Name": "SteelSeries Aerox Mouse",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 4152,
+    "ProductId": null
+  },
+  {
+    "Name": "SteelSeries Apex 3",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 4152,
+    "ProductId": 5658
+  },
+  {
+    "Name": "SteelSeries Apex 3 TKL",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 4152,
+    "ProductId": 5666
+  },
+  {
+    "Name": "SteelSeries Apex 9 Mini",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 4152,
+    "ProductId": 5664
+  },
+  {
+    "Name": "SteelSeries Apex 9 TKL",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 4152,
+    "ProductId": 5684
+  },
+  {
+    "Name": "SteelSeries Apex M750 RGB",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 4152,
+    "ProductId": 1558
+  },
+  {
+    "Name": "SteelSeries Apex M750 TKL",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 4152,
+    "ProductId": null
+  },
+  {
+    "Name": "SteelSeries Apex Pro",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 4152,
+    "ProductId": 5648
+  },
+  {
+    "Name": "SteelSeries Apex Pro Mini",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 4152,
+    "ProductId": null
+  },
+  {
+    "Name": "SteelSeries Apex Pro TKL 2023",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 4152,
+    "ProductId": 5672
+  },
+  {
+    "Name": "SteelSeries Apex Pro TKL 2023 Wireless",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 4152,
+    "ProductId": null
+  },
+  {
+    "Name": "SteelSeries Apex Pro TKL",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 4152,
+    "ProductId": 5652
+  },
+  {
+    "Name": "SteelSeries Arctis 5",
+    "Publisher": "WhirlwindFX",
+    "Kind": "headphones",
+    "VendorId": 4152,
+    "ProductId": 4688
+  },
+  {
+    "Name": "SteelSeries Arctis 5",
+    "Publisher": "WhirlwindFX",
+    "Kind": "headphones",
+    "VendorId": 4152,
+    "ProductId": 4778
+  },
+  {
+    "Name": "SteelSeries Arctis Pro GameDAC",
+    "Publisher": "WhirlwindFX",
+    "Kind": "headphones",
+    "VendorId": 4152,
+    "ProductId": 4736
+  },
+  {
+    "Name": "SteelSeries Arctis Pro",
+    "Publisher": "WhirlwindFX",
+    "Kind": "headphones",
+    "VendorId": 4152,
+    "ProductId": 4690
+  },
+  {
+    "Name": "SteelSeries Arena 7",
+    "Publisher": "WhirlwindFX",
+    "Kind": "speakers",
+    "VendorId": 4152,
+    "ProductId": 6656
+  },
+  {
+    "Name": "SteelSeries Arena 9",
+    "Publisher": "WhirlwindFX",
+    "Kind": "speakers",
+    "VendorId": 4152,
+    "ProductId": 6661
+  },
+  {
+    "Name": "Steelseries Device",
+    "Publisher": "WhirlwindFx",
+    "Kind": "keyboard",
+    "VendorId": 4152,
+    "ProductId": null
+  },
+  {
+    "Name": "Steelseries QcK Prism",
+    "Publisher": "WhirlwindFx",
+    "Kind": "mousepad",
+    "VendorId": 4152,
+    "ProductId": null
+  },
+  {
+    "Name": "Steelseries QcK ",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mousepad",
+    "VendorId": 4152,
+    "ProductId": null
+  },
+  {
+    "Name": "SteelSeries Rival 110",
+    "Publisher": "Lisq",
+    "Kind": "mouse",
+    "VendorId": 4152,
+    "ProductId": 5929
+  },
+  {
+    "Name": "SteelSeries Rival 310",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 4152,
+    "ProductId": null
+  },
+  {
+    "Name": "SteelSeries Rival 3 Gen 2",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 4152,
+    "ProductId": 6256
+  },
+  {
+    "Name": "SteelSeries Rival 3",
+    "Publisher": "Rafee",
+    "Kind": "mouse",
+    "VendorId": 4152,
+    "ProductId": 6220
+  },
+  {
+    "Name": "SteelSeries Rival 3",
+    "Publisher": "Rafee",
+    "Kind": "mouse",
+    "VendorId": 4152,
+    "ProductId": 6180
+  },
+  {
+    "Name": "SteelSeries Rival 3 Wireless",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 4152,
+    "ProductId": 6192
+  },
+  {
+    "Name": "SteelSeries Rival 5 Destiny",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 4152,
+    "ProductId": 6206
+  },
+  {
+    "Name": "SteelSeries Rival 5",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 4152,
+    "ProductId": 6204
+  },
+  {
+    "Name": "SteelSeries Rival 600",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 4152,
+    "ProductId": 5924
+  },
+  {
+    "Name": "SteelSeries Rival 650",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 4152,
+    "ProductId": null
+  },
+  {
+    "Name": "SteelSeries Rival 700",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 4152,
+    "ProductId": 5888
+  },
+  {
+    "Name": "SteelSeries Rival 710",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 4152,
+    "ProductId": 5936
+  },
+  {
+    "Name": "SteelSeries Rival Prime",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 4152,
+    "ProductId": 6190
+  },
+  {
+    "Name": "SteelSeries Sensi 310",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 4152,
+    "ProductId": 5922
+  },
+  {
+    "Name": "SteelSeries Sensi Ten",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 4152,
+    "ProductId": 6194
+  },
+  {
+    "Name": "ThermalTake Argent Mouse Bungee",
+    "Publisher": "WhirlwindFX",
+    "Kind": "other",
+    "VendorId": 9802,
+    "ProductId": 32800
+  },
+  {
+    "Name": "ThermalTake Argent MP1 Mousepad",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mousepad",
+    "VendorId": 9802,
+    "ProductId": 36881
+  },
+  {
+    "Name": "ThermalTake DPSG PSU",
+    "Publisher": "WhirlwindFX",
+    "Kind": "other",
+    "VendorId": 9802,
+    "ProductId": 9001
+  },
+  {
+    "Name": "ThermalTake Argent E1 Headphone Stand",
+    "Publisher": "WhirlwindFX",
+    "Kind": "other",
+    "VendorId": 9802,
+    "ProductId": 32770
+  },
+  {
+    "Name": "ThermalTake Argent HS1 Headphone Stand",
+    "Publisher": "WhirlwindFX",
+    "Kind": "other",
+    "VendorId": 9802,
+    "ProductId": 32802
+  },
+  {
+    "Name": "ThermalTake LedBox",
+    "Publisher": "WhirlwindFX",
+    "Kind": "lightingcontroller",
+    "VendorId": 9802,
+    "ProductId": 8508
+  },
+  {
+    "Name": "ThermalTake LedBox Pacific",
+    "Publisher": "Wisey",
+    "Kind": "lightingcontroller",
+    "VendorId": 9802,
+    "ProductId": null
+  },
+  {
+    "Name": "ThermalTake LedBox",
+    "Publisher": "WhirlwindFX",
+    "Kind": "lightingcontroller",
+    "VendorId": 9802,
+    "ProductId": null
+  },
+  {
+    "Name": "ThermalTake Level 20 Desk",
+    "Publisher": "WhirlwindFX",
+    "Kind": "other",
+    "VendorId": 9802,
+    "ProductId": 2001
+  },
+  {
+    "Name": "TT Floe Riing Controller",
+    "Publisher": "ChrisAdkins/WhirlwindFX",
+    "Kind": "lightingcontroller",
+    "VendorId": 9802,
+    "ProductId": null
+  },
+  {
+    "Name": "ThermalTake Riing Controller",
+    "Publisher": "ButtonBright",
+    "Kind": "lightingcontroller",
+    "VendorId": 9802,
+    "ProductId": null
+  },
+  {
+    "Name": "Thermalright Device",
+    "Publisher": "WhirlwindFx",
+    "Kind": "lcd",
+    "VendorId": 34733,
+    "ProductId": 28891
+  },
+  {
+    "Name": "Turtle Beach AIMO Pad Wide",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mousepad",
+    "VendorId": 4341,
+    "ProductId": 20518
+  },
+  {
+    "Name": "Turtle Beach Kone II",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 4341,
+    "ProductId": 20488
+  },
+  {
+    "Name": "Turtle Beach Kone XP Air Dock",
+    "Publisher": "WhirlwindFX",
+    "Kind": "other",
+    "VendorId": 4341,
+    "ProductId": 20505
+  },
+  {
+    "Name": "Turtle Beach Kone XP Air",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 4341,
+    "ProductId": 20503
+  },
+  {
+    "Name": "Turtle Beach Kone XP Air",
+    "Publisher": "WhirlwindFX",
+    "Kind": "mouse",
+    "VendorId": 4341,
+    "ProductId": 20501
+  },
+  {
+    "Name": "Turtle Beach Vulcan II",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 4341,
+    "ProductId": 20507
+  },
+  {
+    "Name": "Turtle Beach Vulcan II MAX",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 4341,
+    "ProductId": 20508
+  },
+  {
+    "Name": "Turtle Beach Vulcan II Mini Air",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 4341,
+    "ProductId": null
+  },
+  {
+    "Name": "Turtle Beach Vulcan TKL",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 4341,
+    "ProductId": 20515
+  },
+  {
+    "Name": "Turzx Device",
+    "Publisher": "WhirlwindFx",
+    "Kind": "lcd",
+    "VendorId": 6790,
+    "ProductId": null
+  },
+  {
+    "Name": "Turzx LCD 2.1",
+    "Publisher": "WhirlwindFx",
+    "Kind": "lcd",
+    "VendorId": 7531,
+    "ProductId": null
+  },
+  {
+    "Name": "Turzx LCD Screen 8.8",
+    "Publisher": "WhirlwindFX",
+    "Kind": "lcd",
+    "VendorId": 7358,
+    "ProductId": 136
+  },
+  {
+    "Name": "ViewSonic XG270",
+    "Publisher": "K15H3N & SignalRGB",
+    "Kind": "other",
+    "VendorId": 1046,
+    "ProductId": 20512
+  },
+  {
+    "Name": "Wooting 60 HE",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 12771,
+    "ProductId": null
+  },
+  {
+    "Name": "Wooting 80 HE",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 12771,
+    "ProductId": null
+  },
+  {
+    "Name": "Wooting One Keyboard",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 1003,
+    "ProductId": 65281
+  },
+  {
+    "Name": "Wooting Two HE",
+    "Publisher": "twelveroses",
+    "Kind": "keyboard",
+    "VendorId": 12771,
+    "ProductId": null
+  },
+  {
+    "Name": "Xiaohua Device",
+    "Publisher": "WhirlwindFx",
+    "Kind": "keyboard",
+    "VendorId": 11912,
+    "ProductId": null
+  },
+  {
+    "Name": "XPG Summoner",
+    "Publisher": "WhirlwindFX",
+    "Kind": "keyboard",
+    "VendorId": 4703,
+    "ProductId": 37912
+  },
+  {
+    "Name": "Zalman ZSYNC",
+    "Publisher": "Vermis",
+    "Kind": "lightingcontroller",
+    "VendorId": 7255,
+    "ProductId": 32464
+  },
+  {
+    "Name": "DRGB Controller",
+    "Publisher": "DRGB",
+    "Kind": "lightingcontroller",
+    "VendorId": 8227,
+    "ProductId": null
+  },
+  {
+    "Name": "DRGB V3",
+    "Publisher": "DRGB",
+    "Kind": "lightingcontroller",
+    "VendorId": 8227,
+    "ProductId": null
+  },
+  {
+    "Name": "DRGB Controller",
+    "Publisher": "DRGB",
+    "Kind": "lightingcontroller",
+    "VendorId": 9350,
+    "ProductId": null
+  },
+  {
+    "Name": "JPU ELITE",
+    "Publisher": "JPU CABLE",
+    "Kind": "lightingcontroller",
+    "VendorId": 8227,
+    "ProductId": null
+  },
+  {
+    "Name": "NEEDMAX ELITE",
+    "Publisher": "NEEDMAX",
+    "Kind": "lightingcontroller",
+    "VendorId": 8227,
+    "ProductId": null
+  },
+  {
+    "Name": "YICO",
+    "Publisher": "YICO",
+    "Kind": "lightingcontroller",
+    "VendorId": 4968,
+    "ProductId": null
+  },
+  {
+    "Name": "YICO 16",
+    "Publisher": "YICO",
+    "Kind": "lightingcontroller",
+    "VendorId": 9350,
+    "ProductId": null
+  }
+]
