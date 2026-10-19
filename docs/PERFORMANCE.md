@@ -1,52 +1,48 @@
-# CPU / GPU measurements — 0.2.0
+# Measured resource use — 0.3.0
 
-Measured on 2026-10-19 using Windows build 26200, Ryzen 9 5900XT (32 logical processors), RTX 4070 Ti, a 1340x875 DIP window, and 15% effect brightness. This is one PC and short observations, not a universal resource guarantee.
+Measured on 2026-10-19: Ryzen 9 5900XT (32 logical processors), Gigabyte RTX 4070 Ti Gaming OC, MSI B550M PRO-VDH WIFI with two configured 60-pixel ARGB chains, Windows build 26200, and a 1340x875 DIP window. The owner separately confirmed visible motherboard and GPU color tests.
 
-Each scenario has a four-second warmup and approximately **20 seconds** of process CPU measurement. GPU samples are Windows `GPU Engine` utilization counters filtered to the app's process, summed across its engines. They cover roughly the same steady period, at about two-second intervals (the counter read also waits for a sample). CPU is process CPU time divided by elapsed wall time and logical processor count; the one-core column makes the normalization explicit.
+Each scenario warms up for four seconds, then measures about **20 seconds** of process CPU time. Brightness is 15% except the separate Rainbow hardware case at 70%. GPU samples are Windows `GPU Engine` counters for the app process, summed across its engines at roughly two-second intervals. The GPU observation window is approximately the same steady period as the CPU measurement.
 
-| Scenario | Total CPU | One-core equivalent | Mean app GPU engine sum | USB writes / measured period | Working set MiB |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| Animated preview visible | 0.185% | 5.93% | 0.000% | 0 | 253 |
-| Solid preview visible | 0.000% | 0.00% | 0.000% | 0 | 239 |
-| Hidden, output off | 0.000% | 0.00% | 0.000% | 0 | 233 |
-| Screen ambience preview | 0.173% | 5.54% | 0.000% | 0 | 270 |
-| MSI animation, window hidden | 0.049% | 1.56% | 0.000% | 141 | 238 |
-| MSI Solid, window hidden | 0.000% | 0.00% | 0.000% | 0 | 239 |
+| Scenario | Total CPU | One-core equivalent | Mean app GPU | Scene/preview frames per second | USB writes | GPU I2C writes |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Motherboard + GPU, Aurora, hidden | 0.041% | 1.33% | 0.000% | 30.0 | 601 | 274 |
+| Motherboard + GPU, Rainbow 70%, hidden | 0.063% | 2.03% | 0.000% | 30.0 | 600 | 819 |
+| Motherboard + GPU, Solid, hidden | 0.000% | 0.00% | 0.000% | 0.0 | 0 | 0 |
+| Aurora preview visible | 0.085% | 2.73% | 0.000% | 7.7 | 0 | 0 |
+| Solid preview visible | 0.000% | 0.00% | 0.000% | 0.0 | 0 | 0 |
+| Hidden, output off | 0.000% | 0.00% | 0.000% | 0.0 | 0 | 0 |
+| Screen ambience preview | 0.181% | 5.78% | 0.000% | 1.8 | 0 | 0 |
 
-Zero CPU means no additional CPU time at the process timer's resolution during that observation. Zero GPU means no nonzero app-engine activity was observed, including when a software-rendered process has no GPU-engine instances. Windows desktop composition and screen readback may still use GPU resources outside this process. These numbers do not prove zero system-wide GPU cost. The preview uses WPF SoftwareOnly; it does not request GPU-accelerated WPF rendering.
+CPU percentages divide process CPU time by wall time and 32 logical processors. The one-core equivalent makes that normalization explicit. Zero CPU means no additional CPU time at the timer's measurement resolution during that observation. Zero GPU means no nonzero app-engine activity was observed, including when a software-rendered process has no GPU-engine instances. Windows composition and screen readback can use GPU resources outside this process. These observations do not measure total system energy use or guarantee identical results on other PCs.
 
-The hardware scenarios used the real supported MSI controller and all four header outputs, then restored their original colors/modes. Solid's initial update occurs during warmup: zero measured writes means no repeated traffic afterward. Animated output attempts eight frames/second but suppresses identical packets. Preview frames stop while hidden. Screen ambience made roughly 34 captures in 20 seconds in this run because of timer/worker scheduling; two/second is a ceiling.
+Hardware rows use the real supported MSI and Gigabyte controllers. The animation rate counts scene updates; identical reports can be skipped. GPU writes are individual eight-byte register transactions, not complete GPU frames. Solid's initial output and GPU mode setup occur during warmup, so zero measured writes means no repetition afterward. Cleanup clears streamed colors, waits for GPU work, and verifies the original motherboard configuration. Earlier external pixel scenes/GPU colors cannot be recovered.
 
-The older 0.1.0 animated preview measured **0.561% CPU and 0.554% mean app GPU** in a separate approximately 21-second observation on the same PC. Its default renderer and roughly 30 Hz preview differed from the new software-rendered 8 Hz preview. These are illustrative single-run observations; other desktop activity and timing differed. They are not a controlled benchmark or a promise of a fixed improvement.
-
-Raw values, counts, durations, and the baseline are in [performance-results.json](performance-results.json). Memory is reported for transparency; this WPF app is optimized for low ongoing CPU/GPU work, and its desktop runtime still occupies memory.
+Raw values, exact durations, sample counts, and working sets are in [performance-results.json](performance-results.json). The desktop runtime still occupies memory; this work targets low ongoing CPU/GPU processing. Only this setup and these short observations are represented. The 0.2.0 readback-only results did not establish visible ARGB output and are not used as proof of functioning lighting.
 
 ## Reproduce
 
-From the repository root with Windows, .NET 10 SDK, and PowerShell 7:
+Use Windows, .NET 10 SDK, and PowerShell 7 in the repository root:
 
 ```powershell
 ./scripts/build.ps1
 ./scripts/measure.ps1
 ```
 
-Default scenarios do not enable hardware. The script opens the actual app window for visible-preview scenarios and closes it afterward. Results go to a unique `dist/performance-*` folder. Missing/unreadable GPU counters are reported as null rather than a measured zero.
+Default scenarios do not enable hardware. They open the actual app for visible-preview cases and close it afterward. The script saves results in a unique `dist/performance-*` folder. Missing/unreadable GPU counters are null.
 
-For actual supported MSI output, exit competing RGB controllers first and explicitly run:
+Explicit hardware cases change both supported controllers and clear/restore afterward. Close competing RGB apps first:
 
 ```powershell
-./scripts/measure.ps1 -Scenarios hardware-animated,hardware-solid
+./scripts/measure.ps1 -Scenarios hardware-animated,hardware-solid,hardware-rainbow
 ```
 
-These hardware scenarios change all four headers for about 24 seconds each, then restore them. The app keeps output disabled on ordinary launch. Close mode, screen protection, display setup, window size, and effect can alter measurements. A separate bounded `--test-msi <result.json>` diagnostic checks dim test colors and restored header readback; physical LED appearance requires user observation.
+## Scheduling and limits
 
-## How ongoing work is reduced
+- A scoped high-resolution Windows waitable timer targets 30 motherboard frames/second independently of WPF. Its thread sleeps in the kernel, coalesces queued UI callbacks, and stops on static/idle output. It does not request a global timer period or change system power settings.
+- GPU I/O coalesces the latest colors on a separate worker, capped at 15 Hz. Only changed register payloads are sent, and mode setup runs once per output session.
+- Preview drawing is capped at 8 Hz and stops while hidden/minimized or on another page.
+- Static scenes send changed colors once and leave no periodic frame loop running. Screen ambience samples at most twice/second only while needed.
+- Palette/style/grid/label resources are cached. Desktop capture downsamples directly into a 32x18 bitmap rather than allocating a full-desktop bitmap.
 
-- A shared effect timer runs at most eight times/second while needed; idle/static scenes stop it entirely.
-- Hidden/minimized/inactive preview pages stop animation. Background hardware effects continue independently.
-- Repeated identical reports produce no USB write. There is one frame in flight and no backlog.
-- Process-conflict scans are throttled to two seconds during animation and checked again on connect/start/restore.
-- Palette parsing, static brushes, background grid, and labels are cached.
-- Primary-screen color sampling downsamples directly to 32x18 pixels instead of allocating a full-resolution desktop bitmap.
-
-Rendering reference: [Microsoft RenderOptions.ProcessRenderMode](https://learn.microsoft.com/en-us/dotnet/api/system.windows.media.renderoptions.processrendermode). Feature buffers follow [Microsoft HidD_GetFeature](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/hidsdi/nf-hidsdi-hidd_getfeature) and [HidD_SetFeature](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/hidsdi/nf-hidsdi-hidd_setfeature), with the individual report size checked using HID value capabilities.
+Implementation and scope are in [architecture](ARCHITECTURE.md). Relevant platform references: [Windows waitable timer creation](https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-createwaitabletimerexw), [WPF software rendering](https://learn.microsoft.com/en-us/dotnet/api/system.windows.media.renderoptions.processrendermode), and [NVIDIA driver API](https://github.com/NVIDIA/nvapi).

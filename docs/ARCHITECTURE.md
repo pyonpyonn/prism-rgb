@@ -1,39 +1,47 @@
-# Prism RGB source guide
+# Native lighting architecture — 0.3.0
 
-Prism is a standalone C# WPF/Windows Forms app targeting .NET 10. It has no network backend, service, vendor app dependency, or third-party NuGet package. Portable releases bundle the Microsoft desktop runtime and notices.
+Prism is a C# WPF/Windows Forms app targeting .NET 10, without a network backend, browser engine, vendor app dependency, or third-party NuGet package. The portable build bundles Microsoft's desktop runtime and notices. GPU access loads the installed system `nvapi64.dll`.
 
 | Source | Responsibility |
 | --- | --- |
-| App.xaml / App.xaml.cs | Styling, startup, software rendering, diagnostic entry points |
-| MainWindow.cs | Pages, tray, output lifecycle, activity-based scheduling, benchmark hook |
-| Models.cs | Scene/profile validation, persistence, independently written effects |
-| LightingSurface.cs | Cached drawing resources, scene dragging, tiny desktop downsample |
-| Hardware.cs | HID enumeration, descriptor validation, native transport and MSI protocol |
-| Diagnostics.cs | Read-only inspection and explicit brief hardware/readback test |
-| SelfTests.cs | Protocol/lifecycle tests using fake native transport |
+| App.xaml / App.xaml.cs | Styling, startup, software rendering, diagnostic modes |
+| MainWindow.cs | Studio/devices/profiles/catalog/settings, tray, lifecycle, scheduling, interface checks |
+| Models.cs | Persistence/normalization, scene effects, per-output pixel sampling and overrides |
+| LightingSurface.cs | Cached preview drawing, layout dragging, tiny desktop sample |
+| HardwareFrameClock.cs | Scoped native frame timing, cancellation, bounded callbacks |
+| Hardware.cs | Read-only HID enumeration, exact descriptor checks, MSI stream routing and transport |
+| GigabyteGpu.cs | Exact GPU identification, constrained NVAPI I2C access, GPU protocol, combined scheduler |
+| Diagnostics.cs | Read-only inspection and bounded visible hardware tests |
+| SelfTests.cs | Fake transports, packet boundaries, failure/cleanup/concurrency and sampling checks |
 
-## Scheduling and rendering
+## Scheduling
 
-Effects map normalized `(x,y,time)` to color; global brightness applies last. Parsed palette colors are cached per thread. A 125 ms dispatcher timer exists only while animated preview/output, needed screen capture, or dirty output requires it. Hidden/minimized or inactive-page preview is not rendered. Solid output sends changes once and leaves the effect timer stopped. Settings changes wake it; duplicate reports are suppressed by the backend.
+A scoped high-resolution Windows waitable timer runs the motherboard cadence at 30 Hz independently of WPF timers. Its worker sleeps in the kernel and posts at most one pending UI callback; no global timer period or system power setting is changed. Stop cancels and joins the worker, so static and idle scenes have no frame-clock wakeups. There is one motherboard frame in flight. GPU work is separate, capped at 15 Hz, with one pending latest color array instead of a backlog. A GPU error raises an event even if a static scene has stopped the main timer. Stop drops pending GPU frames, awaits in-flight work, clears colors, and restores board configuration before disposing handles.
 
-WPF is set to `SoftwareOnly`. The drawing caches frozen background/grid/style brushes and bounded label resources. The maximum animation rate is 8 Hz, favoring low resource use over high frame-rate smoothness. Screen capture uses GDI StretchBlt directly into a 32x18 bitmap, at most twice/second; no full-desktop bitmap is allocated. Windows composition/capture may still involve GPU work.
+Preview redraws are capped at 8 Hz and stop on hidden/minimized/inactive pages. Static output sleeps between settings changes. Complete duplicate packets and unchanged GPU register payloads are suppressed. GPU lighting mode is initialized once per output session. No permanent GPU polling loop runs when there is no pending work. Color parsing and drawing resources are cached. Screen sampling uses StretchBlt directly into 32x18 pixels at most twice/second.
 
-One output frame is in flight, with no unbounded queue. USB operations are serialized by a semaphore on worker tasks. Process conflicts are checked on connect/start/restore and at most every two seconds during animated output. Static output has no conflict-polling loop; its next write checks again. This is a best-effort process-name check, not an exclusive hardware lock.
+WPF uses SoftwareOnly. Windows composition and screen readback may still consume GPU resources outside the app. [Measurements](PERFORMANCE.md) report observations and their limits.
 
-## Native MSI transport
+## MSI protocol
 
-The target must match board B550M PRO-VDH WIFI (MS-7C95), VID/PID 1462:7C95, usage page 1 / usage 0, maximum feature length 725, and one 8-bit value array for report 0x52 with 184 data bytes. `HidP_GetValueCaps` validates the individual report size. Windows feature calls use the collection's 725-byte buffer, with report ID 0x52 selecting the 185-byte lighting report and zero padding for the API buffer.
+Recognition requires the exact board name, VID/PID 1462:7C95, usage page 1 / usage 0, maximum feature length 725, an 8-bit report 0x52 with 184 data bytes, and report 0x53 with 724 data bytes. The API buffer is allocated at collection maximum; writes use the selected report's actual length (185 or 725). Connection only reads configuration.
 
-Connection reads the original report without writing. Frames clone that snapshot, change selected header mode/color fields at offsets 1, 174, 31, and 42, and clear byte 184 (no flash save). No 0x53 report, firmware command, per-LED probe, or header configuration command is emitted.
+The 0.2.0 adapter changed mode/color fields in report 0x52 and verified them by reading back. The owner reported no visible color change. Working output requires both a correctly routed configuration and report 0x53 pixel data. The visible compact test confirmed that combination; independent-port writes without the correct controller-wide route did not work on the tested setup.
 
-Stop/Quit sends the saved report with its no-save flag cleared, allows 250 ms for controller processing, then verifies all four original mode/color fields. Full report identity is not guaranteed: live tests observed firmware changing unused byte 62. Earlier per-LED streams cannot be reconstructed from the header snapshot. API/readback success does not establish physical wiring or visible LED appearance.
+Compact frames begin 53/25/06/00/00, then RGB1, RGB2, JRAINBOW1 pixels, JRAINBOW2 pixels as RGB triples. The combined ARGB count is at most 232 in this mode. Configuration retains unrelated fields while setting both ARGB lengths/options, analog routing, and the controller-wide selector at offsets 74/78/82. The high-capacity route switches both ARGB modes and the selector together, then uses 53/25/04 port packets and a separate analog packet. Per-header bounds are 1–120; high-capacity physical coverage remains unverified.
 
-Failed reads dispose the handle. Failed writes fault the backend and retain restoration responsibility even if the API reports failure; reconnect is required for further output. Disconnect restores then disposes. Unexpected unplugging or another controller taking ownership can prevent restoration.
+Controller ownership covers all motherboard outputs. Unchecked outputs are black while streaming. No flash save is requested (configuration byte 184 stays zero), and no firmware, BIOS, or fan command is emitted. Stop clears streamed pixels, sends the saved configuration, waits 250 ms, and verifies header fields. An earlier external per-LED stream cannot be reconstructed; unused byte 62 can be normalized by firmware.
 
-The close event cancels first and queues cleanup on the dispatcher, allowing WPF to finish its initial Closing event before final Close. UI verification exercises this actual close path to prevent recursive-close errors.
+## Gigabyte RTX 4070 Ti
 
-## Extending support
+The adapter requires NVAPI PCI ID 278210DE and subsystem 40C61458, then checks the response to the known eight-byte identity query at internal I2C address 0x71 on port 1. Mode/color commands remain disabled until identity verification succeeds. It uses the installed NVIDIA driver with the 64-byte version-3 I2C structure and internal I2CReadEx/I2CWriteEx entries; these are undocumented driver interfaces and may change across driver versions.
 
-Add independently written native adapters behind `ILightingBackend` with strict identification, protocol fixtures, bounded writes, restoration, and disposal. `IMsiTransport` isolates physical I/O from tests. Do not broaden the MSI whitelist merely because another board shares a PID. The descriptive reference catalog is not a driver.
+Every controller write is exactly eight bytes and checked against a narrow allowlist: static lighting mode commands and the known fan/logo color registers only. This avoids the incorrect-write-length issue noted by the inspected protocol. Three fan colors map to zone 0; the logo maps to zone 3. Unused pixel payloads are zeroed. Unchanged payloads are cached, so routine updates typically touch only changed color registers. GPU fan speed, power limits, sensors, firmware, and clocks are outside the adapter.
 
-General SignalRGB plugin execution, per-LED support, audio/game/LCD services, and other board families remain separate work. REA and SignalRGB are research tools/references; they are not runtime dependencies. [Inspection evidence](INSPECTION.md).
+GPU state is not readable as a complete prior scene. Stop clears the controlled GPU lights; it does not claim to restore their earlier colors or effects. A missing/unsupported GPU does not block MSI connection. Runtime GPU I/O errors stop output and require reconnection.
+
+## Tests and extension
+
+Core checks use fake USB/GPU transports, including queued-frame shutdown, static-scene error notification, packet allowlists, routing, bounds, ordering, duplicate suppression, and cleanup. Interface checks use fake connected devices to validate counts, direction, pixel editor population, GPU names, navigation/profiles, idle behavior, and closing. They do not issue real lighting writes.
+
+Extend support using independently written protocols, strict identification, constrained I/O, tests, and explicit cleanup. The reference catalog is descriptive metadata rather than executable drivers. Original SignalRGB scripts, account data, installation inventories, and raw private logs are excluded.

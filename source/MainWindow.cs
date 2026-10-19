@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -21,10 +22,11 @@ public sealed class MainWindow : Window
     readonly LightingSurface surface=new(); readonly DispatcherTimer timer=new(){Interval=TimeSpan.FromMilliseconds(125)};
     readonly DispatcherTimer saveTimer=new(){Interval=TimeSpan.FromMilliseconds(700)};
     readonly Stopwatch watch=Stopwatch.StartNew();
+    readonly HardwareFrameClock frameClock=new();readonly object hardwareTick=new();int pendingHardwareTick;
     readonly List<Button> navButtons=new();
     ILightingBackend? backend; System.Windows.Forms.NotifyIcon? tray;
     List<HidDevice> usbDevices=new(); List<CatalogEntry> catalog=new();
-    bool busy,writing,output,paused,closing,windowClosed,refreshing,screenBusy,outputDirty; double lastScreen,seconds;
+    bool busy,writing,output,paused,closing,windowClosed,refreshing,screenBusy,outputDirty; double lastScreen,lastPreview,seconds;
     public long PreviewFrames {get;private set;}
     public long OutputFrames {get;private set;}
     public long ScreenCaptures {get;private set;}
@@ -55,7 +57,7 @@ public sealed class MainWindow : Window
         var rail=new DockPanel{LastChildFill=true,Margin=new Thickness(0)};
         var railBox=new Border{Background=B("#151C20"),BorderBrush=B("#283338"),BorderThickness=new Thickness(0,0,1,0),Child=rail};root.Children.Add(railBox);
         var logo=V(T("◈  PRISM",25,"#DCEFE6",true),Small("YOUR LIGHT. YOUR SPACE."));logo.Margin=new Thickness(25,30,0,35);DockPanel.SetDock(logo,Dock.Top);rail.Children.Add(logo);
-        var bottom=V(Box(V(T("STANDALONE · LOW POWER",10,"#83E1C2",true),Gap(7),Small("Direct MSI USB control.\nYour profiles stay on this PC.")),"#1D2A2B",new Thickness(13)),Gap(12),Small("PRISM RGB   /   0.2.0"));bottom.Margin=new Thickness(16,0,16,22);DockPanel.SetDock(bottom,Dock.Bottom);rail.Children.Add(bottom);
+        var bottom=V(Box(V(T("STANDALONE · LOW POWER",10,"#83E1C2",true),Gap(7),Small("Direct MSI USB control.\nYour profiles stay on this PC.")),"#1D2A2B",new Thickness(13)),Gap(12),Small("PRISM RGB   /   0.3.0"));bottom.Margin=new Thickness(16,0,16,22);DockPanel.SetDock(bottom,Dock.Bottom);rail.Children.Add(bottom);
         var navigation=V();foreach(var (name,icon) in new[]{("Studio","◉"),("Devices","▦"),("Profiles","▤"),("Compatibility","⌕"),("Settings","⚙")})
         {
             var nameCopy=name;var button=Btn($"{icon}    {name}",()=>Navigate(nameCopy));button.Tag=name;button.HorizontalContentAlignment=HorizontalAlignment.Left;button.Background=Brushes.Transparent;button.Margin=new Thickness(12,3,12,3);navButtons.Add(button);navigation.Children.Add(button);
@@ -71,6 +73,11 @@ public sealed class MainWindow : Window
         footer.FontSize=11;footer.TextWrapping=TextWrapping.Wrap;footer.Foreground=B("#94AAA2");footer.Margin=new Thickness(0,16,0,0);DockPanel.SetDock(footer,Dock.Bottom);main.Children.Add(footer);
         main.Children.Add(content);
         surface.State=prefs.Studio;surface.LayoutChanged+=ScheduleSave;
+        frameClock.Failed+=exception=>
+        {
+            if(closing || Dispatcher.HasShutdownStarted)return;
+            Dispatcher.BeginInvoke(new Action(async()=>{await StopAsync();SetNote("Lighting timer stopped: "+exception.Message);}));
+        };
         timer.Tick+=Tick;saveTimer.Tick+=(_,_)=>{saveTimer.Stop();Save();};
         LoadCatalog();Navigate("Studio");
         Loaded+=async(_,_)=>await ScanUsbAsync();
@@ -155,22 +162,45 @@ public sealed class MainWindow : Window
     UIElement DevicesPage()
     {
         var stack=V();
-        var direct=V(T("MSI motherboard · standalone",18,"#E7F3EC",true),Gap(8),Small("B550M PRO-VDH WIFI (MS-7C95). Direct Windows USB control with one color per RGB / ARGB header. Animated output is capped at 8 updates/second; unchanged colors are sent once."),Gap(14));
-        var directBtn=Btn(backend is MsiBackend?"Connected":"Connect MSI headers",async()=>await ConnectAsync());directBtn.IsEnabled=!busy && backend is null;direct.Children.Add(directBtn);connectButton=directBtn;
+        var direct=V(T("MSI ARGB + Gigabyte GPU",18,"#E7F3EC",true),Gap(8),Small("Direct control of B550M PRO-VDH WIFI headers and the supported Gigabyte RTX 4070 Ti. Individual ARGB colors, saved LED counts, and 30 Hz hardware effects. Preview rendering stays at 8 Hz."),Gap(14));
+        var directBtn=Btn(backend is not null?"Connected":"Connect lighting",async()=>await ConnectAsync());directBtn.IsEnabled=!busy && backend is null;direct.Children.Add(directBtn);connectButton=directBtn;
         stack.Children.Add(Box(direct));
-        stack.Children.Add(Gap(12));stack.Children.Add(Small("Close SignalRGB and other lighting software before connecting. Connecting reads the current state; Start lighting enables output."));stack.Children.Add(Gap(20));
+        stack.Children.Add(Gap(12));stack.Children.Add(Small("Close other RGB apps before connecting. Start lighting enables output. Unchecked motherboard headers are dark while Prism controls the motherboard; Stop clears streamed pixels and restores its configuration."));stack.Children.Add(Gap(20));
         if(backend is not null)
         {
             var header=new Grid();header.ColumnDefinitions.Add(new());header.ColumnDefinitions.Add(new(){Width=GridLength.Auto});header.Children.Add(T($"{backend.Devices.Count} lighting outputs",17,"#E6F0EA",true));
             var disconnect=Btn("Disconnect",async()=>await DisconnectAsync());disconnect.IsEnabled=!busy;Grid.SetColumn(disconnect,1);header.Children.Add(disconnect);stack.Children.Add(header);stack.Children.Add(Gap(8));
-            foreach(var d in backend.Devices)
+            foreach(var d in backend.Devices.OrderBy(d=>d.Id==100?0:d.Id>=2?1:2).ThenBy(d=>d.Id))
             {
-                var line=V();var enabled=new CheckBox{Content=$"{d.Name}   ·   {d.LedCount} LED{(d.LedCount==1?"":"s")}",IsChecked=d.Placement.Enabled};
+                string units=d.Id==100?"lighting zones":d.LedCount==1?"LED":"LEDs";
+                var line=V();var enabled=new CheckBox{Content=$"{d.Name}   ·   {d.LedCount} {units}",IsChecked=d.Placement.Enabled};
                 enabled.IsEnabled=!output;enabled.ToolTip=output?"Stop lighting to change the selected outputs.":null;
                 enabled.Checked+=(_,_)=>{d.Placement.Enabled=true;ScheduleSave();};enabled.Unchecked+=(_,_)=>{d.Placement.Enabled=false;ScheduleSave();};line.Children.Add(enabled);
                 line.Children.Add(Small("POSITION IN SCENE"));var sliders=new Grid();for(int i=0;i<3;i++)sliders.ColumnDefinitions.Add(new());
                 AddPosition(sliders,"Horizontal",d.Placement.X,v=>d.Placement.X=v,0);AddPosition(sliders,"Vertical",d.Placement.Y,v=>d.Placement.Y=v,1);
+                if(d.Id>=2)AddPosition(sliders,"LED span",d.Placement.Span,v=>d.Placement.Span=v,2);
                 line.Children.Add(sliders);var card=Box(line,"#192126",new Thickness(15,8,15,0));card.Margin=new Thickness(0,4,0,4);stack.Children.Add(card);
+                if(d.Id is 2 or 3)
+                {
+                    var count=new TextBox{Text=d.LedCount.ToString(),Width=65,MaxLength=3,Margin=new Thickness(8,0,8,0),IsEnabled=!output};
+                    var apply=Btn("Apply count",()=>
+                    {
+                        if(!int.TryParse(count.Text,out var value) || value<1 || value>120){SetNote("Enter an LED count from 1 to 120 for this header.");return;}
+                        d.LedCount=value;d.Placement.LedCount=value;
+                        foreach(int index in d.Placement.LedColors.Keys.Where(i=>i>=value).ToArray())d.Placement.LedColors.Remove(index);
+                        ScheduleSave();Navigate("Devices");
+                    });apply.IsEnabled=!output;
+                    var countRow=new StackPanel{Orientation=Orientation.Horizontal};countRow.Children.Add(T("LED count",12));countRow.Children.Add(count);countRow.Children.Add(apply);line.Children.Add(countRow);
+                    var reverse=new CheckBox{Content="Reverse effect direction",IsChecked=d.Placement.Reverse};
+                    reverse.Checked+=(_,_)=>{d.Placement.Reverse=true;ScheduleSave();};reverse.Unchecked+=(_,_)=>{d.Placement.Reverse=false;ScheduleSave();};line.Children.Add(reverse);
+                    var editor=new Expander{Header="Choose colors for individual LEDs",Foreground=B("#DCE8E2"),Margin=new Thickness(0,5,0,12)};
+                    editor.Expanded+=(_,_)=>{if(editor.Content is null)editor.Content=PixelEditor(d);};line.Children.Add(editor);
+                }
+                else if(d.Id==100)
+                {
+                    var editor=new Expander{Header="Choose individual fan and logo colors",Foreground=B("#DCE8E2"),Margin=new Thickness(0,5,0,12)};
+                    editor.Expanded+=(_,_)=>{if(editor.Content is null)editor.Content=PixelEditor(d);};line.Children.Add(editor);
+                }
             }
             startButton=Btn(output?"Stop & restore":"Start lighting",async()=>{if(output)await StopAsync();else StartOutput();},true);startButton.Margin=new Thickness(0,12,0,0);stack.Children.Add(startButton);
         }
@@ -186,6 +216,29 @@ public sealed class MainWindow : Window
     void AddPosition(Grid parent,string name,double value,Action<double> set,int col)
     {
         var s=new Slider{Value=value*100,Margin=new Thickness(0,5,12,10)};s.ValueChanged+=(_,_)=>{set(s.Value/100);ScheduleSave();};var p=V(Small(name),s);Grid.SetColumn(p,col);parent.Children.Add(p);
+    }
+    UIElement PixelEditor(OutputDevice device)
+    {
+        var wrap=new WrapPanel{Margin=new Thickness(0,8,0,8)};
+        for(int i=0;i<device.LedCount;i++)
+        {
+            int index=i;
+            string name=i<device.PixelNames.Length?device.PixelNames[i]:(i+1).ToString();
+            var button=Btn(name,()=>{});button.MinWidth=40;button.Height=32;button.Padding=new Thickness(7,0,7,0);button.Margin=new Thickness(2);
+            if(device.Placement.LedColors.TryGetValue(i,out var hex))button.Background=B(hex);
+            button.ToolTip=$"{name}: click to override its effect color";
+            button.Click+=(_,_)=>
+            {
+                using var picker=new System.Windows.Forms.ColorDialog{FullOpen=true};
+                var initial=device.Placement.LedColors.TryGetValue(index,out var color)?Effects.Parse(color):Effects.Parse(prefs.Studio.Color);
+                picker.Color=System.Drawing.Color.FromArgb(initial.R,initial.G,initial.B);
+                if(picker.ShowDialog()!=System.Windows.Forms.DialogResult.OK)return;
+                string selected=$"#{picker.Color.R:X2}{picker.Color.G:X2}{picker.Color.B:X2}";
+                device.Placement.LedColors[index]=selected;button.Background=B(selected);ScheduleSave();
+            };
+            wrap.Children.Add(button);
+        }
+        return V(Small("Each entry overrides one LED or named GPU lighting zone. Global brightness applies to these colors."),wrap,Btn("Return all LEDs to the effect",()=>{device.Placement.LedColors.Clear();ScheduleSave();Navigate("Devices");}));
     }
     UIElement ProfilesPage()
     {
@@ -234,7 +287,7 @@ public sealed class MainWindow : Window
         var minimize=new CheckBox{Content="Keep running in the system tray when I close the window",IsChecked=prefs.MinimizeToTray};minimize.Checked+=(_,_)=>{prefs.MinimizeToTray=true;ScheduleSave();};minimize.Unchecked+=(_,_)=>{prefs.MinimizeToTray=false;ScheduleSave();};
         var panel=V(Box(V(T("Desktop behavior",18,"#E5EEE8",true),Gap(12),minimize,Small("Use Quit in the tray menu to stop lighting, restore the previous state, and exit."))),Gap(18),
             Box(V(T("Your workspace",18,"#E5EEE8",true),Gap(10),Small("Profiles and preferences are stored locally. Hardware output always starts disabled."),Gap(12),Btn("Open profile folder",()=>{Directory.CreateDirectory(Storage.DirectoryPath);Process.Start(new ProcessStartInfo(Storage.DirectoryPath){UseShellExecute=true});}),Gap(12),Btn("Reset virtual layout",()=>{prefs.Studio.Layout=StudioState.Defaults();surface.State=prefs.Studio;ScheduleSave();SetNote("Virtual layout reset.");}))),Gap(18),
-            Box(V(T("About Prism RGB",18,"#E5EEE8",true),Gap(10),Small("Version 0.2.0 · Standalone Windows desktop\nDirect MSI control with independent effects and interface.\n\nLow-power mode is always on: maximum 8 effect updates/second, software-rendered preview, no hidden preview animation, and no repeated USB writes for unchanged colors. Solid lighting sleeps between changes. Screen ambience captures a small desktop sample twice/second.\n\nIncluded: seven effects, draggable preview, profiles, USB discovery, and four MSI header colors. Other devices require future native adapters."),Gap(12),Btn("Open inspection report",()=>OpenReport()))));
+            Box(V(T("About Prism RGB",18,"#E5EEE8",true),Gap(10),Small("Version 0.3.0 · Standalone Windows desktop\nDirect MSI control with independent effects and interface.\n\nLow-power mode is always on: up to 30 hardware updates/second with an 8 Hz preview, software-rendered preview, no hidden preview animation, and no repeated USB writes for unchanged colors. Solid lighting sleeps between changes. Screen ambience captures a small desktop sample twice/second.\n\nIncluded: seven effects, draggable preview, profiles, USB discovery, individual MSI ARGB LEDs, per-LED color overrides, and Gigabyte RTX 4070 Ti lighting. Other devices require future native adapters."),Gap(12),Btn("Open inspection report",()=>OpenReport()))));
         return new ScrollViewer{Content=panel};
     }
     void OpenReport()
@@ -252,7 +305,16 @@ public sealed class MainWindow : Window
     async Task ConnectAsync()
     {
         if(busy || backend is not null)return;busy=true;SetNote("Reading controller information…");Navigate("Devices");
-        ILightingBackend candidate=new MsiBackend();
+        ILightingBackend candidate=new NativeLightingBackend();
+        ((NativeLightingBackend)candidate).OutputFaulted+=exception=>
+        {
+            if(closing || Dispatcher.HasShutdownStarted)return;
+            Dispatcher.BeginInvoke(new Action(async()=>
+            {
+                if(backend!=candidate || closing)return;
+                await StopAsync();SetNote("GPU lighting stopped: "+exception.Message+" Reconnect to retry.");
+            }));
+        };
         try
         {
             if(Hid.ConflictRunning())throw new InvalidOperationException("Close SignalRGB and MSI lighting tools before enabling another lighting controller.");
@@ -262,8 +324,18 @@ public sealed class MainWindow : Window
                 var d=backend.Devices[i];var placement=prefs.Placements.FirstOrDefault(x=>x.Identity==d.Identity);
                 if(placement is null){placement=new(){Identity=d.Identity,X=.1,Y=.25+i*.15,Span=0};placement.Y=Math.Min(.9,placement.Y);prefs.Placements.Add(placement);}
                 d.Placement=placement;
+                if(d.Id is 2 or 3)
+                {
+                    if(placement.LedCount==0)
+                    {
+                        placement.LedCount=d.LedCount;
+                        if(placement.Span<.05)placement.Span=.75;
+                    }
+                    d.LedCount=Math.Clamp(placement.LedCount,1,120);
+                }
+                else if(d.Id==100 && placement.Span<.05)placement.Span=.65;
             }
-            ScheduleSave();SetNote($"Connected directly to {backend.Devices.Count} MSI headers. Start lighting when ready.");
+            ScheduleSave();SetNote($"Connected to {backend.Devices.Count} lighting outputs. {((NativeLightingBackend)backend).GpuStatus} Start lighting when ready.");
         }
         catch(Exception e){await candidate.DisposeAsync();SetNote("Connection failed: "+e.Message);}
         finally{busy=false;Navigate("Devices");}
@@ -274,13 +346,13 @@ public sealed class MainWindow : Window
         if(backend is null){SetNote("Choose a controller under Devices first.");Navigate("Devices");return;}
         if(!backend.Devices.Any(x=>x.Placement.Enabled && x.LedCount>0)){SetNote("Select at least one output with LEDs.");return;}
         if(Hid.ConflictRunning()){SetNote("Close SignalRGB and MSI lighting tools before starting output.");return;}
-        output=true;outputDirty=true;SetNote("Standalone MSI lighting is active. Stop & restore returns the previous controller state.");Navigate(page);
+        output=true;outputDirty=true;SetNote("Lighting is active. Stop restores motherboard configuration and clears streamed motherboard/GPU colors.");Navigate(page);
     }
     async Task WaitForFrameAsync(){while(writing)await Task.Delay(15);}
     async Task StopAsync()
     {
         if(busy)return;busy=true;output=false;RefreshActivity();
-        try{await WaitForFrameAsync();if(backend is not null)await backend.RestoreAsync();SetNote("Lighting stopped. Previous header colors and modes restored.");}
+        try{await WaitForFrameAsync();if(backend is not null)await backend.RestoreAsync();SetNote("Lighting stopped. Streamed motherboard/GPU colors cleared and original motherboard configuration restored.");}
         catch(Exception e){SetNote("Lighting stopped; restore was incomplete: "+e.Message);}
         finally{busy=false;if(!closing)Navigate(page);}
     }
@@ -293,15 +365,24 @@ public sealed class MainWindow : Window
     bool Animated=>prefs.Studio.Effect is not ("Solid" or "Screen ambience");
     void RefreshActivity()
     {
+        frameClock.Set(output && Animated && !closing,()=>
+        {
+            if(Dispatcher.HasShutdownStarted || Interlocked.Exchange(ref pendingHardwareTick,1)!=0)return;
+            Dispatcher.BeginInvoke(new Action(()=>
+            {
+                Interlocked.Exchange(ref pendingHardwareTick,0);
+                if(output && Animated && !closing)Tick(hardwareTick,EventArgs.Empty);
+            }));
+        });
         if(closing){timer.Stop();return;}
         if(PreviewActive){surface.ScreenColor=screen;surface.InvalidateVisual();}
         bool needed=ActivityPolicy.NeedsTicks(PreviewActive,output,Animated,prefs.Studio.Effect=="Screen ambience",outputDirty);
-        if(needed)timer.Start();else timer.Stop();
+        if(needed && !frameClock.Active)timer.Start();else timer.Stop();
     }
     async void Tick(object? sender,EventArgs args)
     {
         double now=watch.Elapsed.TotalSeconds;seconds=now;
-        if(PreviewActive && Animated){surface.Seconds=seconds;surface.InvalidateVisual();PreviewFrames++;}
+        if(PreviewActive && Animated && (!output || now-lastPreview>=.125)){lastPreview=now;surface.Seconds=seconds;surface.InvalidateVisual();PreviewFrames++;}
         if(prefs.Studio.Effect=="Screen ambience" && (PreviewActive || output) && !screenBusy && now-lastScreen>=.5)
         {
             screenBusy=true;lastScreen=now;
@@ -313,14 +394,14 @@ public sealed class MainWindow : Window
             catch(Exception e){screen=Colors.Black;outputDirty=true;SetNote("Screen capture unavailable: "+e.Message);}
             finally{screenBusy=false;}
         }
-        if(!output || backend is null || writing || busy || (!Animated && !outputDirty)){RefreshTickState();return;}
+        if(!output || backend is null || writing || busy || (Animated && sender!=hardwareTick) || (!Animated && !outputDirty)){RefreshTickState();return;}
         writing=true;outputDirty=false;
         try
         {
             var colors=new Dictionary<uint,Color[]>();
             foreach(var d in backend.Devices.Where(x=>x.Placement.Enabled && x.LedCount>0))
             {
-                var values=new Color[d.LedCount];for(int i=0;i<values.Length;i++)values[i]=Effects.Sample(prefs.Studio,Math.Clamp(d.Placement.X+d.Placement.Span*i/Math.Max(1.0,values.Length-1),0,1),d.Placement.Y,seconds,screen);
+                var values=OutputColors.Sample(prefs.Studio,d,seconds,screen);
                 colors.Add(d.Id,values);
             }
             await backend.WriteAsync(colors);OutputFrames++;
@@ -348,7 +429,7 @@ public sealed class MainWindow : Window
     async Task ExitAsync()
     {
         if(closing)return;if(busy){SetNote("Wait for the current connection operation to finish before quitting.");return;}
-        closing=true;timer.Stop();saveTimer.Stop();await StopAsync();if(backend is not null)await backend.DisposeAsync();Save();tray?.Dispose();Close();
+        closing=true;timer.Stop();saveTimer.Stop();frameClock.Dispose();await StopAsync();if(backend is not null)await backend.DisposeAsync();Save();tray?.Dispose();Close();
     }
     public void RenderPreview(string path)
     {
@@ -372,8 +453,8 @@ public sealed class MainWindow : Window
     }
     public async Task RunBenchmarkAsync(string path,string mode)
     {
-        if(mode is not ("animated" or "solid" or "hidden" or "screen" or "hardware-animated" or "hardware-solid"))throw new ArgumentException("Unknown benchmark scenario.");
-        prefs.Studio=new(){Effect=mode.Contains("solid")?"Solid":mode=="screen"?"Screen ambience":"Aurora",Brightness=.15};
+        if(mode is not ("animated" or "solid" or "hidden" or "screen" or "hardware-animated" or "hardware-solid" or "hardware-rainbow"))throw new ArgumentException("Unknown benchmark scenario.");
+        prefs.Studio=new(){Effect=mode=="hardware-rainbow"?"Rainbow":mode.Contains("solid")?"Solid":mode=="screen"?"Screen ambience":"Aurora",Brightness=mode=="hardware-rainbow"?.7:.15};
         surface.State=prefs.Studio;Navigate("Studio");RefreshActivity();
         bool hardware=mode.StartsWith("hardware-",StringComparison.Ordinal);
         if(hardware)
@@ -387,13 +468,13 @@ public sealed class MainWindow : Window
         using var process=Process.GetCurrentProcess();
         var cpu=process.TotalProcessorTime;var wall=Stopwatch.StartNew();
         long frames=PreviewFrames,outputs=OutputFrames,captures=ScreenCaptures;
-        int writes=(backend as MsiBackend)?.Writes??0;
+        int writes=(backend as NativeLightingBackend)?.UsbWrites??0,i2c=(backend as NativeLightingBackend)?.I2cWrites??0;
         try
         {
             await Task.Delay(20000);process.Refresh();
             double core=(process.TotalProcessorTime-cpu).TotalSeconds/wall.Elapsed.TotalSeconds*100;
             if(hardware && !output)throw new IOException("Output stopped during the benchmark: "+note);
-            var result=new{Version="0.2.0",Scenario=mode,Seconds=wall.Elapsed.TotalSeconds,LogicalProcessors=Environment.ProcessorCount,CpuPercent=core/Environment.ProcessorCount,OneCorePercent=core,WorkingSetMiB=process.WorkingSet64/1048576.0,PreviewFrames=PreviewFrames-frames,OutputFrames=OutputFrames-outputs,UsbWrites=((backend as MsiBackend)?.Writes??0)-writes,ScreenCaptures=ScreenCaptures-captures,Renderer="WPF SoftwareOnly",HardwareOutput=hardware};
+            var result=new{Version="0.3.0",Scenario=mode,Effect=prefs.Studio.Effect,Brightness=prefs.Studio.Brightness,Seconds=wall.Elapsed.TotalSeconds,LogicalProcessors=Environment.ProcessorCount,CpuPercent=core/Environment.ProcessorCount,OneCorePercent=core,WorkingSetMiB=process.WorkingSet64/1048576.0,PreviewFrames=PreviewFrames-frames,OutputFrames=OutputFrames-outputs,UsbWrites=((backend as NativeLightingBackend)?.UsbWrites??0)-writes,I2cWrites=((backend as NativeLightingBackend)?.I2cWrites??0)-i2c,ScreenCaptures=ScreenCaptures-captures,Renderer="WPF SoftwareOnly",HardwareOutput=hardware};
             File.WriteAllText(path,JsonSerializer.Serialize(result,new JsonSerializerOptions{WriteIndented=true}));
         }
         finally
@@ -401,7 +482,7 @@ public sealed class MainWindow : Window
             if(hardware)
             {
                 await StopAsync();
-                if(backend is MsiBackend msi && msi.NeedsRestore)throw new IOException("Hardware benchmark restoration was incomplete: "+note);
+                if(backend is NativeLightingBackend native && native.NeedsRestore)throw new IOException("Hardware benchmark restoration was incomplete: "+note);
             }
         }
     }
@@ -443,6 +524,29 @@ public sealed class MainWindow : Window
         prefs.Studio.Effect="Screen ambience";Hide();RefreshActivity();long count=ScreenCaptures;await Task.Delay(700);
         if(timer.IsEnabled || ScreenCaptures!=count)throw new Exception("Hidden idle screen capture is still running.");
         Show();checks.Add("Screen capture sleeps while hidden with hardware output off");
+        prefs.Studio.Effect="Rainbow";
+        var fakeTransport=new FakeMsiTransport();fakeTransport.Original[41]=fakeTransport.Original[52]=60;
+        var fakeBackend=new MsiBackend(()=>fakeTransport,()=>false);await fakeBackend.ConnectAsync();backend=fakeBackend;
+        foreach(var d in backend.Devices)d.Placement=new(){Identity=d.Identity,Span=.75};
+        backend.Devices.Add(new(){Id=100,Name="Gigabyte RTX 4070 Ti · fans + logo",LedCount=4,PixelNames=new[]{"Fan 1","Fan 2","Fan 3","Logo"}});
+        Navigate("Devices");UpdateLayout();RenderCurrentPage(Path.Combine(folder,"native-devices.png"));
+        checks.Add("Rendered motherboard and GPU controls using fake hardware only");
+        var chain=backend.Devices.First(d=>d.Id==2);
+        var countInput=Find<TextBox>(content).First();countInput.Text="999";
+        Find<Button>(content).First(b=>b.Content is string s && s=="Apply count").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        if(chain.LedCount!=60)throw new Exception("Oversized LED count entered the native backend.");
+        countInput.Text="17";Find<Button>(content).First(b=>b.Content is string s && s=="Apply count").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        if(chain.LedCount!=17 || chain.Placement.LedCount!=17)throw new Exception("LED count control failed.");
+        checks.Add("LED count control applies valid counts and rejects oversized chains");
+        UpdateLayout();var direction=Find<CheckBox>(content).First(c=>c.Content is string s && s=="Reverse effect direction");direction.IsChecked=true;
+        if(!chain.Placement.Reverse)throw new Exception("Reverse direction control failed.");checks.Add("Reverse direction control updates real output placement");
+        var expand=Find<Expander>(content).First(e=>e.Header is string s && s=="Choose colors for individual LEDs");expand.IsExpanded=true;UpdateLayout();
+        if(Find<Button>(expand).Count(b=>b.ToolTip is string s && s.Contains("click to override"))!=17)throw new Exception("Individual LED editor does not match its configured count.");
+        var gpuEditor=Find<Expander>(content).First(e=>e.Header is string s && s=="Choose individual fan and logo colors");gpuEditor.IsExpanded=true;UpdateLayout();
+        if(!Find<Button>(gpuEditor).Any(b=>b.Content is string s && s=="Logo"))throw new Exception("GPU logo control is missing.");
+        checks.Add("Expanded individual ARGB pixels and named GPU fan/logo color controls");
+        if(fakeTransport.Packets.Count!=0)throw new Exception("UI editing unexpectedly wrote lighting.");
+        backend=null;await fakeBackend.DisposeAsync();
         SetNote("Preview only. Connect a lighting controller to use real devices.");
         prefs.Studio=new();surface.State=prefs.Studio;Navigate("Studio");RenderPreview(Path.Combine(folder,"studio-final.png"));
         File.WriteAllText(Path.Combine(folder,"ui-test-results.json"),JsonSerializer.Serialize(new{Passed=checks.Count,Failed=0,Checks=checks},new JsonSerializerOptions{WriteIndented=true}));

@@ -71,6 +71,9 @@ public sealed class DevicePlacement
     public double Y { get; set; } = .65;
     public double Span { get; set; } = .5;
     public bool Enabled { get; set; } = true;
+    public int LedCount { get; set; }
+    public bool Reverse { get; set; }
+    public Dictionary<int,string> LedColors { get; set; } = new();
 }
 
 public sealed class Preferences
@@ -93,7 +96,12 @@ public static class Storage
             p.Studio ??=new(); p.Studio.Normalize(); p.Profiles ??=new(); p.Placements ??=new();
             p.Profiles.RemoveAll(item=>item is null);p.Placements.RemoveAll(item=>item is null);
             foreach (var s in p.Profiles) { s.Name=string.IsNullOrWhiteSpace(s.Name)?"Saved profile":s.Name; s.State ??=new(); s.State.Normalize(); }
-            foreach(var d in p.Placements) { d.X=double.IsFinite(d.X)?Math.Clamp(d.X,0,1):.2; d.Y=double.IsFinite(d.Y)?Math.Clamp(d.Y,0,1):.65; d.Span=double.IsFinite(d.Span)?Math.Clamp(d.Span,0,1):.5; }
+            foreach(var d in p.Placements)
+            {
+                d.X=double.IsFinite(d.X)?Math.Clamp(d.X,0,1):.2;d.Y=double.IsFinite(d.Y)?Math.Clamp(d.Y,0,1):.65;d.Span=double.IsFinite(d.Span)?Math.Clamp(d.Span,0,1):.5;
+                d.LedCount=Math.Clamp(d.LedCount,0,120);d.LedColors??=new();
+                foreach(var key in new List<int>(d.LedColors.Keys))if(key<0 || key>=120 || !Effects.ValidColor(d.LedColors[key]))d.LedColors.Remove(key);
+            }
             return p;
         }
         catch (Exception e) when (e is IOException or JsonException or UnauthorizedAccessException) { return new(); }
@@ -112,6 +120,22 @@ public static class Storage
         var p=JsonSerializer.Deserialize<SavedProfile>(File.ReadAllText(path),Options) ?? throw new InvalidDataException("Invalid profile.");
         if(p.State is null || string.IsNullOrWhiteSpace(p.Name)) throw new InvalidDataException("The profile needs a name and lighting settings.");
         p.State.Normalize(); return p;
+    }
+}
+
+public static class OutputColors
+{
+    public static Color[] Sample(StudioState state,OutputDevice device,double seconds,Color? screen=null)
+    {
+        var colors=new Color[device.LedCount];var placement=device.Placement;
+        for(int i=0;i<colors.Length;i++)
+        {
+            int position=placement.Reverse?colors.Length-1-i:i;
+            colors[i]=placement.LedColors.TryGetValue(i,out var hex)
+                ?Effects.Scale(Effects.Parse(hex),state.Brightness)
+                :Effects.Sample(state,Math.Clamp(placement.X+placement.Span*position/Math.Max(1.0,colors.Length-1),0,1),placement.Y,seconds,screen);
+        }
+        return colors;
     }
 }
 

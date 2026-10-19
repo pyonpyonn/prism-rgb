@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.0 — Visible ARGB output, individual pixels, Gigabyte GPU
+
+- Fixed missing visible MSI colors by configuring complete stream routing and supplying compact per-LED data. The owner confirmed the working ARGB test visually.
+- Added 1–120 configured LEDs per JRAINBOW header, direction/span controls, and per-LED color overrides.
+- Added exact Gigabyte RTX 4070 Ti Gaming OC fan/logo lighting through its installed NVIDIA driver; the owner confirmed two GPU tests visually.
+- Increased motherboard effects toward 30 Hz, with a separate coalescing 15 Hz GPU path and 8 Hz preview. Cached unchanged GPU register payloads.
+- Added cleanup of streamed colors, GPU error notifications for idle scenes, and hardware diagnostic commands. Previous external pixel scenes are not recoverable.
+- Passed 29 core and 15 interface checks; added bounded, typed protocol fixtures and GPU shutdown/error coverage.
+
+
 ## 0.2.0 — Standalone MSI / low power
 
 - Removed the OpenRGB backend and all network/server dependencies.

@@ -1,5 +1,5 @@
 param(
-    [ValidateSet('animated','solid','hidden','screen','hardware-animated','hardware-solid')][string[]]$Scenarios=@('animated','solid','hidden','screen'),
+    [ValidateSet('animated','solid','hidden','screen','hardware-animated','hardware-solid','hardware-rainbow')][string[]]$Scenarios=@('animated','solid','hidden','screen'),
     [string]$AppPath
 )
 $ErrorActionPreference='Stop'
@@ -36,6 +36,6 @@ foreach($scenario in $Scenarios){
     $result | Add-Member -NotePropertyName GpuEngineSumMaxPercent -NotePropertyValue $gpuMax
     $result | Add-Member -NotePropertyName GpuSampleCount -NotePropertyValue $gpuSamples.Count
     $result | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $resultPath -Encoding utf8NoBOM
-    $result | Select-Object Scenario,CpuPercent,OneCorePercent,GpuEngineSumMeanPercent,WorkingSetMiB,PreviewFrames,UsbWrites,ScreenCaptures
+    $result | Select-Object Scenario,CpuPercent,OneCorePercent,GpuEngineSumMeanPercent,WorkingSetMiB,PreviewFrames,OutputFrames,UsbWrites,I2cWrites,ScreenCaptures
 }
 Write-Output "Measurement files: $resultsPath"

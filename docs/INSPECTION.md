@@ -14,13 +14,15 @@ Plugin exports describe names, USB vendor/product identifiers, endpoint validati
 
 The included `compatibility-catalog.json` retains only the descriptive fields used by Prism: **Name, Publisher, Kind, VendorId, and ProductId**. Dynamic identifier expressions are left unresolved. The entries are research references, not executable drivers or verified Prism compatibility. Original plugin source, artwork, and effects are not included.
 
-### MSI whole-header protocol
+### MSI and GPU lighting findings
 
-The inspected MSI 185-byte controller plugin exposed report `0x52`, header mode/color offsets, and a no-save tail. The `0x7C95` configuration described two RGB and two ARGB headers. Prism's separate implementation is limited to the exact **B550M PRO-VDH WIFI (MS-7C95), USB 1462:7C95** combination.
+The exact target motherboard exposes a 185-byte configuration report 0x52 and a 725-byte pixel report 0x53. The earlier 0.2.0 implementation changed color fields and verified readback, but the owner observed no visible colors. Readback was therefore insufficient evidence of working lighting.
 
-The adapter reads an existing 185-byte lighting report before allowing output. For selected headers, it writes static-mode/color fields in a copy and clears the flash-save flag. It preserves unrelated bytes and does not implement the larger per-LED protocol, firmware commands, configuration probes, or other board families.
+For 0.3.0, a compact RGB/ARGB stream preceded by complete controller routing configuration produced visible red/rainbow output on both JRAINBOW headers, confirmed by the owner. The retained configuration supplied 60 LEDs per header; this is a configured length, not physical detection. Initial independent-port tests without complete controller routing did not change the visible lights. The high-capacity branch has software coverage but has not been visually verified on a physically populated 233–240 ARGB setup.
 
-Version 0.2.0 live tests on the exact target controller verified dim-color mode/color readback on all four headers and restoration of the previous header fields. The firmware changed unused byte 62 internally after processing, so full report identity is not claimed. Actual LED appearance still requires user observation. The descriptor exposes a 725-byte maximum feature buffer and a 185-byte report 0x52; both are validated before output. See [usage](USAGE.md).
+The card was identified as Gigabyte RTX 4070 Ti Gaming OC, PCI 10DE:2782 and subsystem 1458:40C6. The inspected GPU description used an eight-byte identity query and constrained mode/color transactions at I2C address 0x71. An independently written binding through the installed NVIDIA driver returned the expected identity response. The owner confirmed two red/green/blue GPU tests visually. The four supported lighting colors are three fans and the logo; no fan-speed or power control is implemented.
+
+Original vendor scripts are research references and are not packaged or executed. [Architecture](ARCHITECTURE.md) explains independent packet construction, exact hardware checks, and cleanup. Stop clears streamed colors and restores the motherboard configuration; earlier external pixel animations and GPU colors cannot be recovered.
 
 ### Effects
 
@@ -42,9 +44,9 @@ Local installation paths, machine inventories, evidence dumps, debug symbols, ac
 
 ## Validation scope
 
-Version 0.2.0 passes 15 core and 11 interface checks. Core tests use a fake native MSI transport for duplicate suppression, byte preservation, serialization, failure cleanup, conflicts, and restoration. Automated tests send no physical lighting frames. UI checks cover navigation, scene/profile controls, catalog loading, stopped hidden/static timers, idle screen capture, and the actual close-window path.
+Version 0.3.0 passes 29 core and 15 interface checks using fake transports and read-only HID discovery. No physical lighting writes occur in automated tests. Separate bounded hardware tests produced visible output confirmed by the owner on both ARGB headers and the supported GPU. Performance and actual update counts are recorded in [measurements](PERFORMANCE.md).
 
-Separate live controller checks confirmed header mode/color readback and restoration on the target board. [Performance measurements](PERFORMANCE.md) describe resource results and limits. Broad device support, sleep/resume, physical LED appearance, per-LED geometry, and multi-monitor/protected capture remain unverified.
+Broad hardware support, sleep/resume, every possible physical strip/splitter arrangement, 240 physically populated ARGB pixels, and multi-monitor/protected screen capture remain unverified. No claim is made that controller readback alone proves visible lighting.
 
 ## References
 

@@ -1,87 +1,77 @@
-# Using Prism RGB 0.2.0
+# Using Prism RGB 0.3.0
 
-Download and extract the [Windows x64 release](https://github.com/pyonpyonn/prism-rgb/releases/tag/v0.2.0), then open `Launch Prism RGB.cmd`. Keep the app, catalog, documentation, and runtime notices together. The runtime is bundled; no server or other RGB application is required.
+Extract the complete [v0.3.0 Windows x64 release](https://github.com/pyonpyonn/prism-rgb/releases/tag/v0.3.0) and open `Launch Prism RGB.cmd`. Use the new executable rather than an older extracted build. The .NET desktop runtime is bundled.
 
-## Connect your MSI motherboard
+## Connect and start
 
-Supported: **B550M PRO-VDH WIFI (MS-7C95), USB 1462:7C95**, with the inspected report descriptor. Other board models are deliberately rejected.
+Exit SignalRGB, MSI RGB tools, and RGB Fusion, then choose **Devices → Connect lighting**. This reads motherboard state and sends the supported GPU's identity query; it does not start color output. The footer reports whether GPU lighting is available. The motherboard remains usable if GPU detection fails.
 
-1. Exit SignalRGB and MSI lighting tools, including active background controllers.
-2. Choose **Devices → Connect MSI headers**. This reads the current state and exposes **JRGB1, JRGB2, JRAINBOW1, JRAINBOW2**. Connecting does not change colors.
-3. Select the headers you use. Stop output before changing the selection.
-4. Choose an effect, palette, brightness, and speed in **Studio**.
-5. Choose **Start lighting**. Each selected header uses one scene color, including the complete strip/fans on an ARGB header. Per-LED patterns are not implemented.
-6. Choose **Stop & restore**, **Disconnect**, or **Quit** when finished.
+Supported controllers are MSI B550M PRO-VDH WIFI (1462:7C95) and Gigabyte RTX 4070 Ti Gaming OC (10DE:2782, subsystem 1458:40C6). Other board/GPU identifiers are rejected. GPU access uses the installed NVIDIA driver API without a bundled kernel driver.
 
-Each header has **Horizontal** and **Vertical** sliders under Devices. These determine where it samples the scene. The draggable virtual devices in Studio edit the illustration separately; they are not detected physical devices.
+Choose an effect, palette, and brightness in **Studio**, then **Start lighting**. Unchecked motherboard headers receive black while Prism owns the motherboard controller; it needs a complete stream routing configuration. Stop before changing enabled headers or counts.
 
-The adapter sends volatile report 0x52 only. Stop checks readback of the original four header colors/modes. It cannot restore an earlier per-LED animation stream, firmware settings, or state after hardware removal. Another RGB tool taking ownership blocks writes/restoration; stop that tool and reconnect. Never run two controllers together.
+**Stop & restore** clears streamed ARGB/GPU colors and restores the saved motherboard configuration. It cannot recover an earlier app's per-LED animation or previous GPU colors. Disconnection or another controller taking ownership can prevent cleanup. Output never resumes automatically after failure or on launch.
 
-## Effects and preview
+## Individual ARGB LEDs
 
-| Effect | Color source |
+![Native device controls](images/devices.png)
+
+Interface example rendered with simulated devices during the UI checks.
+
+Each JRAINBOW header has these controls under Devices:
+
+| Control | Use |
 | --- | --- |
-| Aurora | Blended primary and secondary colors |
-| Rainbow | Built-in moving hue gradient |
-| Solid | Primary color |
-| Breathing | Pulsing primary color |
-| Wave | Traveling primary/secondary blend |
-| Ember | Built-in warm orange/red variation |
-| Screen ambience | Primary display average color |
+| LED count / Apply count | Set 1–120 pixels on that chain, while output is stopped |
+| Horizontal / Vertical | Position the chain in the scene |
+| LED span | Distance across the scene covered by the chain |
+| Reverse effect direction | Reverse scene sampling along the chain |
+| Choose colors for individual LEDs | Expand and click a numbered pixel to set a manual color |
+| Return all LEDs to the effect | Clear that output's manual colors |
 
-Palette fields accept `#RRGGBB`; invalid text does not replace the active color. Brightness affects every effect. Motion speed affects animated effects.
+Counts initially come from the controller's saved configuration: 60 on each tested header. This does not measure physical chain length. If you do not know the count, begin with the retained setting and adjust after identifying your fan/strip model. A parallel splitter mirrors its shared data signal; software cannot turn it into separate chains.
 
-**Pause preview** stops the preview; active hardware animation continues. The preview also sleeps when the window is hidden/minimized or another page is open. Animated effects are capped at 8 updates/second. Solid sleeps until you change a setting and skips duplicate USB reports. Screen ambience samples a small primary-display image at most twice/second, only when needed; it does not capture per-region colors or multiple monitors. Samples stay in memory.
+The combined 1–232 ARGB range uses the compact stream verified visually on the tested 60+60 setup. Larger combinations, up to 120+120, select the independently addressed high-capacity path. That path has protocol tests but no visual confirmation on a physically populated 240-pixel setup.
 
-## Profiles and preferences
+## GPU lighting
 
-In **Profiles**, enter a name and choose **Save profile**. Saving an existing name replaces that scene, ignoring case. **Apply** loads a scene; **Export/Import** use JSON, up to 1 MiB. **Delete** removes a profile immediately.
+The GPU output exposes **Fan 1, Fan 2, Fan 3, Logo**. Expand **Choose individual fan and logo colors** to set overrides; otherwise each zone samples the current effect. These are four lighting zones on the tested card, not individually addressable LEDs within every fan ring. Fan speed is never modified. Stop clears GPU lighting because the original state is not readable as a complete scene.
 
-Profiles contain effect, palette, brightness, speed, and virtual layout. Header selections and real scene positions are separate preferences. Settings from 0.1.0 can be read; the obsolete backend preference is ignored. Output always starts disabled on launch.
+## Effects, profiles, and preview
 
-Preferences live in `%LOCALAPPDATA%\PrismRGB\settings.json`. Use **Settings → Open profile folder**. UI errors may create `error.log` there. Quit before backing up/removing settings to reset them.
+Aurora/Wave blend both palette colors; Solid/Breathing use the primary color; Rainbow and Ember use built-in palettes; Screen ambience uses a small primary-display average. Palette inputs accept `#RRGGBB`. Brightness applies to every effect and manual override.
 
-Default Close exits and restores header colors/modes. With **Keep running in the system tray** enabled, closing/minimizing hides the window while active lighting continues. Use the tray's **Stop lighting and restore** or **Quit** to finish. There is no automatic startup or updater.
+Hardware animation is capped at approximately 30 updates/second for the motherboard and 15 for GPU lighting. Preview rendering is capped at 8 and stops while hidden/minimized or on other pages. **Pause preview** freezes only the illustration; hardware continues. Screen ambience samples at most twice/second and does not map screen regions or multiple monitors. Samples remain in memory.
 
-## Discovery and research catalog
+The draggable virtual setup is illustrative. Real outputs use the Devices position/span controls. **Profiles** saves effect, palette, brightness, speed, and virtual layout. Device counts, direction, enabled outputs, placements, and individual overrides are separate local preferences, not exported scene profiles. Applying another profile leaves manual overrides active until cleared.
 
-**Refresh USB devices** reads HID descriptors without changing lighting. A USB listing does not imply RGB support. **Compatibility** contains 462 descriptive research entries; only the MSI adapter above controls hardware in this release. Original SignalRGB plugin source is not included or executed.
+Profiles can be saved, replaced by name, deleted, and imported/exported as Prism JSON up to 1 MiB. Preferences live at `%LOCALAPPDATA%\PrismRGB\settings.json`; **Settings → Open profile folder** opens it. Quit before backing up/resetting settings. Old settings are migrated to use saved controller counts and a usable span when first enabling per-LED control.
+
+Default Close clears/restores and quits. Optional tray mode hides the window while lighting continues. Use the tray's Stop or Quit when finished. No installer, auto-updater, or automatic startup is included.
 
 ## Troubleshooting
 
-| Problem | What to do |
+| Problem | Check |
 | --- | --- |
-| Cannot connect | Exit competing RGB controllers and verify the exact board model. The app also checks the report descriptor. |
-| Connected but no light change | Select the connected header, raise brightness, and press Start lighting. Check physical LED appearance yourself; readback confirms controller state. |
-| Output stops | Check the connection/competing apps, then disconnect and reconnect. Prism does not resume automatically. |
-| Restore fails | Close other controllers and reconnect, or reopen your normal lighting tool. Disconnection can prevent recovery. |
-| Another keyboard/mouse is listed but cannot be controlled | It needs a future native driver; the catalog is research metadata. |
-| Virtual dragging has no physical effect | Use the header position sliders under Devices. |
-| Preview feels less smooth | The 8 Hz cap reduces resource use. Hardware output shares this limit. |
-| Screen ambience is black | Protected content or an unavailable desktop may prevent capture; choose another effect. |
-| Close leaves lighting active | Check tray mode and use Quit. |
+| 0.2.0 connects but produces no visible ARGB colors | Use 0.3.0; the old color-field-only path did not supply the required stream/routing. |
+| Connection blocked | Close competing RGB tools and verify the exact supported hardware. |
+| GPU unavailable | Check the footer, installed NVIDIA driver, exact card identifiers, and competing RGB apps. Motherboard output can still be used. |
+| Some LEDs stay dark or patterns repeat | Check the configured count, chain wiring/splitters, brightness, and manual overrides. |
+| Profile changes leave some colors fixed | Clear that output's per-LED overrides. |
+| GPU fans/logo do not match | Use the named GPU controls; motherboard headers do not control the card directly. |
+| Screen ambience is black | Protected content or an unavailable desktop can prevent sampling; try another effect. |
+| Stop cannot restore everything | The previous external pixel scene is not recoverable. Another app or disconnection can prevent configuration cleanup. |
+| Another USB device appears but cannot be controlled | It needs a future native adapter. The Compatibility catalog is descriptive research metadata. |
 
-## Diagnostics and developer commands
+## Diagnostics
 
-Run from the repository root after `./scripts/build.ps1`:
-
-```powershell
-./scripts/verify.ps1
-./scripts/measure.ps1
-```
-
-The executable supports `--data-dir <folder>`, `--render-preview <png-path>`, and `--ui-smoke <folder>`. Use isolated data folders for diagnostic runs since UI tests modify preferences. `--self-test` uses fake transport and read-only HID enumeration, with results beside the executable.
-
-Read-only motherboard inspection:
+With competing RGB software closed, these explicit tests change supported hardware briefly and clear/restore it afterward:
 
 ```powershell
-./dist/app/PrismRGB.exe --inspect-msi msi-inspection.json
+./dist/app/PrismRGB.exe --test-argb argb-test.json
+./dist/app/PrismRGB.exe --test-gpu gpu-test.json
 ```
 
-The following explicitly performs a brief dim-color hardware test and restores header colors/modes in a `finally` block. Exit all competing lighting tools first:
+The ARGB test lasts about 40 seconds and shows red/green/blue followed by distinct moving pixel colors. The GPU test lasts about 15 seconds and shows red/green/blue. API success is reported separately from visible confirmation, which requires someone observing the lights.
 
-```powershell
-./dist/app/PrismRGB.exe --test-msi msi-test.json
-```
-
-Only use it on the supported board. Do not commit local logs or raw installation data. See [performance](PERFORMANCE.md) and [architecture](ARCHITECTURE.md).
+`--inspect-msi <result.json>` only reads descriptors/current configuration. `--self-test` uses fake controllers and read-only HID enumeration. `--ui-smoke <folder>` exercises interface controls with fake devices; `--render-preview <png>` renders the illustration. Use `--data-dir <folder>` for isolated diagnostic preferences. Build/test/package scripts and [performance measurement](PERFORMANCE.md) are documented in the root README.

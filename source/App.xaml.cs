@@ -21,12 +21,14 @@ public partial class App : Application
             ShutdownMode=ShutdownMode.OnExplicitShutdown;
             int code=await SelfTests.RunAsync();Shutdown(code);return;
         }
-        int probe=Array.IndexOf(e.Args,"--inspect-msi"),hardwareTest=Array.IndexOf(e.Args,"--test-msi");
-        if(probe>=0 || hardwareTest>=0)
+        int probe=Array.IndexOf(e.Args,"--inspect-msi"),argbTest=Array.IndexOf(e.Args,"--test-argb"),gpuTest=Array.IndexOf(e.Args,"--test-gpu");
+        if(probe>=0 || argbTest>=0 || gpuTest>=0)
         {
             ShutdownMode=ShutdownMode.OnExplicitShutdown;
-            int index=probe>=0?probe:hardwareTest;
-            int code=await Diagnostics.InspectMsiAsync(e.Args[index+1],hardwareTest>=0);Shutdown(code);return;
+            int index=probe>=0?probe:argbTest>=0?argbTest:gpuTest;
+            if(index+1>=e.Args.Length){Shutdown(2);return;}
+            int code=probe>=0?await Diagnostics.InspectMsiAsync(e.Args[index+1]):argbTest>=0?await Diagnostics.TestArgbAsync(e.Args[index+1]):await Diagnostics.TestGpuAsync(e.Args[index+1]);
+            Shutdown(code);return;
         }
         DispatcherUnhandledException+=(_,args)=>
         {

@@ -2,47 +2,53 @@
 
 [![Windows build and checks](https://github.com/pyonpyonn/prism-rgb/actions/workflows/windows.yml/badge.svg)](https://github.com/pyonpyonn/prism-rgb/actions/workflows/windows.yml)
 
-A standalone Windows RGB app with direct MSI motherboard control, seven effects, and local profiles. **No OpenRGB, SignalRGB, SDK server, account, or background service is required.**
+A standalone Windows lighting app with **individual MSI ARGB LED control and Gigabyte RTX 4070 Ti lighting**. No OpenRGB, SignalRGB, SDK server, account, or background service is required. The portable x64 release bundles the .NET desktop runtime.
 
-Version **0.2.0 alpha**, Windows x64. Native hardware support currently targets **MSI B550M PRO-VDH WIFI (MS-7C95), USB 1462:7C95**. Each of its two RGB and two ARGB headers receives one color; individual addressable LEDs are a future feature.
+**0.3.0 alpha fixes missing visible ARGB output in 0.2.0.** The older version changed header color fields without supplying the LED stream and complete routing configuration required by this setup. Controller readback alone did not establish visible lighting. The owner has now confirmed the compact ARGB stream and the separate GPU color test visually.
 
 ![Prism RGB Studio](docs/images/preview.png)
 
 ## Download and use
 
-1. Download **PrismRGB-Windows-x64.zip** from [v0.2.0 Releases](https://github.com/pyonpyonn/prism-rgb/releases/tag/v0.2.0).
-2. Extract the complete ZIP and open **Launch Prism RGB.cmd** or **app/PrismRGB.exe**. The .NET desktop runtime is included.
-3. Close competing lighting tools, including SignalRGB and MSI lighting services.
-4. Open **Devices → Connect MSI headers**. Connecting reads the current state; lighting output stays off.
-5. Select headers, choose an effect and brightness, then **Start lighting**.
-6. **Stop & restore** returns the four headers to their previous colors and modes. Quit restores them too; optional tray mode keeps active lighting running.
+1. Download **PrismRGB-Windows-x64.zip** from [v0.3.0 Releases](https://github.com/pyonpyonn/prism-rgb/releases/tag/v0.3.0).
+2. Extract the complete archive and open **Launch Prism RGB.cmd**. Use this new folder instead of an older extracted copy.
+3. Exit other RGB controllers, including SignalRGB, MSI lighting tools, and RGB Fusion.
+4. Choose **Devices → Connect lighting**. The app connects the motherboard and queries the supported GPU if available. Connecting does not start color output.
+5. Choose an effect and brightness, then **Start lighting**.
+6. **Stop & restore** clears streamed colors and restores the motherboard's configuration. Previous external per-LED animations and GPU colors cannot be recovered; GPU LEDs are cleared on Stop.
 
-Preview mode works on other PCs. Other devices shown in USB discovery or the reference catalog do not yet have native Prism drivers. [Full usage and troubleshooting](docs/USAGE.md).
+Output always starts disabled on launch. [Full usage and troubleshooting](docs/USAGE.md).
 
-## Low CPU and GPU use
+## Supported hardware
 
-- Animated preview and hardware effects are capped at **8 updates per second** with one USB frame in flight.
-- **Solid** sends a color when it changes, then sleeps. Identical USB reports are suppressed.
-- Hidden/minimized windows and other pages stop preview animation. Hardware effects continue independently.
-- The preview uses software rendering, cached drawing resources, and cached color parsing. Prism does not request GPU-accelerated WPF rendering.
-- Screen ambience downsamples directly to **32 × 18** pixels, at most twice per second, only when the preview or hardware needs it.
-- There is no browser engine, network client, polling service, or automatic startup.
+| Hardware | Control |
+| --- | --- |
+| MSI B550M PRO-VDH WIFI (MS-7C95), USB 1462:7C95 | JRGB1/JRGB2 single colors; JRAINBOW1/JRAINBOW2 individually addressed chains, 1–120 configured LEDs each |
+| Gigabyte RTX 4070 Ti Gaming OC, PCI 10DE:2782 / subsystem 1458:40C6 | Three fan lighting colors and a separate logo color, through the installed NVIDIA driver |
 
-See [measured CPU/GPU results and reproducible commands](docs/PERFORMANCE.md). Resource use depends on your PC, window size, effect, and screen capture. Windows desktop composition may still use the GPU.
+The motherboard's saved configuration supplied **60 LEDs per ARGB header** on the tested PC. That is a configured count, not physical LED detection. Counts and direction can be changed under Devices after stopping output. Lower-capacity chains use the visually confirmed compact stream. The 233–240 combined ARGB range uses a separate high-capacity path that has protocol tests but has not been visually confirmed on a physically populated chain of that size.
 
-## Features and limits
+Other USB/catalog entries are research references and do not supply native drivers. The GPU adapter is restricted to the exact tested PCI identifiers. No extra kernel driver or NVIDIA DLL is bundled.
 
-Effects: Aurora, Rainbow, Solid, Breathing, Wave, Ember, Screen ambience. Includes brightness, speed, two-color palettes, draggable scene preview, JSON profile import/export, USB discovery, tray controls, and a searchable research catalog.
+## Effects and individual colors
 
-The MSI adapter verifies board name, USB IDs, collection usage, maximum feature buffer length, and the 185-byte report descriptor before opening output. It uses only volatile report **0x52**, preserves unrelated outgoing bytes, and never requests flash-save, firmware operations, or per-LED probes.
+- Seven effects: Aurora, Rainbow, Solid, Breathing, Wave, Ember, Screen ambience.
+- Global brightness, speed, two-color palettes, draggable virtual preview, and local JSON scene profiles.
+- Header LED counts, scene position/span, reverse direction, and numbered per-LED color overrides.
+- Named **Fan 1 / Fan 2 / Fan 3 / Logo** GPU color overrides.
+- Optional tray behavior, read-only HID discovery, and a descriptive compatibility catalog.
 
-Live tests on the target motherboard confirmed test-color readback and restoration of all four header colors/modes. The controller changes an unused report field internally, so full byte-for-byte restoration is not claimed. Physical LED appearance still needs user observation; these are controller readback checks. Restoration can fail after disconnection or another RGB app taking over.
+Expand **Choose colors for individual LEDs** under an ARGB header and click a numbered pixel. GPU controls use named lighting zones. **Return all LEDs to the effect** removes that output's overrides. Global brightness applies to manual colors too.
 
-Not implemented: other motherboard/device adapters, individual ARGB LEDs, fan control, monitoring, audio/game integrations, LCD control, general SignalRGB plugin execution, or automatic startup. This is independent software and does not provide full SignalRGB feature parity. No vendor executable, original plugin source, paid content, or artwork is included.
+## Smooth output with low ongoing resource use
+
+Motherboard animation targets **up to 30 updates/second**, GPU lighting up to **15**, and preview rendering up to **8**. GPU I/O runs separately and coalesces pending colors so it cannot delay the motherboard stream. Unchanged controller packets are suppressed; Solid scenes sleep between changes. Hidden previews stop rendering. Tiny 32x18 desktop samples are captured only when needed, at most twice/second.
+
+See [measured CPU/GPU results](docs/PERFORMANCE.md). These are observations on one PC, not a universal guarantee. Software-rendered WPF avoids requesting accelerated app rendering; Windows composition may still use the GPU.
 
 ## Build, verify, package
 
-Use Windows, the **.NET 10 SDK**, and PowerShell 7:
+Use Windows, **.NET 10 SDK**, and PowerShell 7:
 
 ```powershell
 dotnet run --project source/PrismRGB.csproj -c Release
@@ -51,28 +57,22 @@ dotnet run --project source/PrismRGB.csproj -c Release
 ./scripts/package.ps1
 ```
 
-The portable ZIP and SHA-256 checksum are written to `dist/`. Windows CI runs the same build and **15 core checks + 11 interface checks**, including the normal close-window path. Automated tests use a fake native transport and perform no lighting writes. The app has no third-party NuGet dependencies.
-
-To measure resources on your own PC:
+The ZIP and SHA-256 checksum are written to `dist/`. Windows CI runs the same **29 core checks and 15 interface checks**, using fake hardware without physical lighting writes. Tests cover routing, pixel bounds/order, GPU command sizes, cleanup, stopped idle timers, queued-frame shutdown, errors, and individual color controls. The C# app has no third-party NuGet dependency.
 
 ```powershell
 ./scripts/measure.ps1
-# Optional: these two scenarios actually drive the supported motherboard, then restore it.
+# Optional: these scenarios drive both supported controllers, then clear/restore them.
 ./scripts/measure.ps1 -Scenarios hardware-animated,hardware-solid
 ```
 
-## Documentation
+## Status and documentation
+
+This is independent software, not a reconstruction of the compiled SignalRGB application or full feature parity. No vendor executable, original plugin source, paid content, or artwork is included. Fan-speed control, monitoring, game/audio integrations, LCDs, general plugin execution, startup automation, and other hardware adapters remain future work.
 
 - [Usage and troubleshooting](docs/USAGE.md)
-- [Performance measurements](docs/PERFORMANCE.md)
-- [Architecture and native adapter design](docs/ARCHITECTURE.md)
-- [Inspection findings and evidence limits](docs/INSPECTION.md)
+- [Performance](docs/PERFORMANCE.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Inspection evidence and limits](docs/INSPECTION.md)
 - [Changelog](CHANGELOG.md)
 
-Bug reports should include version, board/device model, effect, reproduction steps, and observed result. Review logs for personal information before posting. Contribute independently written native adapters with protocol tests and public references.
-
-## License and acknowledgements
-
-Original Prism source is [MIT licensed](LICENSE). Bundled Microsoft runtime licenses and notices are in `notices/`. Product names belong to their owners.
-
-Research references: [REA](https://github.com/morluto/rea), [SignalRGB developer documentation](https://docs.signalrgb.com/developer/plugins/). Neither is needed at runtime.
+Original Prism source is [MIT licensed](LICENSE). Microsoft runtime notices are included. Product names belong to their owners. Research references: [REA](https://github.com/morluto/rea), [SignalRGB developer documentation](https://docs.signalrgb.com/developer/plugins/), [NVIDIA NVAPI](https://github.com/NVIDIA/nvapi). None of the research tools or vendor apps is required at runtime.
