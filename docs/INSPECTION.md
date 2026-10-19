@@ -20,11 +20,11 @@ The inspected MSI 185-byte controller plugin exposed report `0x52`, header mode/
 
 The adapter reads an existing 185-byte lighting report before allowing output. For selected headers, it writes static-mode/color fields in a copy and clears the flash-save flag. It preserves unrelated bytes and does not implement the larger per-LED protocol, firmware commands, configuration probes, or other board families.
 
-**Live lighting writes have not been verified.** The original plugin notes that incorrect packets can damage MSI lighting controllers. Byte-boundary tests establish what the software constructs, not physical hardware safety or successful output. See [usage](USAGE.md#experimental-msi-adapter) before experimenting.
+Version 0.2.0 live tests on the exact target controller verified dim-color mode/color readback on all four headers and restoration of the previous header fields. The firmware changed unused byte 62 internally after processing, so full report identity is not claimed. Actual LED appearance still requires user observation. The descriptor exposes a 725-byte maximum feature buffer and a 185-byte report 0x52; both are validated before output. See [usage](USAGE.md).
 
 ### Effects
 
-The bundled Rainbow effect used a 320×200 HTML canvas and animation callbacks. REA's first HTML pass explicitly excluded the inline JavaScript from semantic analysis. Its script body was therefore extracted as inert text, with provenance recorded locally, and analyzed separately: 160 AST nodes, one parsed JavaScript file, and zero parse failures.
+The bundled Rainbow effect used a 320Ã—200 HTML canvas and animation callbacks. REA's first HTML pass explicitly excluded the inline JavaScript from semantic analysis. Its script body was therefore extracted as inert text, with provenance recorded locally, and analyzed separately: 160 AST nodes, one parsed JavaScript file, and zero parse failures.
 
 The selected MSI script analysis visited 10,119 AST nodes and reported zero parse failures. Static graphs are partial evidence and do not prove that a path executes. Prism's seven native effects were written independently; the original effect source is not bundled.
 
@@ -42,13 +42,13 @@ Local installation paths, machine inventories, evidence dumps, debug symbols, ac
 
 ## Validation scope
 
-The release was checked with 13 core tests and 9 interface checks. Core checks use a simulated local OpenRGB server and construct MSI packets in memory. HID discovery reads interface descriptors without sending lighting frames. UI checks cover navigation, scene controls, profile saving, reference-catalog loading, and disabled output by default.
+Version 0.2.0 passes 15 core and 11 interface checks. Core tests use a fake native MSI transport for duplicate suppression, byte preservation, serialization, failure cleanup, conflicts, and restoration. Automated tests send no physical lighting frames. UI checks cover navigation, scene/profile controls, catalog loading, stopped hidden/static timers, idle screen capture, and the actual close-window path.
 
-This verifies selected software behavior. It does not verify real LEDs, sleep/resume recovery, per-device geometry, broad device compatibility, or desktop-capture behavior.
+Separate live controller checks confirmed header mode/color readback and restoration on the target board. [Performance measurements](PERFORMANCE.md) describe resource results and limits. Broad device support, sleep/resume, physical LED appearance, per-LED geometry, and multi-monitor/protected capture remain unverified.
 
 ## References
 
 - [REA repository](https://github.com/morluto/rea)
 - [REA Windows native analysis](https://github.com/morluto/rea/blob/main/docs/windows-ghidra-p0.md)
 - [SignalRGB plugin documentation](https://docs.signalrgb.com/developer/plugins/)
-- [OpenRGB SDK protocol](https://github.com/CalcProgrammer1/OpenRGB/blob/master/Documentation/OpenRGBSDK.md)
+- [Microsoft HID feature reports](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/hidsdi/nf-hidsdi-hidd_getfeature)

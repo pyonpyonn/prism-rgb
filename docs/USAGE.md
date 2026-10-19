@@ -1,142 +1,87 @@
-# Using Prism RGB
+# Using Prism RGB 0.2.0
 
-Prism RGB v0.1.0 is a portable Windows x64 application. It works in preview mode without RGB hardware, OpenRGB, or SignalRGB installed. The downloadable release includes the .NET runtime; building from source requires the .NET 10 SDK.
+Download and extract the [Windows x64 release](https://github.com/pyonpyonn/prism-rgb/releases/tag/v0.2.0), then open `Launch Prism RGB.cmd`. Keep the app, catalog, documentation, and runtime notices together. The runtime is bundled; no server or other RGB application is required.
 
-## First launch
+## Connect your MSI motherboard
 
-1. Download **PrismRGB-Windows-x64.zip** from the [v0.1.0 release](https://github.com/pyonpyonn/prism-rgb/releases/tag/v0.1.0).
-2. Extract the entire archive to a folder where you can write files. Do not run the executable from inside the ZIP.
-3. Open `app/PrismRGB.exe` or `Launch Prism RGB.cmd`.
-4. Begin in **Studio**. The status should read **PREVIEW MODE**.
+Supported: **B550M PRO-VDH WIFI (MS-7C95), USB 1462:7C95**, with the inspected report descriptor. Other board models are deliberately rejected.
 
-Keep the release's executable, catalog, documentation, and runtime notices together. Hardware output starts disabled on every launch and is never resumed automatically after a failure.
+1. Exit SignalRGB and MSI lighting tools, including active background controllers.
+2. Choose **Devices → Connect MSI headers**. This reads the current state and exposes **JRGB1, JRGB2, JRAINBOW1, JRAINBOW2**. Connecting does not change colors.
+3. Select the headers you use. Stop output before changing the selection.
+4. Choose an effect, palette, brightness, and speed in **Studio**.
+5. Choose **Start lighting**. Each selected header uses one scene color, including the complete strip/fans on an ARGB header. Per-LED patterns are not implemented.
+6. Choose **Stop & restore**, **Disconnect**, or **Quit** when finished.
 
-## Create a scene
+Each header has **Horizontal** and **Vertical** sliders under Devices. These determine where it samples the scene. The draggable virtual devices in Studio edit the illustration separately; they are not detected physical devices.
 
-In **Studio**, select an effect and adjust **Brightness** and **Motion speed**. Palette inputs accept six-digit hex colors, such as `#68E0C2`; invalid text does not replace the active color.
+The adapter sends volatile report 0x52 only. Stop checks readback of the original four header colors/modes. It cannot restore an earlier per-LED animation stream, firmware settings, or state after hardware removal. Another RGB tool taking ownership blocks writes/restoration; stop that tool and reconnect. Never run two controllers together.
 
-| Effect | Appearance | Palette use |
-| --- | --- | --- |
-| Aurora | Moving, blended color fields | Both colors |
-| Rainbow | Hue gradient moving across the scene | Built-in rainbow |
-| Solid | Constant color | Primary color |
-| Breathing | Repeating brightness pulse | Primary color |
-| Wave | Traveling blend | Both colors |
-| Ember | Animated orange and red variation | Built-in warm colors |
-| Screen ambience | Average color from the primary screen | Captured color |
+## Effects and preview
 
-Brightness applies to all effects. Motion speed affects animated effects; it has no visible effect on Solid or the screen-capture sampling rate.
-
-Choose **Edit layout** to drag the virtual monitor, keyboard, mouse, PC, and strip. These shapes illustrate the scene and do not indicate that the corresponding devices are connected. **Settings → Reset virtual layout** restores their default positions.
-
-**Pause preview** freezes animation time. If real lighting is active, it continues sending the paused scene; screen capture can still update. Use **Stop & restore** to stop hardware output.
-
-Screen ambience captures an average of the primary display about twice per second while selected, including in preview mode. It does not map screen regions to individual LEDs. Capture samples are held in memory and are not written or uploaded. Screen-capture behavior on real desktops remains unverified.
-
-## Save and share profiles
-
-1. Configure a scene in **Studio**.
-2. Open **Profiles**, enter a name, and choose **Save profile**.
-3. Choose **Apply** beside a saved profile to load it into Studio.
-4. Use **Export** to save a profile as JSON, or **Import profile** to load one.
-
-Saving a name that already exists replaces that profile's scene, ignoring letter case. **Delete** removes a saved profile immediately.
-
-A profile contains the effect, palette, brightness, speed, and virtual layout. Actual hardware output selection and position sliders are saved separately in preferences and are not included in exported scene profiles. Imported profiles must be valid Prism JSON and no larger than 1 MiB.
-
-## Connect through OpenRGB
-
-This route uses [OpenRGB](https://openrgb.org/) for hardware discovery and control. Hardware support depends on your installed OpenRGB version and devices; Prism does not execute SignalRGB plugins.
-
-1. Install OpenRGB from its official website and verify your intended devices appear there.
-2. Close SignalRGB and other competing RGB programs, including their active background controllers. Keep OpenRGB running.
-3. Start OpenRGB's SDK server using **127.0.0.1**, port **6742**. These values are currently fixed in Prism's interface.
-4. Open **Devices → Connect OpenRGB** in Prism. Connection reads the current device list and state. It does not start lighting output.
-5. Enable the desired output checkboxes and set their positions as described below.
-6. Choose **Start lighting**.
-7. To finish, choose **Stop & restore**, then **Disconnect** if desired.
-
-Prism sends effect colors at up to 10 frames per second. It attempts to restore previous colors and mode on Stop, Disconnect, or Quit. Restoration cannot be guaranteed after hardware removal, loss of the server, or another application taking ownership.
-
-If OpenRGB's device list changes, Prism stops output to avoid sending colors to stale device indexes. Disconnect and reconnect to refresh it. Only one Prism backend can be connected at a time; disconnect before switching to the MSI adapter.
-
-## Position real outputs
-
-Real devices sample colors from a normalized scene. Use the controls below each connected output on the **Devices** page:
-
-| Control | Meaning |
+| Effect | Color source |
 | --- | --- |
-| Output checkbox | Includes the output in hardware frames; stop lighting before changing the selection |
-| Horizontal | Starting position from left (0%) to right (100%) |
-| Vertical | Position from top (0%) to bottom (100%) |
-| LED span | Horizontal distance covered by the output's LED sequence |
+| Aurora | Blended primary and secondary colors |
+| Rainbow | Built-in moving hue gradient |
+| Solid | Primary color |
+| Breathing | Pulsing primary color |
+| Wave | Traveling primary/secondary blend |
+| Ember | Built-in warm orange/red variation |
+| Screen ambience | Primary display average color |
 
-For a keyboard or strip, increasing **LED span** spreads its LED colors across a wider part of the effect. The current mapping treats the LEDs as a horizontal sequence, not their physical two-dimensional positions. Samples beyond the right edge use the rightmost scene color. A single-color MSI header uses only Horizontal and Vertical; its LED span does not affect output.
+Palette fields accept `#RRGGBB`; invalid text does not replace the active color. Brightness affects every effect. Motion speed affects animated effects.
 
-These sliders are independent of the draggable virtual layout in Studio.
+**Pause preview** stops the preview; active hardware animation continues. The preview also sleeps when the window is hidden/minimized or another page is open. Animated effects are capped at 8 updates/second. Solid sleeps until you change a setting and skips duplicate USB reports. Screen ambience samples a small primary-display image at most twice/second, only when needed; it does not capture per-region colors or multiple monitors. Samples stay in memory.
 
-## Experimental MSI adapter
+## Profiles and preferences
 
-**Live lighting writes have not been verified.** Use the direct adapter only with the exact supported board and a clear understanding that incorrect controller packets can damage an RGB controller. Source-level packet checks cannot establish physical hardware safety.
+In **Profiles**, enter a name and choose **Save profile**. Saving an existing name replaces that scene, ignoring case. **Apply** loads a scene; **Export/Import** use JSON, up to 1 MiB. **Delete** removes a profile immediately.
 
-The adapter is restricted to **MSI B550M PRO-VDH WIFI (MS-7C95), USB 1462:7C95**. It exposes two 12V RGB and two 5V ARGB headers, with one color for each complete header. It does not set LED counts, implement individual addressable LEDs, or support other motherboard models.
+Profiles contain effect, palette, brightness, speed, and virtual layout. Header selections and real scene positions are separate preferences. Settings from 0.1.0 can be read; the obsolete backend preference is ignored. Output always starts disabled on launch.
 
-1. Confirm the exact board model; the app also checks it before connecting.
-2. Close SignalRGB and other MSI/RGB lighting tools.
-3. Open **Devices → Connect MSI headers**. Prism must successfully read an existing 185-byte lighting report before connecting.
-4. Select the intended headers and set their scene positions.
-5. Choose **Start lighting** only when ready to perform experimental hardware output.
-6. Choose **Stop & restore** when finished.
+Preferences live in `%LOCALAPPDATA%\PrismRGB\settings.json`. Use **Settings → Open profile folder**. UI errors may create `error.log` there. Quit before backing up/removing settings to reset them.
 
-The adapter changes selected header mode/color fields in a copy of the original report and clears the flash-save flag. It does not issue firmware commands or per-LED probes. Stop and Quit attempt to restore the report read during connection. See [inspection notes](INSPECTION.md) and [architecture](ARCHITECTURE.md) for the implementation limits.
+Default Close exits and restores header colors/modes. With **Keep running in the system tray** enabled, closing/minimizing hides the window while active lighting continues. Use the tray's **Stop lighting and restore** or **Quit** to finish. There is no automatic startup or updater.
 
-## USB discovery and compatibility catalog
+## Discovery and research catalog
 
-**Devices → Refresh USB devices** enumerates HID interfaces without sending lighting frames. Detection alone does not establish RGB support; many keyboards and mice expose interfaces unrelated to lighting.
-
-**Compatibility** searches descriptive metadata by device name, publisher, or USB ID. Its entries are research references, not executable drivers or a promise of Prism compatibility. The bundled catalog does not contain the original SignalRGB plugin source.
-
-## Preferences and tray behavior
-
-Prism stores `settings.json` under `%LOCALAPPDATA%\PrismRGB`. This contains local profiles, the current scene, real-device placement preferences, and tray settings. Use **Settings → Open profile folder** to open it. Unhandled UI errors may create `error.log` there.
-
-The default close action exits and attempts to restore lighting. If **Keep running in the system tray when I close the window** is enabled, closing or minimizing the window hides it and active lighting continues. Use the tray menu's **Stop lighting and restore** or **Quit** when finished.
-
-To reset all preferences, quit Prism, back up `settings.json`, and remove that file. The next launch creates default settings. Deleting the extracted app folder does not remove preferences.
+**Refresh USB devices** reads HID descriptors without changing lighting. A USB listing does not imply RGB support. **Compatibility** contains 462 descriptive research entries; only the MSI adapter above controls hardware in this release. Original SignalRGB plugin source is not included or executed.
 
 ## Troubleshooting
 
-| Problem | Check |
+| Problem | What to do |
 | --- | --- |
-| OpenRGB connection fails | Confirm the SDK server is running at `127.0.0.1:6742`, and close competing RGB controllers. |
-| A device appears in USB discovery but cannot be controlled | Discovery is read-only; try OpenRGB if it supports that device. A catalog reference does not supply a Prism driver. |
-| A controller connects but lights do not change | Select at least one output with LEDs, set nonzero brightness, then choose Start lighting. Physical output is still unverified in this release. |
-| Lighting stops after plugging in hardware | Disconnect and reconnect in Prism to refresh OpenRGB's device list. |
-| Previous lighting is not restored | Reconnect or reopen your normal controller software. Hardware disconnection or another controller can prevent restoration. |
-| Moving virtual devices does not change physical lighting | Adjust the real output's position sliders under Devices. |
-| Compatibility list is empty | Confirm `compatibility-catalog.json` is beside `PrismRGB.exe`. |
-| Palette edits appear ignored | Enter a complete color in `#RRGGBB` format and choose an effect that uses that palette. |
-| Screen ambience is black or unavailable | Try another effect. Primary-display capture needs real-desktop testing and may fail for protected content or unusual display configurations. |
-| Closing the window leaves lights active | Check tray settings; use the tray menu's Stop or Quit action. |
+| Cannot connect | Exit competing RGB controllers and verify the exact board model. The app also checks the report descriptor. |
+| Connected but no light change | Select the connected header, raise brightness, and press Start lighting. Check physical LED appearance yourself; readback confirms controller state. |
+| Output stops | Check the connection/competing apps, then disconnect and reconnect. Prism does not resume automatically. |
+| Restore fails | Close other controllers and reconnect, or reopen your normal lighting tool. Disconnection can prevent recovery. |
+| Another keyboard/mouse is listed but cannot be controlled | It needs a future native driver; the catalog is research metadata. |
+| Virtual dragging has no physical effect | Use the header position sliders under Devices. |
+| Preview feels less smooth | The 8 Hz cap reduces resource use. Hardware output shares this limit. |
+| Screen ambience is black | Protected content or an unavailable desktop may prevent capture; choose another effect. |
+| Close leaves lighting active | Check tray mode and use Quit. |
 
-For a bug report, include the version, backend, device model, steps to reproduce, and any visible error. Review screenshots and logs for personal details before posting them.
+## Diagnostics and developer commands
 
-## Developer commands
-
-Run from the repository root on Windows with the .NET 10 SDK:
+Run from the repository root after `./scripts/build.ps1`:
 
 ```powershell
-dotnet build source/PrismRGB.csproj -c Release
-dotnet run --project source/PrismRGB.csproj -c Release
-dotnet run --project source/PrismRGB.csproj -c Release -- --self-test
+./scripts/verify.ps1
+./scripts/measure.ps1
 ```
 
-The core self-test uses a local simulated OpenRGB server and writes `test-results.json` beside the built executable. It does not send physical lighting commands. It does enumerate HID interfaces read-only.
+The executable supports `--data-dir <folder>`, `--render-preview <png-path>`, and `--ui-smoke <folder>`. Use isolated data folders for diagnostic runs since UI tests modify preferences. `--self-test` uses fake transport and read-only HID enumeration, with results beside the executable.
 
-The executable also supports `--data-dir <folder>` to use a separate preferences folder, `--render-preview <png-path>` to render a preview and exit, and `--ui-smoke <folder>` to exercise the UI and save screenshots/results. Use an isolated data folder for screenshot or UI checks because those modes initialize and modify preferences.
+Read-only motherboard inspection:
 
 ```powershell
-dotnet run --project source/PrismRGB.csproj -c Release -- --data-dir .test-data --ui-smoke .test-output
+./dist/app/PrismRGB.exe --inspect-msi msi-inspection.json
 ```
 
-See the root [README](../README.md#build-from-source) for publishing a portable build, and [architecture](ARCHITECTURE.md) for extending the application.
+The following explicitly performs a brief dim-color hardware test and restores header colors/modes in a `finally` block. Exit all competing lighting tools first:
+
+```powershell
+./dist/app/PrismRGB.exe --test-msi msi-test.json
+```
+
+Only use it on the supported board. Do not commit local logs or raw installation data. See [performance](PERFORMANCE.md) and [architecture](ARCHITECTURE.md).

@@ -1,11 +1,7 @@
 using System;
-using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Sockets;
-using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -79,38 +75,66 @@ public static class SelfTests
             Check(layoutState.Layout[0].Name=="Light" && layoutState.Layout[0].Shape=="strip","Incomplete imported layout cannot render safely");
             File.WriteAllText(Path.Combine(dir,"settings.json"),"broken");Check(Storage.Load().Studio.Effect=="Aurora","Corrupt preferences crashed load");
         });
-        Test("OpenRGB decoder handles modes, zones, and LED names",()=>
+        Test("Exact MSI board and descriptor whitelist",()=>
         {
-            var d=OpenRgbBackend.ParseDevice(0,FakeServer.ControllerData(),3);
-            Check(d.Name=="Test keyboard" && d.LedCount==2 && d.Modes.Count==1,"Wrong device metadata");Check(d.PreviousColors[1]==Colors.Blue,"Color byte order is incorrect");
+            var d=new HidDevice("fixture",0x1462,0x7C95,"MSI",725,1,0,185);
+            Check(MsiProtocol.Supports(MsiProtocol.Board,d),"Target rejected");
+            Check(!MsiProtocol.Supports("Other board",d),"Different board accepted");
+            Check(!MsiProtocol.Supports(MsiProtocol.Board,d with {Report52Length=725}),"Different report size accepted");
+            Check(!MsiProtocol.Supports(MsiProtocol.Board,d with {UsagePage=0xFF00}),"Different collection accepted");
+            Check(!MsiProtocol.Supports(MsiProtocol.Board,d with {ProductId=0x1234}),"Different PID accepted");
         });
-        Test("OpenRGB rejects inconsistent controller payloads",()=>
+        Test("Low-power scheduling sleeps when no work is needed",()=>
         {
-            byte[] p=FakeServer.ControllerData();p[0]=0;bool failed=false;
-            try{OpenRgbBackend.ParseDevice(0,p,3);}catch(InvalidDataException){failed=true;}Check(failed,"Invalid packet accepted");
+            Check(!ActivityPolicy.NeedsTicks(false,false,true,true,true),"Hidden idle loop runs");
+            Check(!ActivityPolicy.NeedsTicks(true,true,false,false,false),"Solid output does not sleep");
+            Check(ActivityPolicy.NeedsTicks(false,true,true,false,false),"Hidden hardware animation stopped");
+            Check(ActivityPolicy.NeedsTicks(false,true,false,false,true),"Changed solid output did not wake");
+            Check(ActivityPolicy.NeedsTicks(true,false,false,true,false),"Visible screen capture stopped");
         });
-        await TestAsync("OpenRGB fragmented handshake, frame output, and restoration",async()=>
+        await TestAsync("Native connection only reads; duplicate colors are suppressed; restore resets deduplication",async()=>
         {
-            await using var server=new FakeServer();await using var backend=new OpenRgbBackend(server.Port);await backend.ConnectAsync();
-            Check(backend.Devices.Count==1,"Discovery failed");Check(server.OutputCommands==0,"Connection changed lighting");
-            await backend.WriteAsync(new Dictionary<uint,Color[]>{{0,new[]{Colors.Lime,Colors.Orange}}});
-            await backend.RestoreAsync();await Task.Delay(100);
-            Check(server.Packets.Any(p=>p.Id==1100),"Direct mode not requested");
-            var frames=server.Packets.Where(p=>p.Id==1050).ToArray();Check(frames.Length==2,"Expected output and restoration frames");
-            Check(frames[0].Data[6]==0 && frames[0].Data[7]==255 && frames[0].Data[8]==0,"Wrong emitted RGB bytes");
-            Check(server.Packets.Any(p=>p.Id==1101),"Original mode was not restored");
+            var transport=new FakeMsiTransport();await using var backend=new MsiBackend(()=>transport,()=>false);
+            await backend.ConnectAsync();Check(backend.Devices.Count==4 && transport.Packets.Count==0,"Connect wrote lighting");
+            var colors=new Dictionary<uint,Color[]>{{2,new[]{Colors.Coral}}};
+            await backend.WriteAsync(colors);await backend.WriteAsync(colors);Check(transport.Packets.Count==1,"Duplicate USB write");
+            await backend.RestoreAsync();Check(transport.Packets.Count==2 && transport.Packets[1].SequenceEqual(transport.Original),"Restoration failed");
+            await backend.WriteAsync(colors);Check(transport.Packets.Count==3,"Restart did not reapply color");await backend.RestoreAsync();
         });
-        await TestAsync("Device-list changes stop output before using stale indexes",async()=>
+        await TestAsync("Native failures stop further writes and still attempt restoration",async()=>
         {
-            await using var server=new FakeServer();await using var backend=new OpenRgbBackend(server.Port);await backend.ConnectAsync();
-            await server.InvalidateAsync();await Task.Delay(100);bool stopped=false;
-            try{await backend.WriteAsync(new Dictionary<uint,Color[]>{{0,new[]{Colors.Red,Colors.Red}}});}catch(IOException){stopped=true;}
-            Check(stopped && server.OutputCommands==0,"Stale device index was used");
+            var transport=new FakeMsiTransport{FailWrite=true};await using var backend=new MsiBackend(()=>transport,()=>false);await backend.ConnectAsync();
+            bool failed=false;try{await backend.WriteAsync(new Dictionary<uint,Color[]>{{0,new[]{Colors.Red}}});}catch(IOException){failed=true;}
+            Check(failed,"USB failure ignored");transport.FailWrite=false;
+            failed=false;try{await backend.WriteAsync(new Dictionary<uint,Color[]>{{0,new[]{Colors.Blue}}});}catch(IOException){failed=true;}
+            Check(failed && transport.Packets.Count==0,"Faulted backend resumed");
+            transport.BadReport=true;failed=false;try{await backend.RestoreAsync();}catch(IOException){failed=true;}
+            Check(failed && backend.NeedsRestore,"Bad restore readback was accepted");
+            transport.BadReport=false;await backend.RestoreAsync();Check(transport.Packets.Count==2 && !backend.NeedsRestore,"Failed write was not restored");
         });
-        await TestAsync("Connection failure remains bounded and cleanly disposable",async()=>
+        await TestAsync("Conflicting lighting software blocks connection and restoration",async()=>
         {
-            var listener=new TcpListener(IPAddress.Loopback,0);listener.Start();int port=((IPEndPoint)listener.LocalEndpoint).Port;listener.Stop();
-            await using var backend=new OpenRgbBackend(port);bool failed=false;try{await backend.ConnectAsync();}catch(SocketException){failed=true;}Check(failed,"Connection unexpectedly succeeded");
+            bool conflict=true,opened=false;var transport=new FakeMsiTransport();
+            await using(var blocked=new MsiBackend(()=>{opened=true;return transport;},()=>conflict))
+            {
+                bool failed=false;try{await blocked.ConnectAsync();}catch(IOException){failed=true;}Check(failed&&!opened,"Conflict was ignored");
+            }
+            conflict=false;await using var backend=new MsiBackend(()=>transport,()=>conflict);await backend.ConnectAsync();
+            await backend.WriteAsync(new Dictionary<uint,Color[]>{{1,new[]{Colors.Green}}});conflict=true;
+            bool restoreFailed=false;try{await backend.RestoreAsync();}catch(IOException){restoreFailed=true;}
+            Check(restoreFailed && transport.Packets.Count==1,"Restore overwrote another controller");
+        });
+        await TestAsync("Failed reads dispose the controller without lighting writes",async()=>
+        {
+            var transport=new FakeMsiTransport{BadReport=true};await using var backend=new MsiBackend(()=>transport,()=>false);
+            bool failed=false;try{await backend.ConnectAsync();}catch(InvalidDataException){failed=true;}
+            Check(failed && transport.Disposed && transport.Packets.Count==0,"Read failure cleanup failed");
+        });
+        await TestAsync("Concurrent native writes are serialized with restoration",async()=>
+        {
+            var transport=new FakeMsiTransport();await using var backend=new MsiBackend(()=>transport,()=>false);await backend.ConnectAsync();
+            await Task.WhenAll(Enumerable.Range(0,12).Select(i=>backend.WriteAsync(new Dictionary<uint,Color[]>{{0,new[]{Color.FromRgb((byte)i,0,0)}}})));
+            await backend.RestoreAsync();Check(transport.MaxConcurrent==1 && transport.Packets.Last().SequenceEqual(transport.Original),"HID operations overlapped or restore was not last");
         });
         Test("USB discovery reads interface descriptors without lighting writes",()=>
         {
@@ -122,47 +146,19 @@ public static class SelfTests
     }
 }
 
-sealed class FakeServer : IAsyncDisposable
+sealed class FakeMsiTransport : IMsiTransport
 {
-    readonly TcpListener listener=new(IPAddress.Loopback,0);readonly CancellationTokenSource cancel=new();readonly Task work;TcpClient? client;NetworkStream? stream;
-    public List<(uint Id,byte[] Data)> Packets {get;}=new();
-    public int Port {get;}
-    public int OutputCommands=>Packets.Count(p=>p.Id>=1000);
-    public FakeServer(){listener.Start();Port=((IPEndPoint)listener.LocalEndpoint).Port;work=RunAsync();}
-    async Task RunAsync()
+    public readonly byte[] Original=Enumerable.Range(0,185).Select(i=>(byte)i).ToArray();
+    public readonly List<byte[]> Packets=new();
+    public bool FailWrite,BadReport,Disposed;
+    public int MaxConcurrent;int concurrent;
+    public FakeMsiTransport(){Original[0]=0x52;Original[184]=0;}
+    public byte[] Read()=>BadReport?new byte[185]:(byte[])Original.Clone();
+    public void Write(byte[] bytes)
     {
-        try
-        {
-            client=await listener.AcceptTcpClientAsync(cancel.Token);stream=client.GetStream();
-            while(!cancel.IsCancellationRequested)
-            {
-                var h=new byte[16];await stream.ReadExactlyAsync(h,cancel.Token);
-                uint dev=BinaryPrimitives.ReadUInt32LittleEndian(h.AsSpan(4)),id=BinaryPrimitives.ReadUInt32LittleEndian(h.AsSpan(8)),size=BinaryPrimitives.ReadUInt32LittleEndian(h.AsSpan(12));
-                if(size>1024*1024)throw new InvalidDataException();var data=new byte[size];await stream.ReadExactlyAsync(data,cancel.Token);Packets.Add((id,data));
-                if(id==40)await ReplyAsync(dev,40,BitConverter.GetBytes(5u));
-                if(id==0)await ReplyAsync(0,0,BitConverter.GetBytes(1u));
-                if(id==1)await ReplyAsync(dev,1,ControllerData());
-            }
-        }
-        catch(Exception e) when(e is OperationCanceledException or IOException or ObjectDisposedException or SocketException){}
+        int n=Interlocked.Increment(ref concurrent);MaxConcurrent=Math.Max(n,MaxConcurrent);
+        try{Thread.Sleep(2);if(FailWrite)throw new IOException("Simulated USB failure");Packets.Add((byte[])bytes.Clone());}
+        finally{Interlocked.Decrement(ref concurrent);}
     }
-    public Task InvalidateAsync()=>ReplyAsync(0,100,Array.Empty<byte>());
-    async Task ReplyAsync(uint dev,uint id,byte[] data)
-    {
-        byte[] p=new byte[16+data.Length];"ORGB"u8.CopyTo(p);BinaryPrimitives.WriteUInt32LittleEndian(p.AsSpan(4),dev);BinaryPrimitives.WriteUInt32LittleEndian(p.AsSpan(8),id);BinaryPrimitives.WriteUInt32LittleEndian(p.AsSpan(12),(uint)data.Length);data.CopyTo(p,16);
-        for(int i=0;i<p.Length;i+=3)await stream!.WriteAsync(p.AsMemory(i,Math.Min(3,p.Length-i)),cancel.Token);
-    }
-    public static byte[] ControllerData()
-    {
-        using var memory=new MemoryStream();using var w=new BinaryWriter(memory,Encoding.UTF8,true);
-        void Str(string text){var bytes=Encoding.UTF8.GetBytes(text+"\0");w.Write((ushort)bytes.Length);w.Write(bytes);}
-        w.Write(0u);w.Write(5);Str("Test keyboard");Str("Prism test fixture");Str("Independent protocol fixture");Str("1");Str("");Str("loopback test");
-        w.Write((ushort)1);w.Write(0);Str("Static");
-        for(int i=0;i<12;i++)w.Write(i==0?1u:0u);w.Write((ushort)0);
-        w.Write((ushort)1);Str("Keys");w.Write(1);w.Write(2u);w.Write(2u);w.Write(2u);w.Write((ushort)0);
-        w.Write((ushort)2);Str("A");w.Write(0u);Str("B");w.Write(1u);
-        w.Write((ushort)2);w.Write(new byte[]{255,0,0,0,0,0,255,0});w.Flush();
-        var p=memory.ToArray();BinaryPrimitives.WriteUInt32LittleEndian(p,(uint)p.Length);return p;
-    }
-    public async ValueTask DisposeAsync(){cancel.Cancel();client?.Dispose();listener.Stop();await work;cancel.Dispose();}
+    public void Dispose()=>Disposed=true;
 }

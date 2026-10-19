@@ -3,6 +3,8 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
+using System.Windows.Media;
+using System.Windows.Interop;
 
 namespace PrismRGB;
 
@@ -11,12 +13,20 @@ public partial class App : Application
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        RenderOptions.ProcessRenderMode=RenderMode.SoftwareOnly;
         int dataDir=Array.IndexOf(e.Args,"--data-dir");
         if(dataDir>=0 && dataDir+1<e.Args.Length)Storage.DirectoryPath=Path.GetFullPath(e.Args[dataDir+1]);
         if(Array.IndexOf(e.Args,"--self-test")>=0)
         {
             ShutdownMode=ShutdownMode.OnExplicitShutdown;
             int code=await SelfTests.RunAsync();Shutdown(code);return;
+        }
+        int probe=Array.IndexOf(e.Args,"--inspect-msi"),hardwareTest=Array.IndexOf(e.Args,"--test-msi");
+        if(probe>=0 || hardwareTest>=0)
+        {
+            ShutdownMode=ShutdownMode.OnExplicitShutdown;
+            int index=probe>=0?probe:hardwareTest;
+            int code=await Diagnostics.InspectMsiAsync(e.Args[index+1],hardwareTest>=0);Shutdown(code);return;
         }
         DispatcherUnhandledException+=(_,args)=>
         {
@@ -25,9 +35,17 @@ public partial class App : Application
         };
         int preview=Array.IndexOf(e.Args,"--render-preview");
         int smoke=Array.IndexOf(e.Args,"--ui-smoke");
+        int benchmark=Array.IndexOf(e.Args,"--benchmark");
         var main=new MainWindow();MainWindow=main;
         if(preview>=0 || smoke>=0){main.ShowInTaskbar=false;main.Left=-10000;main.Top=-10000;main.WindowStartupLocation=WindowStartupLocation.Manual;}
         main.Show();
+        if(benchmark>=0 && benchmark+2<e.Args.Length)
+        {
+            ShutdownMode=ShutdownMode.OnExplicitShutdown;
+            try{await main.RunBenchmarkAsync(e.Args[benchmark+1],e.Args[benchmark+2]);await main.CloseForPreview();Shutdown();}
+            catch(Exception ex){File.WriteAllText(e.Args[benchmark+1]+".error.txt",ex.ToString());await main.CloseForPreview();Shutdown(1);}
+            return;
+        }
         if(smoke>=0 && smoke+1<e.Args.Length)
         {
             ShutdownMode=ShutdownMode.OnExplicitShutdown;

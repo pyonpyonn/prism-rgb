@@ -2,110 +2,77 @@
 
 [![Windows build and checks](https://github.com/pyonpyonn/prism-rgb/actions/workflows/windows.yml/badge.svg)](https://github.com/pyonpyonn/prism-rgb/actions/workflows/windows.yml)
 
-An independent Windows desktop RGB studio with animated lighting, local profiles, and optional hardware output through OpenRGB.
+A standalone Windows RGB app with direct MSI motherboard control, seven effects, and local profiles. **No OpenRGB, SignalRGB, SDK server, account, or background service is required.**
 
-Prism RGB is an early **v0.1.0** release for **Windows x64**. You can explore every effect in preview mode without connecting hardware. Hardware output is disabled on each launch, and live LED output has not yet been verified on physical devices.
+Version **0.2.0 alpha**, Windows x64. Native hardware support currently targets **MSI B550M PRO-VDH WIFI (MS-7C95), USB 1462:7C95**. Each of its two RGB and two ARGB headers receives one color; individual addressable LEDs are a future feature.
 
 ![Prism RGB Studio](docs/images/preview.png)
 
-## Download and run
+## Download and use
 
-1. Open [Releases](https://github.com/pyonpyonn/prism-rgb/releases/tag/v0.1.0).
-2. Download **PrismRGB-Windows-x64.zip** and extract the complete archive to a writable folder.
-3. Open `app/PrismRGB.exe` (or use `Launch Prism RGB.cmd`). Keep the extracted files together, including `app/compatibility-catalog.json` and the runtime notices.
-4. Choose an effect in **Studio**. Connecting hardware is optional.
+1. Download **PrismRGB-Windows-x64.zip** from [v0.2.0 Releases](https://github.com/pyonpyonn/prism-rgb/releases/tag/v0.2.0).
+2. Extract the complete ZIP and open **Launch Prism RGB.cmd** or **app/PrismRGB.exe**. The .NET desktop runtime is included.
+3. Close competing lighting tools, including SignalRGB and MSI lighting services.
+4. Open **Devices → Connect MSI headers**. Connecting reads the current state; lighting output stays off.
+5. Select headers, choose an effect and brightness, then **Start lighting**.
+6. **Stop & restore** returns the four headers to their previous colors and modes. Quit restores them too; optional tray mode keeps active lighting running.
 
-The portable release includes the .NET desktop runtime; a separate .NET installation is unnecessary. The release is portable; no installer or auto-updater is included.
+Preview mode works on other PCs. Other devices shown in USB discovery or the reference catalog do not yet have native Prism drivers. [Full usage and troubleshooting](docs/USAGE.md).
 
-See the [usage guide](docs/USAGE.md) for profiles, scene positioning, hardware setup, and troubleshooting.
+## Low CPU and GPU use
 
-## Features
+- Animated preview and hardware effects are capped at **8 updates per second** with one USB frame in flight.
+- **Solid** sends a color when it changes, then sleeps. Identical USB reports are suppressed.
+- Hidden/minimized windows and other pages stop preview animation. Hardware effects continue independently.
+- The preview uses software rendering, cached drawing resources, and cached color parsing. Prism does not request GPU-accelerated WPF rendering.
+- Screen ambience downsamples directly to **32 × 18** pixels, at most twice per second, only when the preview or hardware needs it.
+- There is no browser engine, network client, polling service, or automatic startup.
 
-- Seven effects: **Aurora, Rainbow, Solid, Breathing, Wave, Ember, and Screen ambience**.
-- Brightness, motion speed, hex-color palettes, and an animated setup preview.
-- Drag-and-drop virtual layout editing.
-- Named local profiles with JSON import and export.
-- Read-only USB HID discovery and a searchable device-reference catalog.
-- Optional OpenRGB SDK output for devices supported by your OpenRGB installation.
-- A restricted, experimental direct adapter for MSI B550M PRO-VDH WIFI headers.
-- Optional system-tray behavior and **Stop & restore** controls.
+See [measured CPU/GPU results and reproducible commands](docs/PERFORMANCE.md). Resource use depends on your PC, window size, effect, and screen capture. Windows desktop composition may still use the GPU.
 
-The virtual monitor, keyboard, mouse, PC, and strip are scene illustrations. Dragging them edits the preview; actual hardware uses the separate **Horizontal**, **Vertical**, and **LED span** controls under **Devices**. A catalog match identifies a research candidate and does not install a working driver.
+## Features and limits
 
-## Control real lighting
+Effects: Aurora, Rainbow, Solid, Breathing, Wave, Ember, Screen ambience. Includes brightness, speed, two-color palettes, draggable scene preview, JSON profile import/export, USB discovery, tray controls, and a searchable research catalog.
 
-### Through OpenRGB
+The MSI adapter verifies board name, USB IDs, collection usage, maximum feature buffer length, and the 185-byte report descriptor before opening output. It uses only volatile report **0x52**, preserves unrelated outgoing bytes, and never requests flash-save, firmware operations, or per-LED probes.
 
-1. Install [OpenRGB](https://openrgb.org/) separately and confirm it detects your devices.
-2. Close SignalRGB and other competing lighting controllers. Keep OpenRGB running as the backend.
-3. Enable OpenRGB's SDK server on **127.0.0.1:6742**.
-4. In Prism, select **Devices → Connect OpenRGB**.
-5. Select outputs, position their LEDs with the scene sliders, and choose **Start lighting**.
-6. Choose **Stop & restore** to stop streaming and attempt to restore the previous colors and mode.
+Live tests on the target motherboard confirmed test-color readback and restoration of all four header colors/modes. The controller changes an unused report field internally, so full byte-for-byte restoration is not claimed. Physical LED appearance still needs user observation; these are controller readback checks. Restoration can fail after disconnection or another RGB app taking over.
 
-OpenRGB supplies hardware support. Prism supplies the effects and sends colors through the local SDK connection. Prism currently connects to one backend at a time. Unplugging a device, changing OpenRGB's device list, or losing the server connection stops output; reconnect before trying again. Restoration is best-effort and may be unavailable after a disconnect.
+Not implemented: other motherboard/device adapters, individual ARGB LEDs, fan control, monitoring, audio/game integrations, LCD control, general SignalRGB plugin execution, or automatic startup. This is independent software and does not provide full SignalRGB feature parity. No vendor executable, original plugin source, paid content, or artwork is included.
 
-### Experimental MSI headers
+## Build, verify, package
 
-The direct adapter is restricted to **MSI B550M PRO-VDH WIFI (MS-7C95), USB 1462:7C95**. It provides one color for each of two 12V RGB and two 5V ARGB headers. Individual addressable LEDs and strip-length configuration are not implemented.
-
-**Live lighting writes are unverified.** This is a hardware experiment, not general MSI motherboard support. The implementation reads the existing 185-byte report before enabling output, preserves unrelated report bytes, and avoids flash-save and firmware commands. These checks do not establish hardware safety. Read the [usage guide](docs/USAGE.md#experimental-msi-adapter) and [inspection notes](docs/INSPECTION.md) before using it.
-
-## Build from source
-
-Use Windows with the **.NET 10 SDK** installed. From a terminal in the repository root:
+Use Windows, the **.NET 10 SDK**, and PowerShell 7:
 
 ```powershell
-dotnet build source/PrismRGB.csproj -c Release
 dotnet run --project source/PrismRGB.csproj -c Release
-```
-
-Run the automated core checks:
-
-```powershell
-dotnet run --project source/PrismRGB.csproj -c Release -- --self-test
-```
-
-Publish a portable Windows x64 executable:
-
-```powershell
-dotnet publish source/PrismRGB.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -o dist/app
-```
-
-Keep the published `compatibility-catalog.json` with the executable. `dist/app` is build output and should not be committed. The C# application uses WPF/Windows Forms and has no third-party NuGet dependencies.
-
-To build, check, and assemble the complete release archive with documentation and runtime notices:
-
-```powershell
 ./scripts/build.ps1
 ./scripts/verify.ps1
 ./scripts/package.ps1
 ```
 
-The archive and its SHA-256 checksum are written to `dist/`. Use PowerShell 7 to run these scripts. GitHub Actions runs the same workflow on Windows for pushes and pull requests.
+The portable ZIP and SHA-256 checksum are written to `dist/`. Windows CI runs the same build and **15 core checks + 11 interface checks**, including the normal close-window path. Automated tests use a fake native transport and perform no lighting writes. The app has no third-party NuGet dependencies.
 
-The release build passed 13 core checks and 9 UI smoke checks. Automated Windows builds run the same checks. Tests use a simulated OpenRGB server and do not send hardware lighting commands. They establish software behavior rather than compatibility with physical RGB devices.
+To measure resources on your own PC:
 
-## Status and limits
+```powershell
+./scripts/measure.ps1
+# Optional: these two scenarios actually drive the supported motherboard, then restore it.
+./scripts/measure.ps1 -Scenarios hardware-animated,hardware-solid
+```
 
-This is an independent prototype informed by local protocol inspection. It is not affiliated with SignalRGB and does not provide full SignalRGB feature parity. No SignalRGB executable, plugin source, paid effect, account data, or artwork is included.
-
-Not implemented: general SignalRGB plugin execution, fan control, hardware monitoring, audio-reactive effects, game integrations, macros, LCD control, account services, and automatic startup. Compiled SignalRGB application logic was not recovered during the initial inspection.
-
-Screen ambience samples the average color of the primary display about twice per second. It does not provide per-region or multi-monitor capture. Capture results stay in memory; physical output and real-screen behavior still need user testing.
-
-## Documentation and contributing
+## Documentation
 
 - [Usage and troubleshooting](docs/USAGE.md)
-- [Architecture and extension points](docs/ARCHITECTURE.md)
+- [Performance measurements](docs/PERFORMANCE.md)
+- [Architecture and native adapter design](docs/ARCHITECTURE.md)
 - [Inspection findings and evidence limits](docs/INSPECTION.md)
 - [Changelog](CHANGELOG.md)
-- [License](LICENSE)
 
-Bug reports should include the Prism version, Windows version, selected backend, device model, expected result, and observed result. Remove personal information from logs before sharing. For hardware support, include public protocol references and tests; do not submit proprietary plugin source or private installation dumps.
+Bug reports should include version, board/device model, effect, reproduction steps, and observed result. Review logs for personal information before posting. Contribute independently written native adapters with protocol tests and public references.
 
 ## License and acknowledgements
 
-Original Prism RGB source is released under the [MIT license](LICENSE). Third-party runtimes retain their own licenses and notices. SignalRGB, OpenRGB, MSI, and other product names belong to their respective owners.
+Original Prism source is [MIT licensed](LICENSE). Bundled Microsoft runtime licenses and notices are in `notices/`. Product names belong to their owners.
 
-Research tools and references: [REA](https://github.com/morluto/rea), [SignalRGB plugin documentation](https://docs.signalrgb.com/developer/plugins/), and the [OpenRGB SDK protocol](https://github.com/CalcProgrammer1/OpenRGB/blob/master/Documentation/OpenRGBSDK.md).
+Research references: [REA](https://github.com/morluto/rea), [SignalRGB developer documentation](https://docs.signalrgb.com/developer/plugins/). Neither is needed at runtime.

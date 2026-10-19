@@ -79,7 +79,6 @@ public sealed class Preferences
     public List<SavedProfile> Profiles { get; set; } = new();
     public List<DevicePlacement> Placements { get; set; } = new();
     public bool MinimizeToTray { get; set; } = false;
-    public string Backend { get; set; } = "OpenRGB";
 }
 
 public static class Storage
@@ -120,10 +119,15 @@ public static class Effects
 {
     public static readonly List<string> Names = new() { "Aurora", "Rainbow", "Solid", "Breathing", "Wave", "Ember", "Screen ambience" };
     public static bool ValidColor(string? text) => text is not null && System.Text.RegularExpressions.Regex.IsMatch(text,"^#[0-9a-fA-F]{6}$");
-    public static Color Parse(string text) => (Color)ColorConverter.ConvertFromString(text);
+    // Hex parsing avoids WPF's type converter and its allocations for every LED sample.
+    public static Color Parse(string text) => Color.FromRgb(Convert.ToByte(text.Substring(1,2),16),Convert.ToByte(text.Substring(3,2),16),Convert.ToByte(text.Substring(5,2),16));
+    [ThreadStatic] static string? lastPrimary,lastSecondary;
+    [ThreadStatic] static Color primaryColor,secondaryColor;
     public static Color Sample(StudioState s,double x,double y,double seconds,Color? screen=null)
     {
-        var a=Parse(s.Color); var b=Parse(s.SecondaryColor); double t=seconds*(.05+s.Speed*1.5); Color c;
+        if(lastPrimary!=s.Color){primaryColor=Parse(s.Color);lastPrimary=s.Color;}
+        if(lastSecondary!=s.SecondaryColor){secondaryColor=Parse(s.SecondaryColor);lastSecondary=s.SecondaryColor;}
+        var a=primaryColor; var b=secondaryColor; double t=seconds*(.05+s.Speed*1.5); Color c;
         switch(s.Effect)
         {
             case "Rainbow": c=Hsv((x*.8+y*.2+t*.18)%1,1,1); break;

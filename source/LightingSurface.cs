@@ -1,6 +1,8 @@
 using System;
 using System.Globalization;
 using System.Linq;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -15,7 +17,13 @@ public sealed class LightingSurface : FrameworkElement
     public bool Editing {get;set;}
     public event Action? LayoutChanged;
     LightItem? dragging; Point grab; Rect scene;
-    static SolidColorBrush Brush(string h)=>new((Color)ColorConverter.ConvertFromString(h));
+    static readonly Dictionary<string,SolidColorBrush> brushes=new();
+    readonly Dictionary<string,FormattedText> labels=new();
+    DrawingGroup? background;Size backgroundSize;
+    static SolidColorBrush Brush(string h)
+    {
+        if(!brushes.TryGetValue(h,out var b)){b=new(Effects.Parse(h));b.Freeze();brushes.Add(h,b);}return b;
+    }
     public LightingSurface()
     {
         ClipToBounds=true; MinHeight=300;Cursor=Cursors.Arrow;
@@ -37,7 +45,13 @@ public sealed class LightingSurface : FrameworkElement
     Rect Box(LightItem i)=>new(scene.X+i.X*scene.Width,scene.Y+i.Y*scene.Height,i.Width*scene.Width,i.Height*scene.Height);
     void Label(DrawingContext dc,string text,double x,double y,string color="#899195",double size=10)
     {
-        var t=new FormattedText(text,CultureInfo.CurrentCulture,FlowDirection.LeftToRight,new Typeface("Segoe UI"),size,Brush(color),VisualTreeHelper.GetDpi(this).PixelsPerDip);
+        double dpi=VisualTreeHelper.GetDpi(this).PixelsPerDip;
+        string key=$"{text}|{color}|{size}|{dpi}";
+        if(!labels.TryGetValue(key,out var t))
+        {
+            if(labels.Count>256)labels.Clear();
+            t=new FormattedText(text,CultureInfo.CurrentCulture,FlowDirection.LeftToRight,new Typeface("Segoe UI"),size,Brush(color),dpi);labels.Add(key,t);
+        }
         dc.DrawText(t,new Point(x,y));
     }
     Color At(double x,double y)=>Effects.Sample(State,x,y,Seconds,ScreenColor);
@@ -49,9 +63,19 @@ public sealed class LightingSurface : FrameworkElement
     }
     protected override void OnRender(DrawingContext dc)
     {
-        base.OnRender(dc); dc.DrawRoundedRectangle(Brush("#101619"),null,new Rect(0,0,ActualWidth,ActualHeight),12,12);
+        base.OnRender(dc);
+        if(background is null || backgroundSize!=RenderSize)
+        {
+            backgroundSize=RenderSize;background=new DrawingGroup();
+            using(var bg=background.Open())
+            {
+                bg.DrawRoundedRectangle(Brush("#101619"),null,new Rect(0,0,ActualWidth,ActualHeight),12,12);
+                for(double x=14;x<ActualWidth;x+=22)for(double y=15;y<ActualHeight;y+=22)bg.DrawEllipse(Brush("#243033"),null,new Point(x,y),.7,.7);
+            }
+            background.Freeze();
+        }
+        dc.DrawDrawing(background);
         scene=new Rect(25,28,Math.Max(1,ActualWidth-50),Math.Max(1,ActualHeight-65));
-        for(double x=14;x<ActualWidth;x+=22) for(double y=15;y<ActualHeight;y+=22)dc.DrawEllipse(Brush("#243033"),null,new Point(x,y),.7,.7);
         foreach(var i in State.Layout)
         {
             var b=Box(i);dc.PushOpacity(i.Enabled?1:.22);
@@ -104,13 +128,22 @@ public sealed class LightingSurface : FrameworkElement
 
 public static class ScreenSampler
 {
+    [DllImport("user32.dll")] static extern IntPtr GetDC(IntPtr window);
+    [DllImport("user32.dll")] static extern int ReleaseDC(IntPtr window,IntPtr dc);
+    [DllImport("gdi32.dll",SetLastError=true)] static extern bool StretchBlt(IntPtr dest,int x,int y,int width,int height,IntPtr src,int sx,int sy,int sw,int sh,uint rop);
     public static Color Capture()
     {
         var bounds=System.Windows.Forms.Screen.PrimaryScreen?.Bounds ?? new System.Drawing.Rectangle(0,0,1920,1080);
-        using var bitmap=new System.Drawing.Bitmap(bounds.Width,bounds.Height);
-        using(var graphics=System.Drawing.Graphics.FromImage(bitmap)) graphics.CopyFromScreen(bounds.Location,System.Drawing.Point.Empty,bounds.Size);
+        using var bitmap=new System.Drawing.Bitmap(32,18);
+        using(var graphics=System.Drawing.Graphics.FromImage(bitmap))
+        {
+            var source=GetDC(IntPtr.Zero);if(source==IntPtr.Zero)throw new InvalidOperationException("Desktop is unavailable.");
+            var dest=graphics.GetHdc();
+            try{if(!StretchBlt(dest,0,0,32,18,source,bounds.X,bounds.Y,bounds.Width,bounds.Height,0x00CC0020))throw new InvalidOperationException("Desktop sampling failed.");}
+            finally{graphics.ReleaseHdc(dest);ReleaseDC(IntPtr.Zero,source);}
+        }
         long r=0,g=0,b=0,count=0;
-        for(int y=0;y<bitmap.Height;y+=Math.Max(1,bitmap.Height/18))for(int x=0;x<bitmap.Width;x+=Math.Max(1,bitmap.Width/32))
+        for(int y=0;y<bitmap.Height;y++)for(int x=0;x<bitmap.Width;x++)
         {var c=bitmap.GetPixel(x,y);r+=c.R;g+=c.G;b+=c.B;count++;}
         return Color.FromRgb((byte)(r/count),(byte)(g/count),(byte)(b/count));
     }
