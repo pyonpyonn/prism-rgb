@@ -44,7 +44,9 @@ Local installation paths, machine inventories, evidence dumps, debug symbols, ac
 
 ## Validation scope
 
-Version 0.4.0 passes 34 core and 19 interface checks using fake transports and read-only HID discovery. No physical lighting writes occur in automated tests. Color checks cover every effect, palette persistence, dialog apply/cancel, frozen-image selection, and negative display origins. A local known-color window also verified actual physical screen capture. Separate bounded hardware tests for 0.3.0 produced visible output confirmed by the owner on both ARGB headers and the supported GPU; those native protocols remain unchanged. Performance and actual update counts are recorded in [measurements](PERFORMANCE.md).
+Version 0.5.0 passes 40 core and 25 interface checks using fake transports and read-only HID discovery. Automated checks do not write physical lighting or real Windows startup settings. Added coverage includes hidden saved-scene startup, retries/cancellation/conflicts, activation/Quit, retained-frame release and session-end scheduling. Color/editor checks remain included. A local known-color window also verified actual physical screen capture. Separate bounded hardware tests for 0.3.0 produced visible output confirmed by the owner on both ARGB headers and the supported GPU; those native protocols remain unchanged. Performance and actual update counts are recorded in [measurements](PERFORMANCE.md).
+
+The inspected MSI integration sends a final override color at application shutdown with the persistent-save flag still disabled. This does not demonstrate hardware-memory or standby-power support. Prism's retained-color option likewise leaves volatile frames and makes no BIOS/cold-boot promise. Official board controls and limitations are recorded in the [boot lighting guide](BOOT-LIGHTING.md).
 
 Broad hardware support, sleep/resume, every possible physical strip/splitter arrangement, 240 physically populated ARGB pixels, and multi-monitor/protected screen capture remain unverified. No claim is made that controller readback alone proves visible lighting.
 

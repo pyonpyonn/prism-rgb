@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.0 — Quiet Windows startup and retained exit colors
+
+- Added opt-in per-user Windows sign-in startup, hidden tray launch and saved-lighting restore with three bounded connection attempts.
+- Added single-instance activation and graceful `--quit`, cancellation on Stop/Quit, and deferred exit while a controller connection finishes.
+- Added an optional last-frame retention path that releases controller handles without clearing colors. Stop & restore keeps its clear/restore behavior.
+- Added Windows-session-end preparation, settings controls and a boot-lighting guide distinguishing software startup from BIOS/powered-off hardware behavior.
+- Kept volatile-only controller writes; no BIOS edits or persistent firmware-save commands were added. Actual cold-boot/powered-off retention remains unverified.
+- Passed 40 core and 25 interface checks with fake transports/registration, including hidden startup, conflicts, cancellation, retained release and shutdown preparation.
+
 ## 0.4.0 — Effect color studio and eyedropper
 
 - Added independent 1–8-color palettes for every effect, including recolored Rainbow, Ember and Screen ambience.

@@ -1,4 +1,4 @@
-# Native lighting architecture — 0.4.0
+# Native lighting architecture — 0.5.0
 
 Prism is a C# WPF/Windows Forms app targeting .NET 10, without a network backend, browser engine, vendor app dependency, or third-party NuGet package. The portable build bundles Microsoft's desktop runtime and notices. GPU access loads the installed system `nvapi64.dll`.
 
@@ -9,6 +9,7 @@ Prism is a C# WPF/Windows Forms app targeting .NET 10, without a network backend
 | Models.cs | Persistence/normalization, scene effects, per-output pixel sampling and overrides |
 | ColorEditor.cs | Saturation/value/hue editor, RGB/hex validation, swatches and palette presets |
 | ScreenEyedropper.cs | Temporary physical-pixel display snapshots, magnifier overlays, click/cancel and cleanup |
+| WindowsStartup.cs | Per-user sign-in registration, bounded startup sequence, single-instance activation/Quit signals |
 | LightingSurface.cs | Cached preview drawing, layout dragging, tiny desktop sample |
 | HardwareFrameClock.cs | Scoped native frame timing, cancellation, bounded callbacks |
 | Hardware.cs | Read-only HID enumeration, exact descriptor checks, MSI stream routing and transport |
@@ -31,6 +32,14 @@ WPF uses SoftwareOnly. Windows composition and screen readback may still consume
 The color editor commits only after confirmation. RGB/hex input cannot pass invalid values into the scene. The screen picker runs on one temporary STA thread with a scoped per-monitor DPI context, without changing the WPF thread's DPI settings. It captures display bitmaps before opening full-screen Windows Forms overlays, maps physical coordinates to snapshot pixels, and consumes the selection click. The magnifier repaints on pointer movement only. Selection, Escape/right-click or closing ends the modal session; `finally` disposes overlays/bitmaps and the worker exits. No screenshot file or persistent capture timer is created. The WPF modal editor becomes transparent while picking rather than hiding/ending its dialog loop.
 
 Software checks exercise captured-image selection/cancellation and negative monitor origins. A local diagnostic verifies a real known-color screen pixel; real mixed-DPI/HDR coverage remains limited to available displays.
+
+## Startup and exit lifecycle
+
+The opt-in Windows `Run` entry points to the quoted current executable plus `--startup`, without elevation or a service. Startup can avoid showing the WPF window, restore persisted device placements/scene colors, and retry connection at most three times after 2/3/5-second waits. Stop/Quit or disabling automatic restore cancels pending work; competing RGB apps block it. Failed startup is logged locally and reported through the tray. Manual launches do not independently auto-enable output.
+
+A named kernel-object lease admits one normal instance per user/session. Event signals activate the existing window or request Quit. Thread-pool waits sleep until a signal; no activation polling loop runs. Test/benchmark modes bypass the normal-instance guard and UI tests inject fake startup registration and transports.
+
+Normal Stop always clears/restores. Opt-in Keep colors changes only the quit path: stop the frame clock, wait for an in-flight frame, stop/drain the GPU worker and dispose transports without sending black/config restoration. The most recently delivered colors remain in volatile controller state while powered. On Windows session end with retention enabled, timers stop and configuration is saved without blocking shutdown; Windows reclaims process handles. No flash-save bit, BIOS configuration or firmware command is introduced. Retention is not proof of powered-off/cold-boot behavior; see [boot lighting](BOOT-LIGHTING.md).
 
 ## MSI protocol
 

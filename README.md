@@ -4,20 +4,20 @@
 
 A standalone Windows lighting app with **individual MSI ARGB LED control and Gigabyte RTX 4070 Ti lighting**. No OpenRGB, SignalRGB, SDK server, account, or background service is required. The portable x64 release bundles the .NET desktop runtime.
 
-**0.4.0 alpha adds a color editor and screen eyedropper.** Customize every library effect with up to eight colors, use palette presets, and save each effect's colors in profiles. It retains the working native motherboard/GPU control introduced in 0.3.0.
+**0.5.0 alpha adds quiet Windows sign-in startup and saved-lighting restore.** Optional retained colors freeze the last frame when Prism quits. BIOS and powered-off lighting remain hardware-dependent; Prism does not run before Windows or save scenes into firmware. The full effect color editor and eyedropper are included.
 
 ![Prism RGB Studio](docs/images/preview.png)
 
 ## Download and use
 
-1. Download **PrismRGB-Windows-x64.zip** from [v0.4.0 Releases](https://github.com/pyonpyonn/prism-rgb/releases/tag/v0.4.0).
+1. Download **PrismRGB-Windows-x64.zip** from [v0.5.0 Releases](https://github.com/pyonpyonn/prism-rgb/releases/tag/v0.5.0).
 2. Extract the complete archive and open **Launch Prism RGB.cmd**. Use this new folder instead of an older extracted copy.
 3. Exit other RGB controllers, including SignalRGB, MSI lighting tools, and RGB Fusion.
 4. Choose **Devices → Connect lighting**. The app connects the motherboard and queries the supported GPU if available. Connecting does not start color output.
 5. Choose an effect and brightness, then **Start lighting**.
 6. **Stop & restore** clears streamed colors and restores the motherboard's configuration. Previous external per-LED animations and GPU colors cannot be recovered; GPU LEDs are cleared on Stop.
 
-Output always starts disabled on launch. [Full usage and troubleshooting](docs/USAGE.md).
+Manual first launches start with output off. Optional Windows startup can restore saved lighting after sign-in. [Full usage](docs/USAGE.md) and [startup/boot lighting guide](docs/BOOT-LIGHTING.md).
 
 ## Supported hardware
 
@@ -38,7 +38,8 @@ Other USB/catalog entries are research references and do not supply native drive
 - Global brightness, speed, draggable virtual preview, and local JSON scene profiles that retain every custom effect palette.
 - Header LED counts, scene position/span, reverse direction, and numbered per-LED color overrides.
 - Named **Fan 1 / Fan 2 / Fan 3 / Logo** GPU color overrides.
-- Optional tray behavior, read-only HID discovery, and a descriptive compatibility catalog.
+- Optional Windows sign-in startup, quiet tray launch, automatic saved-scene restore, single-instance activation, and retained last colors on Quit.
+- Read-only HID discovery and a descriptive compatibility catalog.
 
 Expand **Choose colors for individual LEDs** under an ARGB header and click a numbered pixel. GPU controls use named lighting zones. **Return all LEDs to the effect** removes that output's overrides. Global brightness applies to manual colors too.
 
@@ -61,7 +62,7 @@ dotnet run --project source/PrismRGB.csproj -c Release
 ./scripts/package.ps1
 ```
 
-The ZIP and SHA-256 checksum are written to `dist/`. Windows CI runs the same **34 core checks and 19 interface checks**, using fake hardware without physical lighting writes. Tests include all custom effect palettes, persistence/normalization, screen-coordinate mapping, actual color-dialog apply/cancel, eyedropper return/cancellation, and the existing native protocol, cleanup and idle checks. The C# app has no third-party NuGet dependency.
+The ZIP and SHA-256 checksum are written to `dist/`. Windows CI runs the same **40 core checks and 25 interface checks**, using fake hardware without physical lighting writes. Tests include bounded/cancelled startup, hidden saved-scene restore, single-instance activation/Quit, retained-frame cleanup, shutdown preparation, custom palettes/color dialogs, and existing native protocol/idle checks. Startup UI checks use fake registration and do not modify Windows startup. The C# app has no third-party NuGet dependency.
 
 ```powershell
 ./scripts/measure.ps1
@@ -71,9 +72,10 @@ The ZIP and SHA-256 checksum are written to `dist/`. Windows CI runs the same **
 
 ## Status and documentation
 
-This is independent software, not a reconstruction of the compiled SignalRGB application or full feature parity. No vendor executable, original plugin source, paid content, or artwork is included. Fan-speed control, monitoring, game/audio integrations, LCDs, general plugin execution, startup automation, and other hardware adapters remain future work.
+This is independent software, not a reconstruction of the compiled SignalRGB application or full feature parity. No vendor executable, original plugin source, paid content, or artwork is included. Fan-speed control, monitoring, game/audio integrations, LCDs, general plugin execution, and other hardware adapters remain future work. Pre-Windows and powered-off lighting are not guaranteed by retaining a volatile frame.
 
 - [Usage and troubleshooting](docs/USAGE.md)
+- [Windows startup, retained colors, and BIOS limits](docs/BOOT-LIGHTING.md)
 - [Performance](docs/PERFORMANCE.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Inspection evidence and limits](docs/INSPECTION.md)

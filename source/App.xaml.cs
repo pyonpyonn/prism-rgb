@@ -10,6 +10,8 @@ namespace PrismRGB;
 
 public partial class App : Application
 {
+    SingleInstanceLease? instance;
+    protected override void OnExit(ExitEventArgs e){instance?.Dispose();base.OnExit(e);}
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
@@ -50,7 +52,17 @@ public partial class App : Application
         int preview=Array.IndexOf(e.Args,"--render-preview");
         int smoke=Array.IndexOf(e.Args,"--ui-smoke");
         int benchmark=Array.IndexOf(e.Args,"--benchmark");
-        var main=new MainWindow();MainWindow=main;
+        bool startup=Array.IndexOf(e.Args,"--startup")>=0,diagnostic=preview>=0 || smoke>=0 || benchmark>=0;
+        if(Array.IndexOf(e.Args,"--quit")>=0){SingleInstanceLease.RequestQuit();Shutdown();return;}
+        if(!diagnostic)
+        {
+            instance=SingleInstanceLease.Acquire(!startup);
+            if(instance is null){Shutdown();return;}
+        }
+        var main=new MainWindow(smoke>=0?new FakeStartupRegistration():null);MainWindow=main;
+        instance?.Listen(()=>{if(!Dispatcher.HasShutdownStarted)Dispatcher.BeginInvoke(new Action(main.OpenFromLauncher));},()=>{if(!Dispatcher.HasShutdownStarted)Dispatcher.BeginInvoke(new Action(async()=>await main.QuitFromLauncherAsync()));});
+        SessionEnding+=(_,_)=>main.PrepareForWindowsShutdown();
+        if(startup && !diagnostic){await main.RunWindowsStartupAsync();return;}
         if(preview>=0 || smoke>=0){main.ShowInTaskbar=false;main.Left=-10000;main.Top=-10000;main.WindowStartupLocation=WindowStartupLocation.Manual;}
         main.Show();
         if(benchmark>=0 && benchmark+2<e.Args.Length)

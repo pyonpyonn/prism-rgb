@@ -300,6 +300,60 @@ public static class SelfTests
             var resumed=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             clock.Set(true,()=>resumed.TrySetResult());await resumed.Task.WaitAsync(TimeSpan.FromSeconds(2));clock.Set(false,()=>{});
         });
+        Test("Windows startup quotes an exact executable path",()=>
+        {
+            Check(WindowsStartupRegistration.Command(@"C:\Apps\Prism RGB\PrismRGB.exe")=="\"C:\\Apps\\Prism RGB\\PrismRGB.exe\" --startup","Startup command lost quoting");
+            foreach(var path in new[]{"relative.exe",@"C:\Apps\bad"+"\".exe",@"C:\Apps\PrismRGB.dll"})
+            {bool rejected=false;try{WindowsStartupRegistration.Command(path);}catch(ArgumentException){rejected=true;}Check(rejected,"Unsafe startup path accepted");}
+        });
+        await TestAsync("Startup retries are bounded and stop on success or conflicts",async()=>
+        {
+            var delays=new List<int>();int attempts=0;
+            Task Wait(TimeSpan time,CancellationToken token){delays.Add((int)time.TotalSeconds);return Task.CompletedTask;}
+            var result=await StartupSequence.RunAsync(_=>Task.FromResult(++attempts==2?StartupAttempt.Started:StartupAttempt.Retry),CancellationToken.None,Wait);
+            Check(result==StartupAttempt.Started && attempts==2 && delays.SequenceEqual(new[]{2,3}),"Successful startup kept retrying");
+            attempts=0;delays.Clear();result=await StartupSequence.RunAsync(_=>{attempts++;return Task.FromResult(StartupAttempt.Retry);},CancellationToken.None,Wait);
+            Check(result==StartupAttempt.Retry && attempts==3 && delays.SequenceEqual(new[]{2,3,5}),"Failed startup is not bounded");
+            attempts=0;result=await StartupSequence.RunAsync(_=>{attempts++;return Task.FromResult(StartupAttempt.Blocked);},CancellationToken.None,Wait);
+            Check(result==StartupAttempt.Blocked && attempts==1,"Conflicting software triggered repeated connection attempts");
+        });
+        await TestAsync("Cancelling startup prevents any connection attempt",async()=>
+        {
+            using var token=new CancellationTokenSource();token.Cancel();int attempts=0;bool cancelled=false;
+            try{await StartupSequence.RunAsync(_=>{attempts++;return Task.FromResult(StartupAttempt.Started);},token.Token,(_,_)=>Task.CompletedTask);}catch(OperationCanceledException){cancelled=true;}
+            Check(cancelled && attempts==0,"Cancelled startup still connected");
+        });
+        await TestAsync("Single-instance launches signal the first process without startup popups",async()=>
+        {
+            string scope="test-"+Guid.NewGuid().ToString("N");using var first=SingleInstanceLease.Acquire(false,scope);
+            Check(first is not null,"Initial instance was rejected");
+            var opened=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);int activations=0;
+            var quit=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            first!.Listen(()=>{Interlocked.Increment(ref activations);opened.TrySetResult();},()=>quit.TrySetResult());
+            using var silent=SingleInstanceLease.Acquire(false,scope);Check(silent is null,"A duplicate startup instance was admitted");
+            await Task.Delay(30);Check(activations==0,"Duplicate startup reopened the UI");
+            using var manual=SingleInstanceLease.Acquire(true,scope);Check(manual is null,"A duplicate manual instance was admitted");
+            await opened.Task.WaitAsync(TimeSpan.FromSeconds(2));Check(activations==1,"Manual activation was lost or repeated");
+            Check(SingleInstanceLease.RequestQuit(scope),"Quit signal did not find the running instance");await quit.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        });
+        await TestAsync("Retaining colors drains and releases transports without black or flash writes",async()=>
+        {
+            var usb=new FakeMsiTransport();var gpu=new FakeGpuTransport();
+            var backend=new NativeLightingBackend(new MsiBackend(()=>usb,()=>false),()=>new GigabyteBackend(()=>gpu,()=>false));await backend.ConnectAsync();
+            await backend.WriteAsync(new Dictionary<uint,Color[]>{{2,Enumerable.Repeat(Colors.Red,20).ToArray()},{100,Enumerable.Repeat(Colors.Blue,4).ToArray()}});
+            for(int i=0;i<100 && gpu.Packets.Count==0;i++)await Task.Delay(10);
+            Check(gpu.Packets.Count>0,"GPU retained frame was never delivered");int count=usb.Packets.Count,gpuCount=gpu.Packets.Count;
+            await backend.DisposeAsync();Check(usb.Disposed && gpu.Disposed,"Retained output leaked transport handles");
+            Check(usb.Packets.Count==count && gpu.Packets.Count==gpuCount,"Retained output wrote a clearing packet");
+            Check(usb.Packets.Where(p=>p.Length==185).All(p=>p[184]==0),"Retaining requested a persistent controller save");
+        });
+        Test("Startup preferences persist separately from scene profiles and default to opt-in",()=>
+        {
+            var defaults=new Preferences();Check(!defaults.RestoreLightingOnStartup && !defaults.KeepColorsOnExit && defaults.StartInTray,"New settings enabled automatic output");
+            string dir=Path.Combine(Directory.GetCurrentDirectory(),"work","startup-test-"+Guid.NewGuid().ToString("N"));Storage.DirectoryPath=dir;
+            Storage.Save(new(){RestoreLightingOnStartup=true,StartInTray=true,MinimizeToTray=true,KeepColorsOnExit=true});var loaded=Storage.Load();
+            Check(loaded.RestoreLightingOnStartup && loaded.StartInTray && loaded.MinimizeToTray && loaded.KeepColorsOnExit,"Startup/exit preferences were lost");
+        });
         Test("USB discovery reads interface descriptors without lighting writes",()=>
         {
             var devices=Hid.Enumerate();Check(devices.All(d=>d.VendorId>0 && d.Path.Length>0),"Invalid HID metadata");

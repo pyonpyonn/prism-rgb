@@ -1,6 +1,6 @@
-# Using Prism RGB 0.4.0
+# Using Prism RGB 0.5.0
 
-Extract the complete [v0.4.0 Windows x64 release](https://github.com/pyonpyonn/prism-rgb/releases/tag/v0.4.0) and open `Launch Prism RGB.cmd`. Use the new executable rather than an older extracted build. The .NET desktop runtime is bundled.
+Extract the complete [v0.5.0 Windows x64 release](https://github.com/pyonpyonn/prism-rgb/releases/tag/v0.5.0) and open `Launch Prism RGB.cmd`. Use the new executable rather than an older extracted build. The .NET desktop runtime is bundled.
 
 ## Connect and start
 
@@ -10,7 +10,7 @@ Supported controllers are MSI B550M PRO-VDH WIFI (1462:7C95) and Gigabyte RTX 40
 
 Choose an effect, palette, and brightness in **Studio**, then **Start lighting**. Unchecked motherboard headers receive black while Prism owns the motherboard controller; it needs a complete stream routing configuration. Stop before changing enabled headers or counts.
 
-**Stop & restore** clears streamed ARGB/GPU colors and restores the saved motherboard configuration. It cannot recover an earlier app's per-LED animation or previous GPU colors. Disconnection or another controller taking ownership can prevent cleanup. Output never resumes automatically after failure or on launch.
+**Stop & restore** clears streamed ARGB/GPU colors and restores the saved motherboard configuration. It cannot recover an earlier app's per-LED animation or previous GPU colors. Disconnection or another controller taking ownership can prevent cleanup. Output stays off after a runtime failure. Manual first launches start with output off; Windows startup can resume it only when enabled explicitly.
 
 ## Individual ARGB LEDs
 
@@ -71,7 +71,13 @@ The draggable virtual setup is illustrative. Real outputs use the Devices positi
 
 Profiles can be saved, replaced by name, deleted, and imported/exported as Prism JSON up to 1 MiB. Preferences live at `%LOCALAPPDATA%\PrismRGB\settings.json`; **Settings → Open profile folder** opens it. Quit before backing up/resetting settings. Old settings are migrated to use saved controller counts and a usable span when first enabling per-LED control.
 
-Default Close clears/restores and quits. Optional tray mode hides the window while lighting continues. Use the tray's Stop or Quit when finished. No installer, auto-updater, or automatic startup is included.
+## Startup, closing, and boot lighting
+
+Under **Settings → Windows startup**, enable **Start Prism when I sign in to Windows**, **Start quietly in the system tray**, and **Restore my saved lighting automatically at Windows sign-in**. Use a permanent app folder. Close/disable competing RGB startup apps. Connection attempts are limited to three; Stop/Quit cancels pending startup. Launching Prism again opens the existing instance.
+
+Default Close clears/restores and quits. **Keep running in the system tray when I close the window** keeps effects running. **Keep the last colors when Prism quits** stops animation and leaves the last delivered frame while the controller remains powered, including best-effort Windows-session shutdown preparation. Stop & restore always clears/restores. `PrismRGB.exe --quit` also requests a graceful exit.
+
+Prism cannot run in BIOS or while the PC is off. Last-frame retention is volatile and does not establish cold-boot/shutdown lighting support. See the [boot lighting guide](BOOT-LIGHTING.md) for verified MSI controls, power/reset limitations, and a manual restart check. No BIOS settings or controller flash are changed. No installer or auto-updater is included.
 
 ## Troubleshooting
 

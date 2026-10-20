@@ -91,6 +91,9 @@ public sealed class Preferences
     public List<SavedProfile> Profiles { get; set; } = new();
     public List<DevicePlacement> Placements { get; set; } = new();
     public bool MinimizeToTray { get; set; } = false;
+    public bool StartInTray { get; set; } = true;
+    public bool RestoreLightingOnStartup { get; set; }
+    public bool KeepColorsOnExit { get; set; }
 }
 
 public static class Storage
