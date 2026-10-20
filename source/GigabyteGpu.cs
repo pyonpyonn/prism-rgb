@@ -53,6 +53,14 @@ public interface IGpuLightingTransport : IDisposable
     void Write(byte[] packet);
 }
 
+public sealed class NvidiaLightingException : IOException
+{
+    public int Status {get;}
+    public bool RetryPacket=>Status is -1 or -108;
+    public bool CanReconnect=>Status is -1 or -4 or -6 or -8 or -10 or -108 or -156;
+    public NvidiaLightingException(int status):base($"NVIDIA GPU lighting I/O failed ({status})."){Status=status;}
+}
+
 public sealed class NvidiaGigabyteTransport : IGpuLightingTransport
 {
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate IntPtr Query(uint id);
@@ -113,7 +121,7 @@ public sealed class NvidiaGigabyteTransport : IGpuLightingTransport
         {
             var info=new I2cInfo{Version=0x30040,Address=0xE2,Data=pinned.AddrOfPinnedObject(),Size=(uint)bytes.Length,DeprecatedSpeed=0xFFFF,Speed=4,Port=1,PortSet=1};
             int status=(reading?read:write)(gpu,ref info,new uint[]{1,0});
-            if(status!=0)throw new IOException($"NVIDIA GPU lighting I/O failed ({status}). Close RGB Fusion and other lighting tools, then reconnect.");
+            if(status!=0)throw new NvidiaLightingException(status);
         }
         finally{pinned.Free();}
     }
@@ -129,56 +137,86 @@ public sealed class NvidiaGigabyteTransport : IGpuLightingTransport
 public sealed class GigabyteBackend : ILightingBackend
 {
     readonly Func<IGpuLightingTransport> open;readonly Func<bool> conflict;readonly SemaphoreSlim gate=new(1,1);
-    IGpuLightingTransport? transport;Color[]? previous;readonly Dictionary<byte,byte[]> packetCache=new();bool wrote,faulted,disposed;
+    IGpuLightingTransport? transport;Color[]? previous;readonly Dictionary<byte,byte[]> packetCache=new();bool wrote,modeReady,disposed;
     public int Writes {get;private set;}
+    public int PacketRetries {get;private set;}
+    public int TransferFailures {get;private set;}
     public bool NeedsClear=>wrote;
     public List<OutputDevice> Devices {get;}=new();
     public string Label=>"Gigabyte RTX 4070 Ti · fan and logo lighting";
     public GigabyteBackend():this(()=>new NvidiaGigabyteTransport(),Hid.ConflictRunning){}
     internal GigabyteBackend(Func<IGpuLightingTransport> open,Func<bool> conflict){this.open=open;this.conflict=conflict;}
-    async Task Locked(Action action)
+    async Task Locked(Func<CancellationToken,Task> action,CancellationToken token=default)
     {
-        await gate.WaitAsync();try{if(disposed)throw new ObjectDisposedException(nameof(GigabyteBackend));await Task.Run(action);}finally{gate.Release();}
+        await gate.WaitAsync(token);try{if(disposed)throw new ObjectDisposedException(nameof(GigabyteBackend));await Task.Run(()=>action(token),token);}finally{gate.Release();}
     }
-    void Send(byte[] packet){transport!.Write(packet);Writes++;}
-    public Task ConnectAsync()=>Locked(()=>
+    async Task SendAsync(byte[] packet,CancellationToken token)
+    {
+        for(int attempt=0;;attempt++)
+        {
+            token.ThrowIfCancellationRequested();
+            try{transport!.Write(packet);Writes++;return;}
+            catch(NvidiaLightingException ex)
+            {
+                TransferFailures++;
+                if(!ex.RetryPacket || attempt>=2)throw;
+                PacketRetries++;
+                await Task.Delay(attempt==0?40:160,token);
+            }
+        }
+    }
+    void OpenTransport()
     {
         if(conflict())throw new IOException("Close competing RGB software before connecting the GPU.");
         var candidate=open();
         try
         {
-            if(!GigabyteProtocol.Identity(candidate.QueryIdentity()))throw new IOException("GPU lighting identity verification failed; no mode/color commands were sent.");
+            if(!GigabyteProtocol.Identity(candidate.QueryIdentity()))throw new InvalidDataException("GPU lighting identity verification failed; no mode/color commands were sent.");
             transport=candidate;
-            Devices.Add(new(){Id=100,Name="Gigabyte RTX 4070 Ti · fans + logo",Identity="GPU:10DE:2782:1458:40C6",LedCount=4,PixelNames=new[]{"Fan 1","Fan 2","Fan 3","Logo"}});
         }
         catch{candidate.Dispose();throw;}
-    });
-    void WriteColors(Color[] colors)
+    }
+    public Task ConnectAsync()=>Locked(_=>
     {
-        if(!wrote)
+        OpenTransport();
+        Devices.Clear();Devices.Add(new(){Id=100,Name="Gigabyte RTX 4070 Ti · fans + logo",Identity="GPU:10DE:2782:1458:40C6",LedCount=4,PixelNames=new[]{"Fan 1","Fan 2","Fan 3","Logo"}});
+        return Task.CompletedTask;
+    });
+    internal Task ReconnectAsync(CancellationToken token)=>Locked(_=>
+    {
+        transport?.Dispose();transport=null;previous=null;packetCache.Clear();modeReady=false;
+        OpenTransport();return Task.CompletedTask;
+    },token);
+    async Task WriteColorsAsync(Color[] colors,CancellationToken token)
+    {
+        if(!modeReady)
         {
             wrote=true;
-            for(int zone=0;zone<8;zone++)Send(GigabyteProtocol.Mode(zone));
+            for(int zone=0;zone<8;zone++)await SendAsync(GigabyteProtocol.Mode(zone),token);
+            modeReady=true;
         }
         foreach(var packet in GigabyteProtocol.Frame(colors))
         {
             if(packetCache.TryGetValue(packet[0],out var cached) && packet.AsSpan().SequenceEqual(cached))continue;
-            Send(packet);packetCache[packet[0]]=packet;
+            await SendAsync(packet,token);packetCache[packet[0]]=packet;
         }
     }
-    public Task WriteAsync(IReadOnlyDictionary<uint,Color[]> colors)=>Locked(()=>
+    public Task WriteAsync(IReadOnlyDictionary<uint,Color[]> colors)=>WriteAsync(colors,CancellationToken.None);
+    internal Task WriteAsync(IReadOnlyDictionary<uint,Color[]> colors,CancellationToken token)=>Locked(async cancellation=>
     {
         if(!colors.TryGetValue(100,out var values))return;
         if(values.Length!=4)throw new InvalidDataException("The Gigabyte card requires four lighting colors.");
-        if(faulted || transport is null)throw new IOException("GPU lighting is unavailable. Reconnect to retry.");
+        if(transport is null)throw new IOException("GPU lighting is unavailable.");
         if(previous is not null && values.AsSpan().SequenceEqual(previous))return;
-        try{WriteColors(values);previous=(Color[])values.Clone();}catch{faulted=true;throw;}
-    });
-    public Task RestoreAsync()=>Locked(()=>
+        try{await WriteColorsAsync(values,cancellation);previous=(Color[])values.Clone();}
+        catch{previous=null;throw;}
+    },token);
+    public Task RestoreAsync()=>Locked(async token=>
     {
         if(!wrote)return;
         if(conflict())throw new IOException("Another RGB app owns the GPU; clearing was skipped.");
-        WriteColors(new Color[4]);previous=null;wrote=false;packetCache.Clear();
+        if(transport is null)OpenTransport();
+        await WriteColorsAsync(new Color[4],token);previous=null;wrote=false;modeReady=false;packetCache.Clear();
     });
     public async ValueTask DisposeAsync(){await gate.WaitAsync();try{if(disposed)return;disposed=true;transport?.Dispose();transport=null;}finally{gate.Release();}}
 }
@@ -186,17 +224,22 @@ public sealed class GigabyteBackend : ILightingBackend
 public sealed class NativeLightingBackend : ILightingBackend
 {
     readonly MsiBackend msi;readonly Func<GigabyteBackend> openGpu;GigabyteBackend? gpu;
-    readonly object gpuSync=new();Task gpuWork=Task.CompletedTask;Color[]? pendingGpu;Exception? gpuFailure;bool gpuRunning,gpuStopping;
+    readonly object gpuSync=new();Task gpuWork=Task.CompletedTask;Color[]? pendingGpu;bool gpuRunning,gpuStopping,gpuDisabled,disposed;
+    CancellationTokenSource gpuCancellation=new();
+    readonly Func<TimeSpan,CancellationToken,Task> recoveryDelay;
     readonly Stopwatch gpuClock=Stopwatch.StartNew();double lastGpu=-1;
     public NativeLightingBackend():this(new MsiBackend(),()=>new GigabyteBackend()){}
-    internal NativeLightingBackend(MsiBackend msi,Func<GigabyteBackend> openGpu){this.msi=msi;this.openGpu=openGpu;}
+    internal NativeLightingBackend(MsiBackend msi,Func<GigabyteBackend> openGpu,Func<TimeSpan,CancellationToken,Task>? recoveryDelay=null){this.msi=msi;this.openGpu=openGpu;this.recoveryDelay=recoveryDelay??((time,token)=>Task.Delay(time,token));}
     public List<OutputDevice> Devices {get;}=new();
     public string Label=>gpu is null?msi.Label:"MSI motherboard + Gigabyte GPU";
     public string GpuStatus {get;private set;}="";
     public int UsbWrites=>msi.Writes;
     public int I2cWrites=>gpu?.Writes??0;
+    public int GpuPacketRetries=>gpu?.PacketRetries??0;
+    public int GpuTransferFailures=>gpu?.TransferFailures??0;
+    public int GpuRecoveries {get;private set;}
     public bool NeedsRestore=>msi.NeedsRestore || gpu?.NeedsClear==true;
-    public event Action<Exception>? OutputFaulted;
+    public event Action<string>? GpuStatusChanged;
     public async Task ConnectAsync()
     {
         await msi.ConnectAsync();Devices.AddRange(msi.Devices);
@@ -206,44 +249,81 @@ public sealed class NativeLightingBackend : ILightingBackend
     }
     public async Task WriteAsync(IReadOnlyDictionary<uint,Color[]> colors)
     {
-        lock(gpuSync)if(gpuFailure is not null)throw new IOException("GPU output stopped. Reconnect to retry.",gpuFailure);
+        if(disposed)throw new ObjectDisposedException(nameof(NativeLightingBackend));
         await msi.WriteAsync(colors.Where(x=>x.Key<4).ToDictionary(x=>x.Key,x=>x.Value));
         if(gpu is not null && colors.TryGetValue(100,out var values))
         {
             lock(gpuSync)
             {
-                gpuStopping=false;pendingGpu=(Color[])values.Clone();
-                if(!gpuRunning){gpuRunning=true;gpuWork=Task.Run(PumpGpuAsync);}
+                if(gpuDisabled || disposed)return;
+                if(gpuStopping){gpuCancellation.Dispose();gpuCancellation=new();gpuStopping=false;}
+                pendingGpu=(Color[])values.Clone();
+                if(!gpuRunning)StartGpuPump();
             }
         }
     }
-    async Task PumpGpuAsync()
+    // Called with gpuSync held. One worker owns all GPU writes, retries and reconnects.
+    void StartGpuPump(){gpuRunning=true;var token=gpuCancellation.Token;gpuWork=Task.Run(()=>PumpGpuAsync(token));}
+    void SetGpuStatus(string message){GpuStatus=message;GpuStatusChanged?.Invoke(message);}
+    static bool CanRecover(Exception ex)=>ex is NvidiaLightingException native?native.CanReconnect:ex is IOException && ex is not InvalidDataException;
+    internal static TimeSpan RecoveryWait(int attempt)=>TimeSpan.FromSeconds(attempt switch{1=>1,2=>2,3=>5,4=>10,_=>30});
+    async Task PumpGpuAsync(CancellationToken token)
     {
+        bool recovering=false;int attempt=0;
         try
         {
             while(true)
             {
-                double wait=1.0/15-(gpuClock.Elapsed.TotalSeconds-lastGpu);
-                if(wait>0)await Task.Delay(TimeSpan.FromSeconds(wait));
-                Color[]? values;
-                lock(gpuSync)
+                Color[]? values=null;
+                try
                 {
-                    if(gpuStopping || pendingGpu is null){gpuRunning=false;return;}
-                    values=pendingGpu;pendingGpu=null;
+                    token.ThrowIfCancellationRequested();
+                    if(recovering)
+                    {
+                        await recoveryDelay(RecoveryWait(attempt),token);
+                        token.ThrowIfCancellationRequested();
+                        await gpu!.ReconnectAsync(token);
+                    }
+                    double wait=1.0/15-(gpuClock.Elapsed.TotalSeconds-lastGpu);
+                    if(wait>0)await Task.Delay(TimeSpan.FromSeconds(wait),token);
+                    lock(gpuSync)
+                    {
+                        if(gpuStopping || pendingGpu is null)return;
+                        values=pendingGpu;pendingGpu=null;
+                    }
+                    lastGpu=gpuClock.Elapsed.TotalSeconds;
+                    await gpu!.WriteAsync(new Dictionary<uint,Color[]>{{100,values}},token);
+                    if(recovering){GpuRecoveries++;SetGpuStatus("GPU lighting recovered automatically. Motherboard lighting stayed active.");recovering=false;attempt=0;}
                 }
-                lastGpu=gpuClock.Elapsed.TotalSeconds;
-                await gpu!.WriteAsync(new Dictionary<uint,Color[]>{{100,values}});
+                catch(OperationCanceledException) when(token.IsCancellationRequested){return;}
+                catch(Exception ex)
+                {
+                    if(token.IsCancellationRequested)return;
+                    if(!CanRecover(ex))
+                    {
+                        lock(gpuSync){gpuDisabled=true;pendingGpu=null;}
+                        SetGpuStatus("GPU lighting paused: "+ex.Message+" Motherboard lighting continues. Reconnect the GPU after checking the driver and card.");return;
+                    }
+                    // Keep only the newest frame, including Solid scenes with no further ticks.
+                    lock(gpuSync){if(gpuStopping)return;if(values is not null)pendingGpu??=values;}
+                    attempt=Math.Min(attempt+1,5);
+                    if(!recovering)SetGpuStatus("GPU lighting is recovering automatically: "+ex.Message+" Motherboard lighting continues.");
+                    recovering=true;
+                }
             }
         }
-        catch(Exception ex)
+        finally
         {
-            lock(gpuSync){gpuFailure=ex;pendingGpu=null;gpuRunning=false;}
-            OutputFaulted?.Invoke(ex);
+            lock(gpuSync)
+            {
+                gpuRunning=false;
+                if(!gpuStopping && !gpuDisabled && !disposed && pendingGpu is not null)StartGpuPump();
+            }
         }
     }
     async Task StopGpuPumpAsync()
     {
-        Task work;lock(gpuSync){gpuStopping=true;pendingGpu=null;work=gpuWork;}await work;
+        Task work;lock(gpuSync){gpuStopping=true;pendingGpu=null;gpuCancellation.Cancel();work=gpuWork;}await work;
     }
     public async Task RestoreAsync()
     {
@@ -253,5 +333,5 @@ public sealed class NativeLightingBackend : ILightingBackend
         if(gpu is not null)try{await gpu.RestoreAsync();}catch(Exception ex){errors.Add(ex);}
         if(errors.Count>0)throw new AggregateException("Lighting cleanup was incomplete.",errors);
     }
-    public async ValueTask DisposeAsync(){await StopGpuPumpAsync();await msi.DisposeAsync();if(gpu is not null)await gpu.DisposeAsync();}
+    public async ValueTask DisposeAsync(){lock(gpuSync){if(disposed)return;disposed=true;}await StopGpuPumpAsync();await msi.DisposeAsync();if(gpu is not null)await gpu.DisposeAsync();gpuCancellation.Dispose();}
 }

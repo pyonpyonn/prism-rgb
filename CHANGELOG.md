@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.2 — Keep lights running through GPU I/O errors
+
+- Retry brief NVIDIA generic/busy lighting failures without permanently faulting the GPU backend.
+- Reconnect/reidentify the GPU automatically with increasing waits up to 30 seconds, retaining only the latest colors and supporting static scenes.
+- Keep motherboard output active through GPU failures; removed the GPU error path that stopped and cleared all lights.
+- Replace repeated GPU tray warnings with footer/log status transitions. Unsupported requests and identity mismatches pause only the GPU.
+- Fix partial mode initialization and frame-cache handling; cancel packet/reconnect waits on Stop/Quit and preserve retained-color exit behavior.
+- Add a ten-minute hardware-soak diagnostic with GPU failure/retry/recovery counters. Keep normal output rates and idle behavior unchanged.
+- Passed 50 core and 26 interface checks using fake hardware, including recovery, backoff, invalid handles, ownership/identity checks and lifecycle cancellation.
+
 ## 0.5.1 — Preserve existing GPU placement
 
 - Preserve saved GPU color spans below 5% when reconnecting or restoring at sign-in. Default placement now applies only to newly discovered GPU outputs.

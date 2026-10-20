@@ -1,6 +1,6 @@
-# Using Prism RGB 0.5.1
+# Using Prism RGB 0.5.2
 
-Extract the complete [v0.5.1 Windows x64 release](https://github.com/pyonpyonn/prism-rgb/releases/tag/v0.5.1) and open `Launch Prism RGB.cmd`. Use the new executable rather than an older extracted build. The .NET desktop runtime is bundled.
+Extract the complete [v0.5.2 Windows x64 release](https://github.com/pyonpyonn/prism-rgb/releases/tag/v0.5.2) and open `Launch Prism RGB.cmd`. Use the new executable rather than an older extracted build. The .NET desktop runtime is bundled.
 
 ## Connect and start
 
@@ -10,7 +10,7 @@ Supported controllers are MSI B550M PRO-VDH WIFI (1462:7C95) and Gigabyte RTX 40
 
 Choose an effect, palette, and brightness in **Studio**, then **Start lighting**. Unchecked motherboard headers receive black while Prism owns the motherboard controller; it needs a complete stream routing configuration. Stop before changing enabled headers or counts.
 
-**Stop & restore** clears streamed ARGB/GPU colors and restores the saved motherboard configuration. It cannot recover an earlier app's per-LED animation or previous GPU colors. Disconnection or another controller taking ownership can prevent cleanup. Output stays off after a runtime failure. Manual first launches start with output off; Windows startup can resume it only when enabled explicitly.
+**Stop & restore** clears streamed ARGB/GPU colors and restores the saved motherboard configuration. It cannot recover an earlier app's per-LED animation or previous GPU colors. Disconnection or another controller taking ownership can prevent cleanup. Motherboard I/O failures stop output; GPU failures are isolated as described below. Manual first launches start with output off; Windows startup can resume it only when enabled explicitly.
 
 ## Individual ARGB LEDs
 
@@ -36,6 +36,10 @@ The combined 1–232 ARGB range uses the compact stream verified visually on the
 ## GPU lighting
 
 The GPU output exposes **Fan 1, Fan 2, Fan 3, Logo**. Expand **Choose individual fan and logo colors** to set overrides; otherwise each zone samples the current effect. These are four lighting zones on the tested card, not individually addressable LEDs within every fan ring. Fan speed is never modified. Stop clears GPU lighting because the original state is not readable as a complete scene.
+
+Brief NVIDIA generic/busy errors are retried twice, after 40 and 160 milliseconds. If the driver remains unavailable, Prism reconnects and verifies the GPU again after 1, 2, 5, 10, then 30 seconds between attempts. Motherboard lighting continues. The GPU resumes the latest scene colors, including Solid, when access returns. A failed transfer can temporarily leave some GPU zones on an earlier color; recovery refreshes all zones without deliberately clearing them.
+
+Recovery status appears in the footer and `%LOCALAPPDATA%\PrismRGB\startup.log`; it does not repeatedly show tray warnings. Stop/Quit cancels pending recovery. An identity mismatch or unsupported driver request pauses only the GPU and requires disconnect/reconnect after checking the card/driver. Another RGB controller blocks reconnection until it exits. No GPU power, fan, clock, firmware or BIOS settings are changed.
 
 ## Effect colors and eyedropper
 
@@ -86,6 +90,8 @@ Prism cannot run in BIOS or while the PC is off. Last-frame retention is volatil
 | 0.2.0 connects but produces no visible ARGB colors | Use 0.4.0 or later; the old color-field-only path did not supply the required stream/routing. |
 | Connection blocked | Close competing RGB tools and verify the exact supported hardware. |
 | GPU unavailable | Check the footer, installed NVIDIA driver, exact card identifiers, and competing RGB apps. Motherboard output can still be used. |
+| GPU error turns all lights off in 0.5.1 or earlier | Update to 0.5.2. GPU recovery now runs separately and does not clear motherboard output. |
+| GPU is recovering automatically | Leave Prism running; it retries with increasing waits, up to 30 seconds. Check the local startup log if the driver stays unavailable. |
 | Some LEDs stay dark or patterns repeat | Check the configured count, chain wiring/splitters, brightness, and manual overrides. |
 | Profile changes leave some colors fixed | Clear that output's per-LED overrides. |
 | GPU fans/logo do not match | Use the named GPU controls; motherboard headers do not control the card directly. |
@@ -95,7 +101,7 @@ Prism cannot run in BIOS or while the PC is off. Last-frame retention is volatil
 
 ## Diagnostics
 
-With competing RGB software closed, these explicit tests change supported hardware briefly and clear/restore it afterward:
+Quit the normal Prism instance and competing RGB software before running these explicit tests. They change supported hardware briefly and clear/restore it afterward:
 
 ```powershell
 ./dist/app/PrismRGB.exe --test-argb argb-test.json

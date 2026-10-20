@@ -270,7 +270,7 @@ public static class SelfTests
         await TestAsync("Invalid GPU identity is disposed before mode or color writes",async()=>
         {
             var transport=new FakeGpuTransport{BadIdentity=true};await using var backend=new GigabyteBackend(()=>transport,()=>false);bool failed=false;
-            try{await backend.ConnectAsync();}catch(IOException){failed=true;}
+            try{await backend.ConnectAsync();}catch(InvalidDataException){failed=true;}
             Check(failed && transport.Disposed && transport.Packets.Count==0,"Invalid GPU received lighting commands");
         });
         await TestAsync("GPU coalescing drains before Stop and never relights after cleanup",async()=>
@@ -281,14 +281,112 @@ public static class SelfTests
             await backend.RestoreAsync();int sent=gpu.Packets.Count;await Task.Delay(150);
             Check(gpu.Packets.Count==sent && !backend.NeedsRestore && usb.Packets.Last().SequenceEqual(usb.Original),"A pending frame relit a device after Stop");
         });
-        await TestAsync("A queued GPU failure raises an error even when a static scene stops its timer",async()=>
+        await TestAsync("Transient NVIDIA generic/busy failures retry the same packet without reconnecting",async()=>
         {
-            var gpu=new FakeGpuTransport{Fail=true};var usb=new FakeMsiTransport();
+            foreach(int status in new[]{-1,-108})
+            {
+                var gpu=new FakeGpuTransport{Failures=2,FailureStatus=status};await using var backend=new GigabyteBackend(()=>gpu,()=>false);await backend.ConnectAsync();
+                var colors=new Dictionary<uint,Color[]>{{100,Enumerable.Repeat(Colors.Blue,4).ToArray()}};
+                await backend.WriteAsync(colors);await backend.WriteAsync(colors);
+                Check(gpu.Attempts==18 && gpu.Packets.Count==16 && gpu.Queries==1 && backend.PacketRetries==2 && backend.TransferFailures==2,"Transient packet retry lost initialization or duplicate suppression");
+                await backend.RestoreAsync();
+            }
+        });
+        await TestAsync("An interrupted GPU mode setup is completed before colors are sent",async()=>
+        {
+            var gpu=new FakeGpuTransport{Failures=3,FailAfter=3};await using var backend=new GigabyteBackend(()=>gpu,()=>false);await backend.ConnectAsync();
+            var colors=new Dictionary<uint,Color[]>{{100,Enumerable.Repeat(Colors.Blue,4).ToArray()}};
+            try{await backend.WriteAsync(colors);}catch(NvidiaLightingException){}
+            Check(gpu.Packets.Count==3 && gpu.Packets.All(p=>p[0]==0x88),"Interrupted setup sent colors");
+            await backend.WriteAsync(colors);
+            Check(gpu.Packets.Skip(3).Take(8).Select(p=>p[5]).SequenceEqual(Enumerable.Range(0,8).Select(i=>(byte)i)),"Mode setup was incorrectly treated as complete");
+        });
+        await TestAsync("A partially failed GPU frame cannot make the previous color look unchanged",async()=>
+        {
+            var gpu=new FakeGpuTransport();await using var backend=new GigabyteBackend(()=>gpu,()=>false);await backend.ConnectAsync();
+            var red=new Dictionary<uint,Color[]>{{100,Enumerable.Repeat(Colors.Red,4).ToArray()}};await backend.WriteAsync(red);
+            gpu.FailAfter=gpu.Attempts+1;gpu.Failures=3;
+            try{await backend.WriteAsync(new Dictionary<uint,Color[]>{{100,Enumerable.Repeat(Colors.Blue,4).ToArray()}});}catch(NvidiaLightingException){}
+            int before=gpu.Packets.Count;await backend.WriteAsync(red);
+            Check(gpu.Packets.Count>before && gpu.Packets.Last()[2]==255 && gpu.Packets.Last()[4]==0,"Cached prior frame hid a partial failed color change");
+        });
+        await TestAsync("A static GPU scene recovers automatically while motherboard frames keep working",async()=>
+        {
+            var failed=new FakeGpuTransport{Fail=true};var good=new FakeGpuTransport();var usb=new FakeMsiTransport();int opens=0,statuses=0;
+            await using var backend=new NativeLightingBackend(new MsiBackend(()=>usb,()=>false),()=>new GigabyteBackend(()=>++opens==1?failed:good,()=>false),(_,token)=>Task.Delay(10,token));await backend.ConnectAsync();
+            var recovered=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            backend.GpuStatusChanged+=s=>{statuses++;if(s.Contains("recovered"))recovered.TrySetResult();};
+            await backend.WriteAsync(new Dictionary<uint,Color[]>{{2,new[]{Colors.Red}},{100,Enumerable.Repeat(Colors.Blue,4).ToArray()}});
+            await recovered.Task.WaitAsync(TimeSpan.FromSeconds(3));
+            Check(backend.GpuRecoveries==1 && opens==2 && failed.Disposed && good.Queries==1 && good.Packets.Count==16 && statuses==2,"Static frame did not resume after reidentification");
+            Check(usb.Packets.Last()[11]==255 && !usb.Packets.Last().SequenceEqual(usb.Original),"GPU failure cleared motherboard output");
+            await backend.RestoreAsync();Check(!backend.NeedsRestore,"Recovered frame cleanup failed");
+        });
+        await TestAsync("GPU recovery coalesces the newest frame without blocking motherboard output",async()=>
+        {
+            var failed=new FakeGpuTransport{Fail=true};var good=new FakeGpuTransport();var usb=new FakeMsiTransport();int opens=0;
+            var paused=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);var resume=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            await using var backend=new NativeLightingBackend(new MsiBackend(()=>usb,()=>false),()=>new GigabyteBackend(()=>++opens==1?failed:good,()=>false),(_,token)=>{paused.TrySetResult();return resume.Task.WaitAsync(token);});await backend.ConnectAsync();
+            var recovered=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);backend.GpuStatusChanged+=s=>{if(s.Contains("recovered"))recovered.TrySetResult();};
+            await backend.WriteAsync(new Dictionary<uint,Color[]>{{100,Enumerable.Repeat(Colors.Blue,4).ToArray()}});await paused.Task.WaitAsync(TimeSpan.FromSeconds(3));
+            for(int i=0;i<20;i++)await backend.WriteAsync(new Dictionary<uint,Color[]>{{2,new[]{Color.FromRgb((byte)i,0,0)}},{100,Enumerable.Repeat(Color.FromRgb((byte)i,0,0),4).ToArray()}});
+            Check(usb.Packets.Last()[11]==19 && opens==1,"Motherboard was stalled by GPU recovery");resume.TrySetResult();await recovered.Task.WaitAsync(TimeSpan.FromSeconds(3));
+            Check(good.Packets.Where(p=>p[0] is 0xB0 or 0xBC).All(p=>p[2]==19 && p[4]==0) && good.Packets.Count==16,"Recovery replayed stale frames");
+        });
+        await TestAsync("Prolonged GPU outages back off, notify once and cancel promptly on retained Quit",async()=>
+        {
+            var failed=new FakeGpuTransport{Fail=true};var usb=new FakeMsiTransport();int opens=0,statuses=0;var waits=new List<int>();
+            var backedOff=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var backend=new NativeLightingBackend(new MsiBackend(()=>usb,()=>false),()=>new GigabyteBackend(()=>{if(++opens==1)return failed;throw new IOException("Driver temporarily unavailable");},()=>false),(time,token)=>{waits.Add((int)time.TotalSeconds);if(waits.Count<6)return Task.CompletedTask;backedOff.TrySetResult();return Task.Delay(Timeout.Infinite,token);});
+            await backend.ConnectAsync();backend.GpuStatusChanged+=_=>statuses++;
+            await backend.WriteAsync(new Dictionary<uint,Color[]>{{100,Enumerable.Repeat(Colors.Blue,4).ToArray()}});await backedOff.Task.WaitAsync(TimeSpan.FromSeconds(3));
+            await backend.WriteAsync(new Dictionary<uint,Color[]>{{2,new[]{Colors.Green}}});int writes=usb.Packets.Count;
+            await backend.DisposeAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(2));int attempts=failed.Attempts;await Task.Delay(100);
+            Check(waits.SequenceEqual(new[]{1,2,5,10,30,30}) && statuses==1 && failed.Attempts==attempts && usb.Packets.Count==writes && failed.Disposed,"Recovery spun, repeated notifications or relit after Quit");
+        });
+        await TestAsync("Unsupported NVIDIA requests pause only the GPU without retries or repeated notifications",async()=>
+        {
+            var gpu=new FakeGpuTransport{Fail=true,FailureStatus=-5};var usb=new FakeMsiTransport();int statuses=0;
             await using var backend=new NativeLightingBackend(new MsiBackend(()=>usb,()=>false),()=>new GigabyteBackend(()=>gpu,()=>false));await backend.ConnectAsync();
-            var fault=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);backend.OutputFaulted+=_=>fault.TrySetResult();
-            await backend.WriteAsync(new Dictionary<uint,Color[]>{{100,Enumerable.Repeat(Colors.Blue,4).ToArray()}});
-            await fault.Task.WaitAsync(TimeSpan.FromSeconds(2));gpu.Fail=false;await backend.RestoreAsync();
-            Check(!backend.NeedsRestore,"Failed queued GPU frame was not cleaned up");
+            var paused=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);backend.GpuStatusChanged+=_=>{statuses++;paused.TrySetResult();};
+            await backend.WriteAsync(new Dictionary<uint,Color[]>{{100,Enumerable.Repeat(Colors.Blue,4).ToArray()}});await paused.Task.WaitAsync(TimeSpan.FromSeconds(2));
+            for(int i=0;i<5;i++)await backend.WriteAsync(new Dictionary<uint,Color[]>{{2,new[]{Color.FromRgb((byte)i,0,0)}},{100,Enumerable.Repeat(Colors.Red,4).ToArray()}});
+            Check(gpu.Attempts==1 && statuses==1 && usb.Packets.Last()[11]==4,"Permanent GPU failure stopped the motherboard or kept retrying");gpu.Fail=false;await backend.RestoreAsync();
+        });
+        await TestAsync("GPU identity is checked again before recovery can send any mode or color",async()=>
+        {
+            var failed=new FakeGpuTransport{Fail=true};var wrong=new FakeGpuTransport{BadIdentity=true};var usb=new FakeMsiTransport();int opens=0;
+            await using var backend=new NativeLightingBackend(new MsiBackend(()=>usb,()=>false),()=>new GigabyteBackend(()=>++opens==1?failed:wrong,()=>false),(_,_)=>Task.CompletedTask);await backend.ConnectAsync();
+            var rejected=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);backend.GpuStatusChanged+=s=>{if(s.Contains("paused"))rejected.TrySetResult();};
+            await backend.WriteAsync(new Dictionary<uint,Color[]>{{100,Enumerable.Repeat(Colors.Red,4).ToArray()}});await rejected.Task.WaitAsync(TimeSpan.FromSeconds(3));
+            Check(opens==2 && wrong.Queries==1 && wrong.Packets.Count==0 && wrong.Disposed,"Recovery bypassed GPU identity guard");
+        });
+        await TestAsync("Invalidated NVIDIA handles are reopened without retrying the stale handle",async()=>
+        {
+            var invalid=new FakeGpuTransport{Fail=true,FailureStatus=-10};var good=new FakeGpuTransport();var usb=new FakeMsiTransport();int opens=0;
+            await using var backend=new NativeLightingBackend(new MsiBackend(()=>usb,()=>false),()=>new GigabyteBackend(()=>++opens==1?invalid:good,()=>false),(_,_)=>Task.CompletedTask);await backend.ConnectAsync();
+            var recovered=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);backend.GpuStatusChanged+=s=>{if(s.Contains("recovered"))recovered.TrySetResult();};
+            await backend.WriteAsync(new Dictionary<uint,Color[]>{{100,Enumerable.Repeat(Colors.Red,4).ToArray()}});await recovered.Task.WaitAsync(TimeSpan.FromSeconds(3));
+            Check(invalid.Attempts==1 && backend.GpuPacketRetries==0 && invalid.Disposed && opens==2 && good.Queries==1,"Stale GPU handle was retried or not re-enumerated");
+        });
+        await TestAsync("Competing RGB software blocks recovery writes until it exits",async()=>
+        {
+            var failed=new FakeGpuTransport{Fail=true};var good=new FakeGpuTransport();var usb=new FakeMsiTransport();int opens=0,waits=0;bool conflict=false;
+            var blocked=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);var released=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            await using var backend=new NativeLightingBackend(new MsiBackend(()=>usb,()=>false),()=>new GigabyteBackend(()=>++opens==1?failed:good,()=>conflict),(_,token)=>{if(++waits==1){conflict=true;return Task.CompletedTask;}blocked.TrySetResult();return released.Task.WaitAsync(token);});await backend.ConnectAsync();
+            var recovered=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);backend.GpuStatusChanged+=s=>{if(s.Contains("recovered"))recovered.TrySetResult();};
+            await backend.WriteAsync(new Dictionary<uint,Color[]>{{100,Enumerable.Repeat(Colors.Blue,4).ToArray()}});await blocked.Task.WaitAsync(TimeSpan.FromSeconds(3));
+            Check(opens==1 && good.Packets.Count==0,"Recovery ignored another controller");conflict=false;released.TrySetResult();await recovered.Task.WaitAsync(TimeSpan.FromSeconds(3));Check(opens==2 && good.Queries==1,"Recovery did not resume after ownership was available");
+        });
+        await TestAsync("Stop cancels GPU recovery and a fresh Start can deliver colors again",async()=>
+        {
+            var gpu=new FakeGpuTransport{Fail=true};var usb=new FakeMsiTransport();var waiting=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            await using var backend=new NativeLightingBackend(new MsiBackend(()=>usb,()=>false),()=>new GigabyteBackend(()=>gpu,()=>false),(_,token)=>{waiting.TrySetResult();return Task.Delay(Timeout.Infinite,token);});await backend.ConnectAsync();
+            var colors=new Dictionary<uint,Color[]>{{2,new[]{Colors.Green}},{100,Enumerable.Repeat(Colors.Blue,4).ToArray()}};
+            await backend.WriteAsync(colors);await waiting.Task.WaitAsync(TimeSpan.FromSeconds(3));gpu.Fail=false;await backend.RestoreAsync().WaitAsync(TimeSpan.FromSeconds(2));
+            int sent=gpu.Packets.Count;await Task.Delay(100);Check(gpu.Packets.Count==sent && !backend.NeedsRestore,"Recovery relit after Stop");
+            await backend.WriteAsync(colors);for(int i=0;i<100 && gpu.Packets.Count==sent;i++)await Task.Delay(10);
+            Check(gpu.Packets.Count>sent,"Restart reused a cancelled GPU worker");await backend.RestoreAsync();
         });
         await TestAsync("Hardware frame timer stops all callbacks and can restart without hardware writes",async()=>
         {
@@ -368,9 +466,9 @@ sealed class FakeGpuTransport : IGpuLightingTransport
 {
     public List<byte[]> Packets {get;}=new();
     public bool BadIdentity,Disposed,Fail;
-    public int Queries,Delay;
+    public int Queries,Delay,Attempts,Failures,FailAfter,FailureStatus=-1;
     public byte[] QueryIdentity(){Queries++;return BadIdentity?new byte[4]:new byte[]{0xAB,0x11,0x52,1};}
-    public void Write(byte[] packet){GigabyteProtocol.Validate(packet);if(Fail)throw new IOException("Simulated GPU I/O failure");if(Delay>0)Thread.Sleep(Delay);Packets.Add((byte[])packet.Clone());}
+    public void Write(byte[] packet){GigabyteProtocol.Validate(packet);Attempts++;if(Fail || (Attempts>FailAfter && Failures-->0))throw new NvidiaLightingException(FailureStatus);if(Delay>0)Thread.Sleep(Delay);Packets.Add((byte[])packet.Clone());}
     public void Dispose()=>Disposed=true;
 }
 

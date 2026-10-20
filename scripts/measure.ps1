@@ -1,5 +1,5 @@
 param(
-    [ValidateSet('animated','solid','hidden','screen','palette','palette-solid','hardware-animated','hardware-solid','hardware-rainbow')][string[]]$Scenarios=@('animated','solid','hidden','screen'),
+    [ValidateSet('animated','solid','hidden','screen','palette','palette-solid','hardware-animated','hardware-solid','hardware-rainbow','hardware-soak')][string[]]$Scenarios=@('animated','solid','hidden','screen'),
     [string]$AppPath
 )
 $ErrorActionPreference='Stop'

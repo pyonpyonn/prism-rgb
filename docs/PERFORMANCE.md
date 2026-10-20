@@ -1,5 +1,17 @@
 # Measured resource use
 
+## 0.5.2 GPU recovery
+
+Normal output remains capped at 30 motherboard / 15 GPU updates per second, with changed-packet caching and sleeping Solid scenes. GPU faults use cancellable delays: at most two brief packet retries, then reconnect waits of 1/2/5/10/30 seconds, capped at 30 seconds. An unavailable GPU does not create a busy retry loop or block motherboard frames. Successful static scenes have no periodic recovery worker.
+
+For a ten-minute run against both real supported controllers, quit the normal Prism instance and competing RGB apps, then run:
+
+```powershell
+./scripts/measure.ps1 -Scenarios hardware-soak
+```
+
+This explicit diagnostic uses isolated preferences, drives Aurora at 15% brightness, records CPU/frame/write counts plus GPU transfer failures, packet retries, recoveries and final status, then clears/restores the controllers. It takes ten minutes plus warmup/cleanup. Check GPU status/counters as well as process success; motherboard output can continue while GPU access is unavailable. A finite successful run cannot establish that driver errors will never recur. The earlier measurements below remain version-specific observations.
+
 ## 0.4.0 color studio
 
 Measured on 2026-10-20 on the same PC described below, using four seconds of warmup followed by about 20 seconds per case. These preview cases do not enable hardware output.

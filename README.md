@@ -4,13 +4,13 @@
 
 A standalone Windows lighting app with **individual MSI ARGB LED control and Gigabyte RTX 4070 Ti lighting**. No OpenRGB, SignalRGB, SDK server, account, or background service is required. The portable x64 release bundles the .NET desktop runtime.
 
-**0.5.1 alpha adds quiet Windows sign-in startup and saved-lighting restore.** Optional retained colors freeze the last frame when Prism quits. BIOS and powered-off lighting remain hardware-dependent; Prism does not run before Windows or save scenes into firmware. The full effect color editor and eyedropper are included.
+**0.5.2 alpha fixes GPU errors stopping all lighting.** Brief NVIDIA lighting errors are retried; longer outages reconnect the GPU automatically while motherboard output continues. Quiet Windows startup, retained exit colors, the effect color editor and eyedropper are included. BIOS and powered-off lighting remain hardware-dependent.
 
 ![Prism RGB Studio](docs/images/preview.png)
 
 ## Download and use
 
-1. Download **PrismRGB-Windows-x64.zip** from [v0.5.1 Releases](https://github.com/pyonpyonn/prism-rgb/releases/tag/v0.5.1).
+1. Download **PrismRGB-Windows-x64.zip** from [v0.5.2 Releases](https://github.com/pyonpyonn/prism-rgb/releases/tag/v0.5.2).
 2. Extract the complete archive and open **Launch Prism RGB.cmd**. Use this new folder instead of an older extracted copy.
 3. Exit other RGB controllers, including SignalRGB, MSI lighting tools, and RGB Fusion.
 4. Choose **Devices → Connect lighting**. The app connects the motherboard and queries the supported GPU if available. Connecting does not start color output.
@@ -49,6 +49,8 @@ In **Studio → Effect colors**, select a numbered swatch and choose **Edit colo
 
 Motherboard animation targets **up to 30 updates/second**, GPU lighting up to **15**, and preview rendering up to **8**. GPU I/O runs separately and coalesces pending colors so it cannot delay the motherboard stream. Unchanged controller packets are suppressed; Solid scenes sleep between changes. Hidden previews stop rendering. Screen ambience uses tiny 32x18 desktop samples only when needed, at most twice/second. The separate eyedropper captures full display images only for the active selection.
 
+GPU generic/busy errors get at most two packet retries. Continued failures reopen and reidentify the same supported card after 1, 2, 5, 10, then 30 seconds between attempts. Recovery keeps only the newest colors, also handles Solid scenes, and cancels on Stop/Quit. GPU status changes appear in the footer/local log without repeated tray popups or clearing the motherboard. Unsupported commands and identity mismatches pause only the GPU until reconnect.
+
 See [measured CPU/GPU results](docs/PERFORMANCE.md). These are observations on one PC, not a universal guarantee. Software-rendered WPF avoids requesting accelerated app rendering; Windows composition may still use the GPU.
 
 ## Build, verify, package
@@ -62,7 +64,7 @@ dotnet run --project source/PrismRGB.csproj -c Release
 ./scripts/package.ps1
 ```
 
-The ZIP and SHA-256 checksum are written to `dist/`. Windows CI runs the same **40 core checks and 25 interface checks**, using fake hardware without physical lighting writes. Tests include bounded/cancelled startup, hidden saved-scene restore, single-instance activation/Quit, retained-frame cleanup, shutdown preparation, custom palettes/color dialogs, and existing native protocol/idle checks. Startup UI checks use fake registration and do not modify Windows startup. The C# app has no third-party NuGet dependency.
+The ZIP and SHA-256 checksum are written to `dist/`. Windows CI runs the same **50 core checks and 26 interface checks**, using fake hardware without physical lighting writes. Tests include transient/partial GPU failures, automatic recovery, backoff, ownership/identity guards, Stop/Quit cancellation, hidden startup, retained-frame cleanup, custom palettes/color dialogs, and native protocol/idle checks. Startup UI checks use fake registration and do not modify Windows startup. The C# app has no third-party NuGet dependency.
 
 ```powershell
 ./scripts/measure.ps1
