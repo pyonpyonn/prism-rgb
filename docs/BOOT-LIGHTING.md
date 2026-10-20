@@ -1,6 +1,6 @@
 # Windows startup, closing, and boot lighting
 
-Prism 0.6.0 can apply saved static colors **before Windows sign-in**, once Windows Task Scheduler and the lighting drivers are available. Normal sign-in startup then resumes the animated scene. It can also leave its last colors on powered controllers when quitting. **Prism cannot run inside UEFI/BIOS, before Windows, or while Windows is shut down.** Lighting during those periods is controlled by the hardware and its power supply.
+Prism 0.6.1 can apply saved static colors **before Windows sign-in**, once Windows Task Scheduler and the lighting drivers are available. The boot task has no added startup delay. Normal sign-in startup then resumes the animated scene. It can also leave its last colors on powered controllers when quitting. **Prism cannot run inside UEFI/BIOS, before Windows, or while Windows is shut down.** Lighting during those periods is controlled by the hardware and its power supply.
 
 ## Before Windows sign-in
 
@@ -13,9 +13,9 @@ $sid = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
 ./scripts/install-boot-lighting.ps1 -PrismExe "$PWD/app/PrismRGB.exe" -UserSid $sid
 ```
 
-Setup exports only the fixed color frame and registers `PrismRGB-BootLighting-<user SID>`. It uses an **At startup** trigger delayed five seconds and the same user's limited-rights **S4U** identity. No password is stored. It does not run as SYSTEM, start a background service, restart Windows or change BIOS/firmware. Microsoft requires administrator registration for [boot-trigger tasks](https://learn.microsoft.com/en-us/windows/win32/taskschd/boottrigger); [S4U tasks](https://learn.microsoft.com/en-us/windows/win32/api/taskschd/ne-taskschd-task_logon_type) run on a noninteractive desktop with local resources only. Do not use a different administrator account for setup.
+Setup exports only the fixed color frame and registers `PrismRGB-BootLighting-<user SID>`. It uses an **At startup** trigger with zero added delay, normal process priority (task priority 5), and the same user's limited-rights **S4U** identity. Re-running setup upgrades the old five-second delay/background priority. No password is stored. It does not run as SYSTEM, start a background service, restart Windows or change BIOS/firmware. Microsoft requires administrator registration for [boot-trigger tasks](https://learn.microsoft.com/en-us/windows/win32/taskschd/boottrigger); [S4U tasks](https://learn.microsoft.com/en-us/windows/win32/api/taskschd/ne-taskschd-task_logon_type) run on a noninteractive desktop with local resources only. Do not use a different administrator account for setup.
 
-The helper uses `%LOCALAPPDATA%\PrismRGB\boot\boot-frame.json` and writes `boot-result.json` there. Existing boot frames update automatically when Prism saves color/device changes. The boot frame samples an animated scene at a fixed point; it does not animate. Screen ambience uses a saved palette color instead of capturing the sign-in screen. Brightness, header lengths, enabled outputs and manual LED colors are retained.
+The helper uses `%LOCALAPPDATA%\PrismRGB\boot\boot-frame.json` and writes `boot-result.json` there. The result records process-start and separate successful motherboard/GPU delivery times, so scheduler startup and driver readiness can be distinguished. Existing boot frames update automatically when Prism saves color/device changes. The boot frame samples an animated scene at a fixed point; it does not animate. Screen ambience uses a saved palette color instead of capturing the sign-in screen. Brightness, header lengths, enabled outputs and manual LED colors are retained.
 
 Keep normal Windows sign-in startup and saved-lighting restore enabled if you want the animation to resume. Re-run setup with the new permanent executable path after moving the app. To remove only the boot task, leaving normal sign-in startup and settings intact:
 
@@ -23,7 +23,7 @@ Keep normal Windows sign-in startup and saved-lighting restore enabled if you wa
 ./scripts/remove-boot-lighting.ps1 -PrismExe "$PWD/app/PrismRGB.exe" -UserSid $sid
 ```
 
-Use `-WhatIf` to review setup/removal without changes. Setup does not test the task or reboot the PC. The actual delay and whether lights appear before the sign-in screen depend on boot speed and driver readiness. A noninteractive test can establish device access, but the next real boot is needed to verify cold-boot timing on this PC.
+Use `-WhatIf` to review setup/removal without changes. Setup does not test the task or reboot the PC. Windows starts boot-trigger tasks when Task Scheduler starts; removing the added delay cannot move the helper ahead of Windows or driver initialization. Fast or automatic sign-in can still finish first. A noninteractive test can establish device access, but the next real boot is needed to verify timing on this PC. The helper has no continuing CPU work once its static frame is applied.
 
 ## Start with Windows
 

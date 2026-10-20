@@ -93,6 +93,9 @@ public sealed class BootLightingResult
     public int Version {get;set;}=1;
     public int SessionId {get;set;}=Process.GetCurrentProcess().SessionId;
     public bool UserInteractive {get;set;}=Environment.UserInteractive;
+    public DateTimeOffset ProcessStarted {get;set;}=Started();
+    public DateTimeOffset? MotherboardAppliedAt {get;set;}
+    public DateTimeOffset? GpuAppliedAt {get;set;}
     public DateTimeOffset Finished {get;set;}
     public bool MotherboardApplied {get;set;}
     public bool GpuApplied {get;set;}
@@ -106,6 +109,7 @@ public sealed class BootLightingResult
     public bool Cancelled {get;set;}
     public bool TimedOut {get;set;}
     public int ExitCode {get;set;}
+    static DateTimeOffset Started(){using var process=Process.GetCurrentProcess();return new DateTimeOffset(process.StartTime);}
 }
 
 internal sealed class BootRunOptions
@@ -229,6 +233,7 @@ public static class BootLighting
         public readonly Func<ILightingBackend> Factory;
         public readonly List<BootOutputFrame> Frames;
         public bool Applied,Permanent;
+        public DateTimeOffset? AppliedAt;
         public int Attempts;
         public string Error="";
         public ControllerAttempt(bool gpu,Func<ILightingBackend> factory,List<BootOutputFrame> frames){Gpu=gpu;Factory=factory;Frames=frames;}
@@ -282,7 +287,7 @@ public static class BootLighting
                         // Use direct GPU delivery, never the combined backend's
                         // asynchronous queue, which disposal is allowed to cancel.
                         if(backend is GigabyteBackend gpu)await gpu.WriteAsync(colors,active);else await backend.WriteAsync(colors);
-                        controller.Applied=true;controller.Error="";Check();
+                        controller.Applied=true;controller.AppliedAt=DateTimeOffset.Now;controller.Error="";Check();
                     }
                     catch(OperationCanceledException) when(active.IsCancellationRequested){throw;}
                     catch(Exception ex)
@@ -308,6 +313,7 @@ public static class BootLighting
         {result.Handoff=handoff;result.TimedOut=deadline.IsCancellationRequested && !handoff && !token.IsCancellationRequested;result.Cancelled=token.IsCancellationRequested;}
         finally{cancellation.Cancel();await watcher;}
         result.MotherboardApplied=controllers[0].Applied;result.GpuApplied=controllers[1].Applied;
+        result.MotherboardAppliedAt=controllers[0].AppliedAt;result.GpuAppliedAt=controllers[1].AppliedAt;
         result.MotherboardAttempts=controllers[0].Attempts;result.GpuAttempts=controllers[1].Attempts;
         result.MotherboardError=controllers[0].Error;result.GpuError=controllers[1].Error;
         result.ExitCode=result.Handoff || result.Cancelled?0:controllers.Any(controller=>controller.Requested && !controller.Applied)?1:0;
@@ -365,6 +371,7 @@ public static class BootLighting
             Delay=(time,token)=>{token.ThrowIfCancellationRequested();waits.Add((int)time.TotalSeconds);return Task.CompletedTask;}
         });
         Check(independent.MotherboardApplied && independent.GpuApplied && independent.MotherboardAttempts==2 && independent.GpuAttempts==3 && waits.SequenceEqual(new[]{2,5}),"Independent driver readiness retries failed.");
+        Check(independent.MotherboardAppliedAt is not null && independent.GpuAppliedAt is not null && independent.MotherboardAppliedAt>=independent.ProcessStarted && independent.GpuAppliedAt>=independent.MotherboardAppliedAt,"Boot timing did not record successful controller delivery.");
         Check(msiSuccess.Writes==1 && gpuSuccess.Writes==1 && msiSuccess.Restores==0 && gpuSuccess.Restores==0 && msiSuccess.Disposed && gpuSuccess.Disposed,"Boot output was cleared or repeated after success.");
         Check(msiSuccess.Devices.Single(device=>device.Id==2).LedCount==60 && msiSuccess.LastColors?.Count==4,"Motherboard snapshot counts or selected outputs were not applied.");
         var failures=new List<int>();

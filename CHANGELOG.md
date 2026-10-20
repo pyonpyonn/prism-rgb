@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.1 — Start boot lighting without an added delay
+
+- Remove the boot task's five-second trigger delay and use normal process priority instead of background priority. Re-running setup updates the existing owned task.
+- Record helper process start and separate motherboard/GPU application times to identify scheduler or driver delays.
+- Extend boot checks to verify successful delivery timestamps. Normal output rates, static idle behavior, ownership guards and limited-rights execution remain unchanged.
+- The helper still requires Windows Task Scheduler and device drivers; fast/automatic sign-in may finish before they are ready. Initial BIOS lighting remains hardware-controlled.
+
 ## 0.6.0 — Static lighting before Windows sign-in
 
 - Added a headless boot helper that applies saved static per-device colors and exits without clearing them. Normal sign-in startup resumes animations.

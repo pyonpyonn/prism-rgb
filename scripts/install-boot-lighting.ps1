@@ -96,7 +96,7 @@ try {
         throw 'Registering a task that runs before sign-in requires administrator rights. Open PowerShell using Run as administrator for this same Windows account, then run this command again with the same -UserSid. Setup has not changed the task or snapshot.'
     }
     if (-not $PSCmdlet.ShouldProcess($taskName, 'Export saved Prism lighting and register a limited-rights Windows startup task')) {
-        [pscustomobject]@{ Success = $true; Changed = $false; TaskName = $taskName; UserSid = $currentSid; Account = $account; Executable = $exePath; Snapshot = $snapshot; Result = $result; DelaySeconds = 5; PasswordStored = $false; RunLevel = 'Limited'; WhatIf = [bool]$WhatIfPreference } | ConvertTo-Json
+        [pscustomobject]@{ Success = $true; Changed = $false; TaskName = $taskName; UserSid = $currentSid; Account = $account; Executable = $exePath; Snapshot = $snapshot; Result = $result; DelaySeconds = 0; Priority = 5; PasswordStored = $false; RunLevel = 'Limited'; WhatIf = [bool]$WhatIfPreference } | ConvertTo-Json
         return
     }
 
@@ -132,11 +132,12 @@ try {
 
     $action = New-ScheduledTaskAction -Execute $exePath -Argument $arguments -WorkingDirectory $exeDirectory
     $trigger = New-ScheduledTaskTrigger -AtStartup
-    $trigger.Delay = 'PT5S'
+    $trigger.Delay = 'PT0S'
     $principal = New-ScheduledTaskPrincipal -UserId $currentSid -LogonType S4U -RunLevel Limited
     $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -ExecutionTimeLimit ([TimeSpan]::FromMinutes(2)) -MultipleInstances IgnoreNew
     $settings.WakeToRun = $false
     $settings.RestartCount = 0
+    $settings.Priority = 5
     $definition = New-ScheduledTask -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Description $ownerDescription
     $registration = @{ TaskName = $taskName; TaskPath = '\'; InputObject = $definition; ErrorAction = 'Stop' }
     if ($existing.Count -eq 1) { $registration.Force = $true }
@@ -145,13 +146,13 @@ try {
     Assert-OwnedTask $registered
     $savedSettings = $registered.Settings
     if ($registered.Actions[0].Arguments -ne $arguments -or @($registered.Triggers).Count -ne 1 -or
-        $registered.Triggers[0].CimClass.CimClassName -ne 'MSFT_TaskBootTrigger' -or $registered.Triggers[0].Delay -ne 'PT5S' -or
+        $registered.Triggers[0].CimClass.CimClassName -ne 'MSFT_TaskBootTrigger' -or $registered.Triggers[0].Delay -notin @($null,'PT0S','') -or
         $savedSettings.DisallowStartIfOnBatteries -or $savedSettings.StopIfGoingOnBatteries -or -not $savedSettings.StartWhenAvailable -or
         $savedSettings.WakeToRun -or $savedSettings.RestartCount -ne 0 -or $savedSettings.ExecutionTimeLimit -ne 'PT2M' -or
-        [string]$savedSettings.MultipleInstances -ne 'IgnoreNew') {
+        [string]$savedSettings.MultipleInstances -ne 'IgnoreNew' -or $savedSettings.Priority -ne 5) {
         throw 'Windows registered the task, but its saved arguments, trigger, or runtime limits did not match. Inspect the task before relying on boot lighting.'
     }
-    [pscustomobject]@{ Success = $true; Changed = $true; TaskName = $taskName; UserSid = $currentSid; Account = $account; Executable = $exePath; Snapshot = $snapshot; Result = $result; DelaySeconds = 5; PasswordStored = $false; RunLevel = 'Limited'; StartedTask = $false; RestartedWindows = $false } | ConvertTo-Json
+    [pscustomobject]@{ Success = $true; Changed = $true; TaskName = $taskName; UserSid = $currentSid; Account = $account; Executable = $exePath; Snapshot = $snapshot; Result = $result; DelaySeconds = 0; Priority = 5; PasswordStored = $false; RunLevel = 'Limited'; StartedTask = $false; RestartedWindows = $false } | ConvertTo-Json
 }
 catch {
     Write-Error $_

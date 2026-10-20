@@ -4,13 +4,13 @@
 
 A standalone Windows lighting app with **individual MSI ARGB LED control and Gigabyte RTX 4070 Ti lighting**. No OpenRGB, SignalRGB, SDK server, account, or background service is required. The portable x64 release bundles the .NET desktop runtime.
 
-**0.6.0 alpha adds optional lighting before Windows sign-in.** A short boot helper applies saved static colors once Windows drivers are ready, then exits. Normal Prism startup resumes animations after sign-in. GPU recovery, retained exit colors, the color editor and eyedropper are included. Initial BIOS/logo and powered-off lighting remain hardware-dependent.
+**0.6.1 alpha removes the boot helper's added five-second delay.** The short helper now runs at normal priority as soon as Windows Task Scheduler starts, applies saved static colors once drivers are ready, then exits. Normal Prism startup resumes animations after sign-in. Fast sign-in may still finish first; initial BIOS/logo and powered-off lighting remain hardware-dependent.
 
 ![Prism RGB Studio](docs/images/preview.png)
 
 ## Download and use
 
-1. Download **PrismRGB-Windows-x64.zip** from [v0.6.0 Releases](https://github.com/pyonpyonn/prism-rgb/releases/tag/v0.6.0).
+1. Download **PrismRGB-Windows-x64.zip** from [v0.6.1 Releases](https://github.com/pyonpyonn/prism-rgb/releases/tag/v0.6.1).
 2. Extract the complete archive and open **Launch Prism RGB.cmd**. Use this new folder instead of an older extracted copy.
 3. Exit other RGB controllers, including SignalRGB, MSI lighting tools, and RGB Fusion.
 4. Choose **Devices → Connect lighting**. The app connects the motherboard and queries the supported GPU if available. Connecting does not start color output.
