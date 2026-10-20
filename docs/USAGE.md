@@ -1,6 +1,6 @@
-# Using Prism RGB 0.5.2
+# Using Prism RGB 0.6.0
 
-Extract the complete [v0.5.2 Windows x64 release](https://github.com/pyonpyonn/prism-rgb/releases/tag/v0.5.2) and open `Launch Prism RGB.cmd`. Use the new executable rather than an older extracted build. The .NET desktop runtime is bundled.
+Extract the complete [v0.6.0 Windows x64 release](https://github.com/pyonpyonn/prism-rgb/releases/tag/v0.6.0) and open `Launch Prism RGB.cmd`. Use the new executable rather than an older extracted build. The .NET desktop runtime is bundled.
 
 ## Connect and start
 
@@ -13,6 +13,8 @@ Choose an effect, palette, and brightness in **Studio**, then **Start lighting**
 **Stop & restore** clears streamed ARGB/GPU colors and restores the saved motherboard configuration. It cannot recover an earlier app's per-LED animation or previous GPU colors. Disconnection or another controller taking ownership can prevent cleanup. Motherboard I/O failures stop output; GPU failures are isolated as described below. Manual first launches start with output off; Windows startup can resume it only when enabled explicitly.
 
 ## Individual ARGB LEDs
+
+To turn on saved static colors before signing in, enable the optional boot task using the [before-sign-in setup](BOOT-LIGHTING.md#before-windows-sign-in). It runs once Windows drivers are ready, then exits; sign-in startup resumes animations. Saved color changes refresh an existing boot frame automatically. The initial motherboard/UEFI logo still requires hardware lighting support.
 
 ![Native device controls](images/devices.png)
 

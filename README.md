@@ -4,20 +4,20 @@
 
 A standalone Windows lighting app with **individual MSI ARGB LED control and Gigabyte RTX 4070 Ti lighting**. No OpenRGB, SignalRGB, SDK server, account, or background service is required. The portable x64 release bundles the .NET desktop runtime.
 
-**0.5.2 alpha fixes GPU errors stopping all lighting.** Brief NVIDIA lighting errors are retried; longer outages reconnect the GPU automatically while motherboard output continues. Quiet Windows startup, retained exit colors, the effect color editor and eyedropper are included. BIOS and powered-off lighting remain hardware-dependent.
+**0.6.0 alpha adds optional lighting before Windows sign-in.** A short boot helper applies saved static colors once Windows drivers are ready, then exits. Normal Prism startup resumes animations after sign-in. GPU recovery, retained exit colors, the color editor and eyedropper are included. Initial BIOS/logo and powered-off lighting remain hardware-dependent.
 
 ![Prism RGB Studio](docs/images/preview.png)
 
 ## Download and use
 
-1. Download **PrismRGB-Windows-x64.zip** from [v0.5.2 Releases](https://github.com/pyonpyonn/prism-rgb/releases/tag/v0.5.2).
+1. Download **PrismRGB-Windows-x64.zip** from [v0.6.0 Releases](https://github.com/pyonpyonn/prism-rgb/releases/tag/v0.6.0).
 2. Extract the complete archive and open **Launch Prism RGB.cmd**. Use this new folder instead of an older extracted copy.
 3. Exit other RGB controllers, including SignalRGB, MSI lighting tools, and RGB Fusion.
 4. Choose **Devices → Connect lighting**. The app connects the motherboard and queries the supported GPU if available. Connecting does not start color output.
 5. Choose an effect and brightness, then **Start lighting**.
 6. **Stop & restore** clears streamed colors and restores the motherboard's configuration. Previous external per-LED animations and GPU colors cannot be recovered; GPU LEDs are cleared on Stop.
 
-Manual first launches start with output off. Optional Windows startup can restore saved lighting after sign-in. [Full usage](docs/USAGE.md) and [startup/boot lighting guide](docs/BOOT-LIGHTING.md).
+Manual first launches start with output off. Optional Windows startup can restore saved lighting after sign-in. For earlier static colors, use the one-time administrator setup in the [startup/boot lighting guide](docs/BOOT-LIGHTING.md#before-windows-sign-in). It creates a limited-rights task for the same user without storing a password; it does not reboot or change firmware. [Full usage](docs/USAGE.md).
 
 ## Supported hardware
 
@@ -39,6 +39,7 @@ Other USB/catalog entries are research references and do not supply native drive
 - Header LED counts, scene position/span, reverse direction, and numbered per-LED color overrides.
 - Named **Fan 1 / Fan 2 / Fan 3 / Logo** GPU color overrides.
 - Optional Windows sign-in startup, quiet tray launch, automatic saved-scene restore, single-instance activation, and retained last colors on Quit.
+- Optional static boot lighting before sign-in, bounded device-readiness retries, and automatic handoff to the normal app.
 - Read-only HID discovery and a descriptive compatibility catalog.
 
 Expand **Choose colors for individual LEDs** under an ARGB header and click a numbered pixel. GPU controls use named lighting zones. **Return all LEDs to the effect** removes that output's overrides. Global brightness applies to manual colors too.
@@ -64,7 +65,7 @@ dotnet run --project source/PrismRGB.csproj -c Release
 ./scripts/package.ps1
 ```
 
-The ZIP and SHA-256 checksum are written to `dist/`. Windows CI runs the same **50 core checks and 26 interface checks**, using fake hardware without physical lighting writes. Tests include transient/partial GPU failures, automatic recovery, backoff, ownership/identity guards, Stop/Quit cancellation, hidden startup, retained-frame cleanup, custom palettes/color dialogs, and native protocol/idle checks. Startup UI checks use fake registration and do not modify Windows startup. The C# app has no third-party NuGet dependency.
+The ZIP and SHA-256 checksum are written to `dist/`. Windows CI runs the same **51 core checks and 27 interface checks**, using fake hardware without physical lighting writes. Tests include boot snapshots/readiness retries, retained one-shot delivery, controller handoff/cancellation, transient GPU recovery, ownership/identity guards, hidden startup, palettes/dialogs and native protocol/idle checks. Startup UI checks use fake registration and do not modify Windows startup. Boot setup scripts support `-WhatIf`. The C# app has no third-party NuGet dependency.
 
 ```powershell
 ./scripts/measure.ps1

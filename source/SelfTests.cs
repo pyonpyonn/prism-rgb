@@ -25,6 +25,7 @@ public static class SelfTests
     }
     public static async Task<int> RunAsync()
     {
+        await TestAsync("Boot snapshots, independent readiness retries, retained writes and cross-session handoff are bounded",()=>BootLighting.VerifyAsync(Path.Combine(Directory.GetCurrentDirectory(),"work","boot-test-"+Guid.NewGuid().ToString("N"))));
         Test("All effects obey zero brightness",()=>
         {
             foreach(var n in Effects.Names)for(int i=0;i<12;i++)Check(Effects.Sample(new(){Effect=n,Brightness=0},i/12.0,.3,i,Colors.Coral)==Colors.Black,n);

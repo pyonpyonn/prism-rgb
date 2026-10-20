@@ -1,6 +1,29 @@
 # Windows startup, closing, and boot lighting
 
-Prism 0.5.1 can start quietly after Windows sign-in and restore the saved scene. It can also leave its last colors on powered controllers when quitting. **It cannot run inside UEFI/BIOS, before Windows, or while Windows is shut down.** Lighting during those periods is controlled by the hardware and its power supply.
+Prism 0.6.0 can apply saved static colors **before Windows sign-in**, once Windows Task Scheduler and the lighting drivers are available. Normal sign-in startup then resumes the animated scene. It can also leave its last colors on powered controllers when quitting. **Prism cannot run inside UEFI/BIOS, before Windows, or while Windows is shut down.** Lighting during those periods is controlled by the hardware and its power supply.
+
+## Before Windows sign-in
+
+The optional boot helper reads a saved frame, applies it to the supported motherboard/GPU, releases the controllers without clearing them, and exits. It has no preview, desktop capture or continuing effect loop. It attempts the controllers independently with limited readiness retries. The normal app takes priority after sign-in; a shared per-user controller lock prevents concurrent writes from the two Windows sessions. GPU lighting still depends on its NVIDIA driver being available in the noninteractive session.
+
+Keep the app in its permanent folder and choose/save your scene first. Open PowerShell **as administrator using the same Windows account that uses Prism**, then run from the extracted Prism folder:
+
+```powershell
+$sid = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
+./scripts/install-boot-lighting.ps1 -PrismExe "$PWD/app/PrismRGB.exe" -UserSid $sid
+```
+
+Setup exports only the fixed color frame and registers `PrismRGB-BootLighting-<user SID>`. It uses an **At startup** trigger delayed five seconds and the same user's limited-rights **S4U** identity. No password is stored. It does not run as SYSTEM, start a background service, restart Windows or change BIOS/firmware. Microsoft requires administrator registration for [boot-trigger tasks](https://learn.microsoft.com/en-us/windows/win32/taskschd/boottrigger); [S4U tasks](https://learn.microsoft.com/en-us/windows/win32/api/taskschd/ne-taskschd-task_logon_type) run on a noninteractive desktop with local resources only. Do not use a different administrator account for setup.
+
+The helper uses `%LOCALAPPDATA%\PrismRGB\boot\boot-frame.json` and writes `boot-result.json` there. Existing boot frames update automatically when Prism saves color/device changes. The boot frame samples an animated scene at a fixed point; it does not animate. Screen ambience uses a saved palette color instead of capturing the sign-in screen. Brightness, header lengths, enabled outputs and manual LED colors are retained.
+
+Keep normal Windows sign-in startup and saved-lighting restore enabled if you want the animation to resume. Re-run setup with the new permanent executable path after moving the app. To remove only the boot task, leaving normal sign-in startup and settings intact:
+
+```powershell
+./scripts/remove-boot-lighting.ps1 -PrismExe "$PWD/app/PrismRGB.exe" -UserSid $sid
+```
+
+Use `-WhatIf` to review setup/removal without changes. Setup does not test the task or reboot the PC. The actual delay and whether lights appear before the sign-in screen depend on boot speed and driver readiness. A noninteractive test can establish device access, but the next real boot is needed to verify cold-boot timing on this PC.
 
 ## Start with Windows
 
@@ -16,7 +39,7 @@ Keep the complete app folder in its permanent location, then enable these option
 
 Prism waits two seconds before its first connection attempt, then allows retries after three and five seconds if the controller is unavailable. There are at most three attempts, with no permanent retry loop. Startup waits for the first motherboard frame to succeed before reporting success. Stop or Quit cancels pending startup. Competing RGB software blocks output; disable its automatic startup separately. A failure is reported in the tray and the local `startup.log` beside preferences. A missing GPU does not prevent available motherboard lighting.
 
-Windows registration uses the current user's `Run` entry named `PrismRGB`, pointing to the quoted app path with `--startup`. No administrator account, service, BIOS change or scheduled task is required. Windows **Settings → Apps → Startup** can also disable the entry. Re-enable the option from the new copy if you move the portable app. [Microsoft's startup documentation](https://support.microsoft.com/en-us/windows/experience/startup-boot/configure-startup-applications-in-windows) describes sign-in startup and the registry location.
+Sign-in startup uses the current user's `Run` entry named `PrismRGB`, pointing to the quoted app path with `--startup`. This part needs no administrator account, service, BIOS change or scheduled task; the optional earlier boot helper above is separate. Windows **Settings → Apps → Startup** can also disable the Run entry. Re-enable it from the new copy if you move the portable app. [Microsoft's startup documentation](https://support.microsoft.com/en-us/windows/experience/startup-boot/configure-startup-applications-in-windows) describes sign-in startup and the registry location.
 
 Only one normal instance runs in the current user/session. Launching Prism again opens the existing window; an extra automatic startup launch stays quiet. `PrismRGB.exe --quit` requests a graceful exit from that instance. Diagnostics use their own isolated instances.
 
@@ -43,5 +66,6 @@ Prism keeps MSI's persistent-save flag disabled. It does not modify BIOS setting
 1. Enable Windows startup, tray mode and automatic restore. Choose a scene and start lighting.
 2. Enable Keep colors, then choose **Quit** from the tray. The animation should stop at the last colors while the controllers remain powered. This is different from Stop & restore, which clears them.
 3. When you next choose to restart normally, check what the LEDs do during BIOS and after signing in. Prism should resume its scene after sign-in. Record any gap or hardware-default colors during boot.
+4. If the boot task is installed, check for the static saved colors after Windows begins starting but before sign-in. Inspect `boot-result.json` for separate motherboard/GPU results; a skipped helper means normal Prism already held the controllers or requested handoff.
 
 No restart, shutdown or BIOS alteration is performed by enabling these app settings. A real power-cycle observation is needed to establish what this hardware retains outside Windows.

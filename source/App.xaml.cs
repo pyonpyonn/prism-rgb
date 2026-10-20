@@ -18,6 +18,20 @@ public partial class App : Application
         RenderOptions.ProcessRenderMode=RenderMode.SoftwareOnly;
         int dataDir=Array.IndexOf(e.Args,"--data-dir");
         if(dataDir>=0 && dataDir+1<e.Args.Length)Storage.DirectoryPath=Path.GetFullPath(e.Args[dataDir+1]);
+        int exportBoot=Array.IndexOf(e.Args,"--export-boot-frame"),bootFrame=Array.IndexOf(e.Args,"--boot-frame");
+        if(exportBoot>=0 || bootFrame>=0)
+        {
+            ShutdownMode=ShutdownMode.OnExplicitShutdown;
+            if(exportBoot>=0)
+            {
+                if(exportBoot+1>=e.Args.Length){Shutdown(2);return;}
+                try{BootLighting.SaveSnapshot(Storage.Load(),e.Args[exportBoot+1]);Shutdown(0);}
+                catch{Shutdown(1);}return;
+            }
+            if(bootFrame+2>=e.Args.Length){Shutdown(2);return;}
+            try{int code=await BootLighting.RunAsync(e.Args[bootFrame+1],e.Args[bootFrame+2]);Shutdown(code);}
+            catch{Shutdown(1);}return;
+        }
         if(Array.IndexOf(e.Args,"--self-test")>=0)
         {
             ShutdownMode=ShutdownMode.OnExplicitShutdown;
@@ -41,6 +55,8 @@ public partial class App : Application
             ShutdownMode=ShutdownMode.OnExplicitShutdown;
             int index=probe>=0?probe:argbTest>=0?argbTest:gpuTest;
             if(index+1>=e.Args.Length){Shutdown(2);return;}
+            using var controller=probe<0?ControllerLease.TryAcquire():null;
+            if(probe<0 && controller is null){Shutdown(3);return;}
             int code=probe>=0?await Diagnostics.InspectMsiAsync(e.Args[index+1]):argbTest>=0?await Diagnostics.TestArgbAsync(e.Args[index+1]):await Diagnostics.TestGpuAsync(e.Args[index+1]);
             Shutdown(code);return;
         }

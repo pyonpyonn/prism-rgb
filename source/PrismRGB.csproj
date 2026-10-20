@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <AssemblyName>PrismRGB</AssemblyName>
-    <Version>0.5.2</Version>
+    <Version>0.6.0</Version>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <PathMap>$(MSBuildProjectDirectory)=/_/source</PathMap>
     <Deterministic>true</Deterministic>

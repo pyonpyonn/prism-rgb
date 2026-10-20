@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.6.0 — Static lighting before Windows sign-in
+
+- Added a headless boot helper that applies saved static per-device colors and exits without clearing them. Normal sign-in startup resumes animations.
+- Export only validated fixed color arrays/counts, preserve brightness/manual overrides/disabled outputs, and use a saved color instead of desktop capture for Screen ambience.
+- Added limited independent driver-readiness retries, a cooperative startup deadline and controller ownership/handoff across Windows sessions.
+- Added optional same-user limited-rights S4U boot-task setup/removal scripts, with no stored password, SYSTEM process, service or firmware change. Administrator registration is required.
+- Refresh an existing boot frame when saved preferences change. Initial UEFI/BIOS, powered-off lighting and actual cold-boot timing remain hardware-dependent and need observation.
+- Extended fake-controller/core and interface checks for snapshots, awaited GPU delivery, retention, retries, invalid data and handoff.
+
 ## 0.5.2 — Keep lights running through GPU I/O errors
 
 - Retry brief NVIDIA generic/busy lighting failures without permanently faulting the GPU backend.
