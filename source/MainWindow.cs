@@ -32,7 +32,7 @@ public sealed class MainWindow : Window
     public long ScreenCaptures {get;private set;}
     Color? screen; string page="Studio"; string note="Preview only. Connect a lighting controller to use real devices.";
     Button? startButton,connectButton; TextBlock? effectLabel,brightnessLabel,speedLabel; Slider? brightness,speed;
-    TextBox? primary,secondary;ListBox? effects;bool syncing=false;
+    TextBox? primary;ListBox? effects;StackPanel? paletteControls;WrapPanel? paletteStops;TextBlock? paletteMode;int selectedStop;bool syncing=false,pickingColor;
     static SolidColorBrush B(string h)=>new((Color)ColorConverter.ConvertFromString(h));
     static TextBlock T(string text,double size=13,string color="#E8EFEC",bool bold=false)=>new(){Text=text,FontSize=size,Foreground=B(color),FontWeight=bold?FontWeights.SemiBold:FontWeights.Normal,TextWrapping=TextWrapping.Wrap};
     static StackPanel V(params UIElement[] elements){var p=new StackPanel();foreach(var e in elements)p.Children.Add(e);return p;}
@@ -57,7 +57,7 @@ public sealed class MainWindow : Window
         var rail=new DockPanel{LastChildFill=true,Margin=new Thickness(0)};
         var railBox=new Border{Background=B("#151C20"),BorderBrush=B("#283338"),BorderThickness=new Thickness(0,0,1,0),Child=rail};root.Children.Add(railBox);
         var logo=V(T("◈  PRISM",25,"#DCEFE6",true),Small("YOUR LIGHT. YOUR SPACE."));logo.Margin=new Thickness(25,30,0,35);DockPanel.SetDock(logo,Dock.Top);rail.Children.Add(logo);
-        var bottom=V(Box(V(T("STANDALONE · LOW POWER",10,"#83E1C2",true),Gap(7),Small("Direct MSI USB control.\nYour profiles stay on this PC.")),"#1D2A2B",new Thickness(13)),Gap(12),Small("PRISM RGB   /   0.3.0"));bottom.Margin=new Thickness(16,0,16,22);DockPanel.SetDock(bottom,Dock.Bottom);rail.Children.Add(bottom);
+        var bottom=V(Box(V(T("STANDALONE · LOW POWER",10,"#83E1C2",true),Gap(7),Small("Direct MSI USB control.\nYour profiles stay on this PC.")),"#1D2A2B",new Thickness(13)),Gap(12),Small("PRISM RGB   /   0.4.0"));bottom.Margin=new Thickness(16,0,16,22);DockPanel.SetDock(bottom,Dock.Bottom);rail.Children.Add(bottom);
         var navigation=V();foreach(var (name,icon) in new[]{("Studio","◉"),("Devices","▦"),("Profiles","▤"),("Compatibility","⌕"),("Settings","⚙")})
         {
             var nameCopy=name;var button=Btn($"{icon}    {name}",()=>Navigate(nameCopy));button.Tag=name;button.HorizontalContentAlignment=HorizontalAlignment.Left;button.Background=Brushes.Transparent;button.Margin=new Thickness(12,3,12,3);navButtons.Add(button);navigation.Children.Add(button);
@@ -118,14 +118,14 @@ public sealed class MainWindow : Window
     }
     void Navigate(string name)
     {
-        page=name;content.Children.Clear();startButton=null;connectButton=null;effectLabel=null;brightnessLabel=null;speedLabel=null;primary=null;secondary=null;effects=null;brightness=null;speed=null;
+        page=name;content.Children.Clear();startButton=null;connectButton=null;effectLabel=null;brightnessLabel=null;speedLabel=null;primary=null;paletteControls=null;paletteStops=null;paletteMode=null;effects=null;brightness=null;speed=null;
         foreach(var b in navButtons){bool selected=(string)b.Tag==name;b.Background=selected?B("#254139"):Brushes.Transparent;b.Foreground=selected?B("#93EBC9"):B("#A7B8B2");}
         title.Text=name;subtitle.Text=name switch{"Studio"=>"Create a lighting scene that moves with your setup.","Devices"=>"Connect your hardware and place its lights in your scene.","Profiles"=>"Keep a different atmosphere ready for every moment.","Compatibility"=>"Explore the included device-reference descriptions.",_=>"Make Prism RGB feel at home on your PC."};
         content.Children.Add(name switch{"Studio"=>StudioPage(),"Devices"=>DevicesPage(),"Profiles"=>ProfilesPage(),"Compatibility"=>CatalogPage(),_=>SettingsPage()});UpdateStatus();RefreshActivity();
     }
     UIElement StudioPage()
     {
-        var grid=new Grid();grid.ColumnDefinitions.Add(new());grid.ColumnDefinitions.Add(new(){Width=new GridLength(270)});
+        var grid=new Grid();grid.ColumnDefinitions.Add(new());grid.ColumnDefinitions.Add(new(){Width=new GridLength(310)});
         var left=new Grid{Margin=new Thickness(0,0,20,0)};left.RowDefinitions.Add(new(){Height=GridLength.Auto});left.RowDefinitions.Add(new());left.RowDefinitions.Add(new(){Height=GridLength.Auto});grid.Children.Add(left);
         var top=new Grid{Margin=new Thickness(0,0,0,14)};top.ColumnDefinitions.Add(new());top.ColumnDefinitions.Add(new(){Width=GridLength.Auto});
         effectLabel=T(prefs.Studio.Effect,18,"#EDF2EF",true);top.Children.Add(V(effectLabel,Small("Lighting canvas")));
@@ -135,29 +135,83 @@ public sealed class MainWindow : Window
         var below=new Grid{Margin=new Thickness(0,15,0,0)};below.ColumnDefinitions.Add(new());below.ColumnDefinitions.Add(new(){Width=GridLength.Auto});Grid.SetRow(below,2);left.Children.Add(below);
         var preview=Btn(paused?"Resume preview":"Pause preview",()=>{paused=!paused;Navigate("Studio");});below.Children.Add(preview);preview.HorizontalAlignment=HorizontalAlignment.Left;
         startButton=Btn(output?"Stop & restore":"Start lighting",async()=>{if(output)await StopAsync();else StartOutput();},true);Grid.SetColumn(startButton,1);below.Children.Add(startButton);
-        var controls=V(T("EFFECT LIBRARY",10,"#8EA59D",true),Gap(10));
-        effects=new ListBox{Height=285};foreach(var name in Effects.Names)effects.Items.Add(name);effects.SelectedItem=prefs.Studio.Effect;
-        effects.SelectionChanged+=(_,_)=>{if(syncing || effects.SelectedItem is not string selected)return;prefs.Studio.Effect=selected;effectLabel!.Text=selected;ScheduleSave();};controls.Children.Add(effects);controls.Children.Add(Gap(14));
-        brightnessLabel=T($"Brightness                                      {prefs.Studio.Brightness:P0}",12);controls.Children.Add(brightnessLabel);
-        brightness=new Slider{Value=prefs.Studio.Brightness*100};brightness.ValueChanged+=(_,_)=>{if(syncing)return;prefs.Studio.Brightness=brightness.Value/100;brightnessLabel.Text=$"Brightness                                      {prefs.Studio.Brightness:P0}";ScheduleSave();};controls.Children.Add(brightness);
-        speedLabel=T($"Motion speed                                  {prefs.Studio.Speed:P0}",12);controls.Children.Add(speedLabel);
-        speed=new Slider{Value=prefs.Studio.Speed*100};speed.ValueChanged+=(_,_)=>{if(syncing)return;prefs.Studio.Speed=speed.Value/100;speedLabel.Text=$"Motion speed                                  {prefs.Studio.Speed:P0}";ScheduleSave();};controls.Children.Add(speed);
-        controls.Children.Add(T("Palette",12));controls.Children.Add(Gap(8));
-        var palette=new Grid();palette.ColumnDefinitions.Add(new());palette.ColumnDefinitions.Add(new());primary=new TextBox{Text=prefs.Studio.Color,Margin=new Thickness(0,0,5,0)};secondary=new TextBox{Text=prefs.Studio.SecondaryColor,Margin=new Thickness(5,0,0,0)};
-        primary.ToolTip="Primary color, for example #68E0C2";secondary.ToolTip="Secondary color, for example #A38BFA";palette.Children.Add(primary);Grid.SetColumn(secondary,1);palette.Children.Add(secondary);controls.Children.Add(palette);
-        primary.TextChanged+=(_,_)=>UpdatePalette();secondary.TextChanged+=(_,_)=>UpdatePalette();
-        var swatches=new StackPanel{Orientation=Orientation.Horizontal,Margin=new Thickness(0,12,0,0)};
-        foreach(var color in new[]{"#68E0C2","#A38BFA","#F3A65F","#5FADFA","#FA739C","#EEF3EC"})
-        {var c=color;var swatch=Btn("",()=>{primary.Text=c;});swatch.Width=27;swatch.Height=25;swatch.Padding=new Thickness(0);swatch.Background=B(c);swatch.Margin=new Thickness(0,0,6,0);swatch.ToolTip=c;swatches.Children.Add(swatch);}
-        controls.Children.Add(swatches);controls.Children.Add(Gap());controls.Children.Add(Small("The virtual setup previews the scene. Real devices use the positions set under Devices."));
+        var controls=V(T("EFFECT LIBRARY",10,"#8EA59D",true),Gap(10));controls.MaxWidth=250;
+        var effectPanel=new FrameworkElementFactory(typeof(System.Windows.Controls.Primitives.UniformGrid));effectPanel.SetValue(System.Windows.Controls.Primitives.UniformGrid.ColumnsProperty,2);
+        var effectStyle=new Style(typeof(ListBoxItem),(Style)FindResource(typeof(ListBoxItem)));effectStyle.Setters.Add(new Setter(Control.PaddingProperty,new Thickness(8,7,8,7)));
+        effects=new ListBox{Height=148,FontSize=12,ItemsPanel=new ItemsPanelTemplate(effectPanel),ItemContainerStyle=effectStyle};foreach(var name in Effects.Names)effects.Items.Add(name);effects.SelectedItem=prefs.Studio.Effect;
+        effects.SelectionChanged+=(_,_)=>{if(syncing || effects.SelectedItem is not string selected)return;prefs.Studio.Effect=selected;selectedStop=0;effectLabel!.Text=selected;RefreshPaletteControls();ScheduleSave();};controls.Children.Add(effects);controls.Children.Add(Gap(14));
+        brightnessLabel=T($"Brightness · {prefs.Studio.Brightness:P0}",12);controls.Children.Add(brightnessLabel);
+        brightness=new Slider{Value=prefs.Studio.Brightness*100};brightness.ValueChanged+=(_,_)=>{if(syncing)return;prefs.Studio.Brightness=brightness.Value/100;brightnessLabel.Text=$"Brightness · {prefs.Studio.Brightness:P0}";ScheduleSave();};controls.Children.Add(brightness);
+        speedLabel=T($"Motion speed · {prefs.Studio.Speed:P0}",12);controls.Children.Add(speedLabel);
+        speed=new Slider{Value=prefs.Studio.Speed*100};speed.ValueChanged+=(_,_)=>{if(syncing)return;prefs.Studio.Speed=speed.Value/100;speedLabel.Text=$"Motion speed · {prefs.Studio.Speed:P0}";ScheduleSave();};controls.Children.Add(speed);
+        paletteControls=new StackPanel();RefreshPaletteControls();controls.Children.Add(paletteControls);controls.Children.Add(Gap());controls.Children.Add(Small("The virtual setup previews the scene. Real devices use the positions set under Devices. Manual device colors stay fixed until cleared."));
         var box=Box(new ScrollViewer{Content=controls});Grid.SetColumn(box,1);grid.Children.Add(box);return grid;
     }
     void UpdatePalette()
     {
-        if(syncing || primary is null || secondary is null)return;
-        primary.BorderBrush=Effects.ValidColor(primary.Text)?B("#344147"):B("#EFA275");secondary.BorderBrush=Effects.ValidColor(secondary.Text)?B("#344147"):B("#EFA275");
-        if(Effects.ValidColor(primary.Text))prefs.Studio.Color=primary.Text;
-        if(Effects.ValidColor(secondary.Text))prefs.Studio.SecondaryColor=secondary.Text;ScheduleSave();
+        if(syncing || primary is null)return;
+        bool valid=ColorValues.TryHex(primary.Text,out var color);primary.BorderBrush=B(valid?"#344147":"#EFA275");
+        if(!valid)return;
+        var colors=Effects.Palette(prefs.Studio);colors[selectedStop]=ColorValues.Hex(color);Effects.SetPalette(prefs.Studio,colors);
+        if(paletteMode is not null)paletteMode.Text="Custom · saved for this effect";RenderPaletteStops();ScheduleSave();
+    }
+    void RefreshPaletteControls()
+    {
+        if(paletteControls is null)return;paletteControls.Children.Clear();var colors=Effects.Palette(prefs.Studio);selectedStop=Math.Clamp(selectedStop,0,colors.Count-1);
+        paletteControls.Children.Add(T("EFFECT COLORS",10,"#8EA59D",true));
+        paletteMode=Small(prefs.Studio.EffectPalettes.ContainsKey(prefs.Studio.Effect)?"Custom · saved for this effect":"Original colors");paletteMode.Margin=new Thickness(0,6,0,10);paletteControls.Children.Add(paletteMode);
+        paletteStops=new WrapPanel();RenderPaletteStops();paletteControls.Children.Add(paletteStops);
+        paletteControls.Children.Add(Small("Select a color, then edit it or pick from your screen."));paletteControls.Children.Add(Gap(9));
+        var editRow=new Grid();editRow.ColumnDefinitions.Add(new());editRow.ColumnDefinitions.Add(new(){Width=GridLength.Auto});
+        primary=new TextBox{Text=colors[selectedStop],ToolTip="Selected palette color · #RRGGBB",Margin=new Thickness(0,0,8,0)};
+        System.Windows.Automation.AutomationProperties.SetName(primary,"Selected palette hex color");
+        primary.TextChanged+=(_,_)=>UpdatePalette();editRow.Children.Add(primary);
+        var edit=Btn("Edit color",EditPaletteColor);Grid.SetColumn(edit,1);editRow.Children.Add(edit);paletteControls.Children.Add(editRow);
+        var dropper=Btn("Eyedropper · pick from screen",async()=>await PickPaletteColorAsync());dropper.Margin=new Thickness(0,8,0,8);dropper.IsEnabled=!pickingColor;paletteControls.Children.Add(dropper);
+        var actions=new WrapPanel();
+        foreach(var (label,action) in new (string,Action)[]{("Reverse colors",()=>{var p=Effects.Palette(prefs.Studio);p.Reverse();ApplyPalette(p);}), ("Remove color",()=>{var p=Effects.Palette(prefs.Studio);if(p.Count>1){p.RemoveAt(selectedStop);ApplyPalette(p);}})})
+        {var button=Btn(label,action);button.Padding=new Thickness(10,8,10,8);button.Margin=new Thickness(0,0,7,7);button.IsEnabled=colors.Count>1;actions.Children.Add(button);}
+        paletteControls.Children.Add(actions);
+        var preset=Btn("Color presets ▾",()=>{});var menu=new ContextMenu();preset.Click+=(_,_)=>{menu.PlacementTarget=preset;menu.IsOpen=true;};
+        foreach(var item in ColorPresets.All)
+        {
+            var entry=item;var line=new StackPanel{Orientation=Orientation.Horizontal};
+            foreach(var c in entry.Value)line.Children.Add(new Border{Width=13,Height=18,Background=B(c),Margin=new Thickness(0,0,2,0)});
+            line.Children.Add(new TextBlock{Text="  "+entry.Key,VerticalAlignment=VerticalAlignment.Center});
+            var option=new MenuItem{Header=line};option.Click+=(_,_)=>{selectedStop=0;ApplyPalette(entry.Value);};menu.Items.Add(option);
+        }
+        paletteControls.Children.Add(preset);var reset=Btn("Restore original colors",()=>{prefs.Studio.EffectPalettes.Remove(prefs.Studio.Effect);selectedStop=0;RefreshPaletteControls();ScheduleSave();});reset.Margin=new Thickness(0,8,0,8);paletteControls.Children.Add(reset);
+        paletteControls.Children.Add(Small(prefs.Studio.Effect=="Solid"?"Solid uses the first color. Choose another effect to blend multiple colors.":prefs.Studio.Effect=="Screen ambience"?"Custom colors follow screen brightness. Restore original colors to match the screen directly.":"Up to 8 colors per effect. Profiles keep all your effect palettes."));
+    }
+    void RenderPaletteStops()
+    {
+        if(paletteStops is null)return;paletteStops.Children.Clear();var colors=Effects.Palette(prefs.Studio);
+        for(int i=0;i<colors.Count;i++)
+        {
+            int index=i;var c=Effects.Parse(colors[i]);var swatch=Btn((i+1).ToString(),()=>{selectedStop=index;RefreshPaletteControls();});
+            swatch.Width=swatch.Height=36;swatch.Padding=new Thickness(0);swatch.Margin=new Thickness(0,0,6,8);swatch.Background=new SolidColorBrush(c);
+            swatch.Foreground=(c.R*.2126+c.G*.7152+c.B*.0722)>145?Brushes.Black:Brushes.White;swatch.BorderThickness=new Thickness(i==selectedStop?3:1);swatch.BorderBrush=i==selectedStop?Brushes.White:B("#56615F");
+            swatch.ToolTip=$"Select color {i+1}: {colors[i]}";System.Windows.Automation.AutomationProperties.SetName(swatch,$"Select palette color {i+1}");paletteStops.Children.Add(swatch);
+        }
+        var add=Btn("+",()=>{var p=Effects.Palette(prefs.Studio);if(p.Count>=8)return;p.Add("#FFFFFF");selectedStop=p.Count-1;ApplyPalette(p);});
+        add.Width=add.Height=36;add.Padding=new Thickness(0);add.IsEnabled=colors.Count<8;add.ToolTip="Add color (up to 8)";System.Windows.Automation.AutomationProperties.SetName(add,"Add palette color");paletteStops.Children.Add(add);
+    }
+    void ApplyPalette(IEnumerable<string> colors){Effects.SetPalette(prefs.Studio,colors);RefreshPaletteControls();ScheduleSave();}
+    void EditPaletteColor()
+    {
+        var colors=Effects.Palette(prefs.Studio);var picker=new ColorEditor(Effects.Parse(colors[selectedStop]),$"{prefs.Studio.Effect} · color {selectedStop+1}"){Owner=this};
+        if(picker.ShowDialog()==true){colors[selectedStop]=ColorValues.Hex(picker.SelectedColor);ApplyPalette(colors);}
+    }
+    async Task PickPaletteColorAsync()
+    {
+        if(pickingColor)return;pickingColor=true;string effect=prefs.Studio.Effect;int index=selectedStop;IsEnabled=false;
+        try
+        {
+            var color=await ScreenEyedropper.PickAsync();
+            if(color is Color picked && prefs.Studio.Effect==effect){var p=Effects.Palette(prefs.Studio);p[Math.Min(index,p.Count-1)]=ColorValues.Hex(picked);ApplyPalette(p);SetNote("Picked "+ColorValues.Hex(picked)+" for "+effect+".");}
+        }
+        catch(Exception e){SetNote("Could not pick a screen color: "+e.Message);}
+        finally{pickingColor=false;if(!windowClosed){IsEnabled=true;Activate();RefreshPaletteControls();}}
     }
     UIElement DevicesPage()
     {
@@ -287,7 +341,7 @@ public sealed class MainWindow : Window
         var minimize=new CheckBox{Content="Keep running in the system tray when I close the window",IsChecked=prefs.MinimizeToTray};minimize.Checked+=(_,_)=>{prefs.MinimizeToTray=true;ScheduleSave();};minimize.Unchecked+=(_,_)=>{prefs.MinimizeToTray=false;ScheduleSave();};
         var panel=V(Box(V(T("Desktop behavior",18,"#E5EEE8",true),Gap(12),minimize,Small("Use Quit in the tray menu to stop lighting, restore the previous state, and exit."))),Gap(18),
             Box(V(T("Your workspace",18,"#E5EEE8",true),Gap(10),Small("Profiles and preferences are stored locally. Hardware output always starts disabled."),Gap(12),Btn("Open profile folder",()=>{Directory.CreateDirectory(Storage.DirectoryPath);Process.Start(new ProcessStartInfo(Storage.DirectoryPath){UseShellExecute=true});}),Gap(12),Btn("Reset virtual layout",()=>{prefs.Studio.Layout=StudioState.Defaults();surface.State=prefs.Studio;ScheduleSave();SetNote("Virtual layout reset.");}))),Gap(18),
-            Box(V(T("About Prism RGB",18,"#E5EEE8",true),Gap(10),Small("Version 0.3.0 · Standalone Windows desktop\nDirect MSI control with independent effects and interface.\n\nLow-power mode is always on: up to 30 hardware updates/second with an 8 Hz preview, software-rendered preview, no hidden preview animation, and no repeated USB writes for unchanged colors. Solid lighting sleeps between changes. Screen ambience captures a small desktop sample twice/second.\n\nIncluded: seven effects, draggable preview, profiles, USB discovery, individual MSI ARGB LEDs, per-LED color overrides, and Gigabyte RTX 4070 Ti lighting. Other devices require future native adapters."),Gap(12),Btn("Open inspection report",()=>OpenReport()))));
+            Box(V(T("About Prism RGB",18,"#E5EEE8",true),Gap(10),Small("Version 0.4.0 · Standalone Windows desktop\nDirect MSI control with independent effects and interface.\n\nLow-power mode is always on: up to 30 hardware updates/second with an 8 Hz preview, software-rendered preview, no hidden preview animation, and no repeated USB writes for unchanged colors. Solid lighting sleeps between changes. Screen ambience captures a small desktop sample twice/second. The eyedropper captures only during a color selection.\n\nIncluded: seven effects with custom palettes, color editor and screen eyedropper, draggable preview, profiles, USB discovery, individual MSI ARGB LEDs, per-LED color overrides, and Gigabyte RTX 4070 Ti lighting. Other devices require future native adapters."),Gap(12),Btn("Open inspection report",()=>OpenReport()))));
         return new ScrollViewer{Content=panel};
     }
     void OpenReport()
@@ -453,8 +507,9 @@ public sealed class MainWindow : Window
     }
     public async Task RunBenchmarkAsync(string path,string mode)
     {
-        if(mode is not ("animated" or "solid" or "hidden" or "screen" or "hardware-animated" or "hardware-solid" or "hardware-rainbow"))throw new ArgumentException("Unknown benchmark scenario.");
-        prefs.Studio=new(){Effect=mode=="hardware-rainbow"?"Rainbow":mode.Contains("solid")?"Solid":mode=="screen"?"Screen ambience":"Aurora",Brightness=mode=="hardware-rainbow"?.7:.15};
+        if(mode is not ("animated" or "solid" or "hidden" or "screen" or "palette" or "palette-solid" or "hardware-animated" or "hardware-solid" or "hardware-rainbow"))throw new ArgumentException("Unknown benchmark scenario.");
+        prefs.Studio=new(){Effect=mode is "hardware-rainbow" or "palette"?"Rainbow":mode.Contains("solid")?"Solid":mode=="screen"?"Screen ambience":"Aurora",Brightness=mode=="hardware-rainbow"?.7:.15};
+        if(mode.StartsWith("palette",StringComparison.Ordinal))Effects.SetPalette(prefs.Studio,new[]{"#FF365E","#FF9B38","#FFE45C","#65E878","#3BC7FA","#6278FF","#AA69FF","#FA76D4"});
         surface.State=prefs.Studio;Navigate("Studio");RefreshActivity();
         bool hardware=mode.StartsWith("hardware-",StringComparison.Ordinal);
         if(hardware)
@@ -474,7 +529,7 @@ public sealed class MainWindow : Window
             await Task.Delay(20000);process.Refresh();
             double core=(process.TotalProcessorTime-cpu).TotalSeconds/wall.Elapsed.TotalSeconds*100;
             if(hardware && !output)throw new IOException("Output stopped during the benchmark: "+note);
-            var result=new{Version="0.3.0",Scenario=mode,Effect=prefs.Studio.Effect,Brightness=prefs.Studio.Brightness,Seconds=wall.Elapsed.TotalSeconds,LogicalProcessors=Environment.ProcessorCount,CpuPercent=core/Environment.ProcessorCount,OneCorePercent=core,WorkingSetMiB=process.WorkingSet64/1048576.0,PreviewFrames=PreviewFrames-frames,OutputFrames=OutputFrames-outputs,UsbWrites=((backend as NativeLightingBackend)?.UsbWrites??0)-writes,I2cWrites=((backend as NativeLightingBackend)?.I2cWrites??0)-i2c,ScreenCaptures=ScreenCaptures-captures,Renderer="WPF SoftwareOnly",HardwareOutput=hardware};
+            var result=new{Version="0.4.0",Scenario=mode,Effect=prefs.Studio.Effect,Brightness=prefs.Studio.Brightness,PaletteStops=prefs.Studio.EffectPalettes.TryGetValue(prefs.Studio.Effect,out var p)?p.Count:0,Seconds=wall.Elapsed.TotalSeconds,LogicalProcessors=Environment.ProcessorCount,CpuPercent=core/Environment.ProcessorCount,OneCorePercent=core,WorkingSetMiB=process.WorkingSet64/1048576.0,PreviewFrames=PreviewFrames-frames,OutputFrames=OutputFrames-outputs,UsbWrites=((backend as NativeLightingBackend)?.UsbWrites??0)-writes,I2cWrites=((backend as NativeLightingBackend)?.I2cWrites??0)-i2c,ScreenCaptures=ScreenCaptures-captures,Renderer="WPF SoftwareOnly",HardwareOutput=hardware};
             File.WriteAllText(path,JsonSerializer.Serialize(result,new JsonSerializerOptions{WriteIndented=true}));
         }
         finally
@@ -497,9 +552,9 @@ public sealed class MainWindow : Window
             RenderCurrentPage(Path.Combine(folder,name.ToLowerInvariant()+".png"));checks.Add("Opened and rendered "+name);
         }
         Navigate("Studio");effects!.SelectedItem="Rainbow";brightness!.Value=51;speed!.Value=67;
-        primary!.Text="#234567";secondary!.Text="#ABCDEF";
-        if(prefs.Studio.Effect!="Rainbow" || prefs.Studio.Brightness!=.51 || prefs.Studio.Speed!=.67 || prefs.Studio.Color!="#234567")throw new Exception("Lighting controls did not update state.");
-        primary.Text="invalid";if(prefs.Studio.Color!="#234567")throw new Exception("Invalid color entered the render engine.");checks.Add("Effect, speed, brightness and palette controls update state; invalid colors remain outside the engine");
+        primary!.Text="#234567";
+        if(prefs.Studio.Effect!="Rainbow" || prefs.Studio.Brightness!=.51 || prefs.Studio.Speed!=.67 || Effects.Palette(prefs.Studio)[0]!="#234567")throw new Exception("Lighting controls did not update state.");
+        primary.Text="invalid";if(Effects.Palette(prefs.Studio)[0]!="#234567")throw new Exception("Invalid color entered the render engine.");checks.Add("Effect, speed, brightness and palette controls update state; invalid colors remain outside the engine");
         Navigate("Profiles");
         static IEnumerable<TChild> Find<TChild>(DependencyObject root) where TChild:DependencyObject
         {
@@ -509,6 +564,66 @@ public sealed class MainWindow : Window
                 foreach(var descendant in Find<TChild>(child))yield return descendant;
             }
         }
+        Navigate("Studio");UpdateLayout();
+        var before=Effects.Palette(prefs.Studio);int originalCount=before.Count;
+        Button StudioAction(Func<Button,bool> match){UpdateLayout();return Find<Button>(content).Single(match);}
+        StudioAction(b=>System.Windows.Automation.AutomationProperties.GetName(b)=="Add palette color").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        if(Effects.Palette(prefs.Studio).Count!=originalCount+1)throw new Exception("Add palette color failed.");
+        primary!.Text="AABBCC";if(Effects.Palette(prefs.Studio)[^1]!="#AABBCC")throw new Exception("Selected color input failed.");
+        StudioAction(b=>b.Content is string s && s=="Reverse colors").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        if(Effects.Palette(prefs.Studio)[0]!="#AABBCC")throw new Exception("Reverse palette failed.");
+        StudioAction(b=>b.Content is string s && s=="Remove color").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        if(Effects.Palette(prefs.Studio).Count!=originalCount)throw new Exception("Remove palette color failed.");
+        effects!.SelectedItem="Ember";primary!.Text="#102030";effects.SelectedItem="Rainbow";
+        if(Effects.Palette(prefs.Studio)[0]!="#AABBCC")throw new Exception("Switching effects lost the custom palette.");
+        checks.Add("Added, selected, reversed and removed colors; each effect retains its own palette");
+        Exception? pickerError=null;
+        _=Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle,new Action(async()=>
+        {
+            try
+            {
+                var picker=Application.Current.Windows.OfType<ColorEditor>().Single();picker.HexInput.Text="#123456";
+                picker.RedInput.Text="250";picker.GreenInput.Text="80";picker.BlueInput.Text="30";
+                if(picker.SelectedColor!=Color.FromRgb(250,80,30))throw new Exception("RGB editor failed.");
+                picker.HexInput.Text="invalid";
+                var use=Find<Button>(picker).Single(b=>b.Content is string s && s=="Use color");
+                if(use.IsEnabled)throw new Exception("Invalid hex color can be applied.");
+                picker.HexInput.Text="#445566";
+                picker.PickScreenColor=()=>Task.FromResult<Color?>(Color.FromRgb(34,170,238));
+                Find<Button>(picker).Single(b=>b.Content is string s && s=="Eyedropper · pick from screen").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                await Task.Delay(250);
+                if(!picker.IsVisible || !picker.IsEnabled || picker.SelectedColor!=Color.FromRgb(34,170,238) || Find<TextBlock>(picker).Any(t=>t.Text=="Use six hex digits and RGB numbers from 0 to 255."))throw new Exception("Eyedropper did not return to a valid modal color editor.");
+                picker.UpdateLayout();
+                var visual=(FrameworkElement)picker.Content;int width=(int)(visual.ActualWidth+48),height=(int)(visual.ActualHeight+48);
+                var drawing=new DrawingVisual();using(var dc=drawing.RenderOpen())
+                {dc.DrawRectangle(picker.Background,null,new Rect(0,0,width,height));dc.DrawRectangle(new VisualBrush(visual),null,new Rect(24,24,visual.ActualWidth,visual.ActualHeight));}
+                var image=new RenderTargetBitmap(width,height,96,96,PixelFormats.Pbgra32);image.Render(drawing);
+                var encoder=new PngBitmapEncoder();encoder.Frames.Add(BitmapFrame.Create(image));using(var f=File.Create(Path.Combine(folder,"color-editor.png")))encoder.Save(f);
+                use.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            }
+            catch(Exception e){pickerError=e;Application.Current.Windows.OfType<ColorEditor>().FirstOrDefault()?.Close();}
+        }));
+        StudioAction(b=>b.Content is string s && s=="Edit color").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        if(pickerError is not null)throw pickerError;
+        if(Effects.Palette(prefs.Studio)[selectedStop]!="#22AAEE")throw new Exception("Color editor did not commit to the selected palette stop.");
+        var committed=Effects.Palette(prefs.Studio)[selectedStop];
+        _=Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle,new Action(()=>
+        {
+            var picker=Application.Current.Windows.OfType<ColorEditor>().Single();picker.SetColor(Colors.Red);
+            Find<Button>(picker).Single(b=>b.Content is string s && s=="Cancel").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        }));
+        StudioAction(b=>b.Content is string s && s=="Edit color").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        if(Effects.Palette(prefs.Studio)[selectedStop]!=committed)throw new Exception("Cancelling changed the palette.");
+        checks.Add("Color editor commits hex/RGB, rejects invalid inputs, returns from its eyedropper, and cancels without changing the scene");
+        if(!await ScreenEyedropper.VerifyOverlayAsync())throw new Exception("Eyedropper selection or cancellation failed.");
+        checks.Add("Eyedropper frozen-image selection and Escape cancellation close their temporary windows");
+        StudioAction(b=>b.Content is string s && s=="Restore original colors").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        if(prefs.Studio.EffectPalettes.ContainsKey("Rainbow") || !prefs.Studio.EffectPalettes.ContainsKey("Ember"))throw new Exception("Reset affected the wrong effect palette.");
+        effects!.SelectedItem="Ember";
+        if(Effects.Palette(prefs.Studio)[0]!="#102030")throw new Exception("Other effect palette was lost.");
+        checks.Add("Restored one effect's original colors while preserving other custom palettes");
+        effects.SelectedItem="Rainbow";ApplyPalette(new[]{"#234567","#ABCDEF","#22AAEE"});
+        Navigate("Profiles");
         UpdateLayout();var input=Find<TextBox>(content).First();input.Text="UI smoke profile";
         var save=Find<Button>(content).First(x=>x.Content is string s && s=="Save profile");save.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         if(!prefs.Profiles.Any(p=>p.Name=="UI smoke profile" && p.State.Effect=="Rainbow"))throw new Exception("Save profile control failed.");checks.Add("Saved a profile through the actual interface");

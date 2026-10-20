@@ -1,4 +1,4 @@
-# Native lighting architecture — 0.3.0
+# Native lighting architecture — 0.4.0
 
 Prism is a C# WPF/Windows Forms app targeting .NET 10, without a network backend, browser engine, vendor app dependency, or third-party NuGet package. The portable build bundles Microsoft's desktop runtime and notices. GPU access loads the installed system `nvapi64.dll`.
 
@@ -7,6 +7,8 @@ Prism is a C# WPF/Windows Forms app targeting .NET 10, without a network backend
 | App.xaml / App.xaml.cs | Styling, startup, software rendering, diagnostic modes |
 | MainWindow.cs | Studio/devices/profiles/catalog/settings, tray, lifecycle, scheduling, interface checks |
 | Models.cs | Persistence/normalization, scene effects, per-output pixel sampling and overrides |
+| ColorEditor.cs | Saturation/value/hue editor, RGB/hex validation, swatches and palette presets |
+| ScreenEyedropper.cs | Temporary physical-pixel display snapshots, magnifier overlays, click/cancel and cleanup |
 | LightingSurface.cs | Cached preview drawing, layout dragging, tiny desktop sample |
 | HardwareFrameClock.cs | Scoped native frame timing, cancellation, bounded callbacks |
 | Hardware.cs | Read-only HID enumeration, exact descriptor checks, MSI stream routing and transport |
@@ -21,6 +23,14 @@ A scoped high-resolution Windows waitable timer runs the motherboard cadence at 
 Preview redraws are capped at 8 Hz and stop on hidden/minimized/inactive pages. Static output sleeps between settings changes. Complete duplicate packets and unchanged GPU register payloads are suppressed. GPU lighting mode is initialized once per output session. No permanent GPU polling loop runs when there is no pending work. Color parsing and drawing resources are cached. Screen sampling uses StretchBlt directly into 32x18 pixels at most twice/second.
 
 WPF uses SoftwareOnly. Windows composition and screen readback may still consume GPU resources outside the app. [Measurements](PERFORMANCE.md) report observations and their limits.
+
+## Custom effect palettes
+
+`StudioState.EffectPalettes` stores a separate 1–8-stop hex palette for each customized effect. Missing entries preserve original effect behavior, so older settings/profiles remain valid. Normalization removes unknown effects/invalid colors and limits stop counts. Palette changes replace lists; a weak cache parses each list into RGB values once and reuses them for preview and hardware sampling. Profiles deep-clone and export the full palette dictionary. No hardware protocol or output cadence changes are needed for recoloring.
+
+The color editor commits only after confirmation. RGB/hex input cannot pass invalid values into the scene. The screen picker runs on one temporary STA thread with a scoped per-monitor DPI context, without changing the WPF thread's DPI settings. It captures display bitmaps before opening full-screen Windows Forms overlays, maps physical coordinates to snapshot pixels, and consumes the selection click. The magnifier repaints on pointer movement only. Selection, Escape/right-click or closing ends the modal session; `finally` disposes overlays/bitmaps and the worker exits. No screenshot file or persistent capture timer is created. The WPF modal editor becomes transparent while picking rather than hiding/ending its dialog loop.
+
+Software checks exercise captured-image selection/cancellation and negative monitor origins. A local diagnostic verifies a real known-color screen pixel; real mixed-DPI/HDR coverage remains limited to available displays.
 
 ## MSI protocol
 

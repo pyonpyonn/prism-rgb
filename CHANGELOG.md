@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.0 — Effect color studio and eyedropper
+
+- Added independent 1–8-color palettes for every effect, including recolored Rainbow, Ember and Screen ambience.
+- Added a saturation/value area, hue slider, RGB/hex editing, quick swatches, eight palette presets, add/remove/reverse and restore-original controls.
+- Added a screen eyedropper with frozen images, magnification, physical-pixel selection and Escape/right-click cancellation; temporary images/windows/thread are released afterward.
+- Saved all custom effect palettes in local settings and exported profiles, with normalization and older-profile compatibility.
+- Retained the native hardware paths, output rates and static/hidden timer sleep. Parsed custom palette stops are cached.
+- Passed 34 core and 19 interface checks, including color-dialog apply/cancel and returning from the eyedropper without losing its modal session.
+
 ## 0.3.0 — Visible ARGB output, individual pixels, Gigabyte GPU
 
 - Fixed missing visible MSI colors by configuring complete stream routing and supplying compact per-LED data. The owner confirmed the working ARGB test visually.

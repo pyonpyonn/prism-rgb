@@ -21,6 +21,18 @@ public partial class App : Application
             ShutdownMode=ShutdownMode.OnExplicitShutdown;
             int code=await SelfTests.RunAsync();Shutdown(code);return;
         }
+        int eyedropper=Array.IndexOf(e.Args,"--verify-eyedropper");
+        if(eyedropper>=0 && eyedropper+1<e.Args.Length)
+        {
+            ShutdownMode=ShutdownMode.OnExplicitShutdown;
+            try
+            {
+                bool capture=await ScreenEyedropper.VerifyCaptureAsync(),overlay=await ScreenEyedropper.VerifyOverlayAsync();
+                File.WriteAllText(e.Args[eyedropper+1],System.Text.Json.JsonSerializer.Serialize(new{PhysicalScreenCaptureMatchesKnownColor=capture,FrozenSelectionAndCancellation=overlay}));
+                Shutdown(capture&&overlay?0:1);
+            }
+            catch(Exception ex){File.WriteAllText(e.Args[eyedropper+1],ex.ToString());Shutdown(1);}return;
+        }
         int probe=Array.IndexOf(e.Args,"--inspect-msi"),argbTest=Array.IndexOf(e.Args,"--test-argb"),gpuTest=Array.IndexOf(e.Args,"--test-gpu");
         if(probe>=0 || argbTest>=0 || gpuTest>=0)
         {

@@ -1,4 +1,20 @@
-# Measured resource use — 0.3.0
+# Measured resource use
+
+## 0.4.0 color studio
+
+Measured on 2026-10-20 on the same PC described below, using four seconds of warmup followed by about 20 seconds per case. These preview cases do not enable hardware output.
+
+| Scenario | Total CPU | One-core equivalent | Mean app GPU | Preview frames/second |
+| --- | ---: | ---: | ---: | ---: |
+| Original Aurora preview | 0.383% | 12.26% | 0.000% | 7.9 |
+| Custom eight-color Rainbow preview | 0.378% | 12.11% | 0.000% | 7.9 |
+| Custom Solid preview after warmup | 0.000% | 0.00% | 0.000% | 0.0 |
+
+Raw values are in [color-studio-performance.json](color-studio-performance.json). Palette stops are parsed once after an edit and cached for sampling. Static custom colors still stop the periodic preview timer. The eyedropper uses one temporary display snapshot per monitor, redraws its magnifier on pointer events, and disposes the images/windows/thread when finished. No ongoing eyedropper polling or screenshot storage is added. These observations do not measure the short picking interaction itself, system composition, or energy use.
+
+The native protocols and output cadences are unchanged in 0.4.0. The hardware results below are archived 0.3.0 observations, rather than new 0.4.0 hardware measurements.
+
+## 0.3.0 hardware and preview archive
 
 Measured on 2026-10-19: Ryzen 9 5900XT (32 logical processors), Gigabyte RTX 4070 Ti Gaming OC, MSI B550M PRO-VDH WIFI with two configured 60-pixel ARGB chains, Windows build 26200, and a 1340x875 DIP window. The owner separately confirmed visible motherboard and GPU color tests.
 

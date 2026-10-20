@@ -46,6 +46,60 @@ public static class SelfTests
         {
             Check(Effects.Sample(new(){Effect="Screen ambience",Brightness=1},0,0,0,Colors.OrangeRed)==Colors.OrangeRed,"Screen sample ignored");
         });
+        Test("All seven effects accept a custom color and obey brightness",()=>
+        {
+            foreach(var name in Effects.Names)
+            {
+                var state=new StudioState{Effect=name,Brightness=1};Effects.SetPalette(state,new[]{"#0000FF"});
+                var color=Effects.Sample(state,.4,.2,.8,Colors.White);
+                Check(color.R==0 && color.G==0 && color.B>0,name+" ignored the custom palette");
+                state.Brightness=0;Check(Effects.Sample(state,.4,.2,.8,Colors.White)==Colors.Black,name+" ignored brightness");
+            }
+            var screen=new StudioState{Effect="Screen ambience",Brightness=1};Effects.SetPalette(screen,new[]{"#FFFFFF","#FF0000"});
+            Check(Effects.Sample(screen,0,0,0,Colors.Black)==Colors.Black,"Custom screen palette lit a black screen");
+        });
+        Test("Custom gradients loop continuously and refresh cached colors",()=>
+        {
+            var stops=new[]{Colors.Red,Colors.Blue,Colors.Lime};
+            Check(Effects.PaletteAt(stops,0)==Colors.Red && Effects.PaletteAt(stops,1)==Colors.Lime,"Gradient endpoints changed");
+            Check(Effects.PaletteAt(stops,.25)==Color.FromRgb(127,0,127),"Gradient interpolation changed");
+            Check(Effects.PaletteAt(stops,1,true)==Effects.PaletteAt(stops,0,true) && Effects.PaletteAt(stops,-.25,true)==Effects.PaletteAt(stops,.75,true),"Loop seam or negative phase failed");
+            var state=new StudioState{Effect="Rainbow",Brightness=1};Effects.SetPalette(state,new[]{"#FF0000"});
+            Check(Effects.Sample(state,0,0,0)==Colors.Red,"Initial palette failed");Effects.SetPalette(state,new[]{"#0000FF"});
+            Check(Effects.Sample(state,0,0,0)==Colors.Blue,"Edited palette used stale parsed colors");
+            state.Effect="Ember";Effects.SetPalette(state,new[]{"#00FF00"});state.Effect="Rainbow";
+            Check(Effects.Sample(state,0,0,0)==Colors.Blue,"Changing effects overwrote a different palette");
+        });
+        Test("Custom palettes normalize, clone and survive profile export",()=>
+        {
+            var state=new StudioState{Effect="Wave"};Effects.SetPalette(state,new[]{"#123456","#ABCDEF","#22AAEE"});
+            var clone=state.Clone();clone.EffectPalettes["Wave"][0]="#FFFFFF";
+            Check(state.EffectPalettes["Wave"][0]=="#123456","Cloning shared palette lists");
+            string dir=Path.Combine(Directory.GetCurrentDirectory(),"work","palette-test-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(dir);
+            string path=Path.Combine(dir,"profile.json");Storage.Export(new(){Name="Custom",State=state},path);
+            Check(Storage.Import(path).State.EffectPalettes["Wave"].SequenceEqual(state.EffectPalettes["Wave"]),"Profile lost palette stops");
+            state.EffectPalettes["Rainbow"]=Enumerable.Repeat("#FFFFFF",20).ToList();state.EffectPalettes["Ember"]=new(){"bad"};state.EffectPalettes["unknown"]=new(){"#000000"};state.EffectPalettes["Solid"]=null!;state.Normalize();
+            Check(state.EffectPalettes["Rainbow"].Count==8 && !state.EffectPalettes.ContainsKey("Ember") && !state.EffectPalettes.ContainsKey("unknown") && !state.EffectPalettes.ContainsKey("Solid"),"Malformed palettes survived normalization");
+            bool rejected=false;try{Effects.SetPalette(state,new[]{"bad"});}catch(ArgumentException){rejected=true;}Check(rejected,"Malformed edited colors accepted");
+        });
+        Test("Screen color coordinates retain negative monitor origins and reject outside pixels",()=>
+        {
+            using var bitmap=new System.Drawing.Bitmap(2,2);bitmap.SetPixel(0,0,System.Drawing.Color.Red);bitmap.SetPixel(1,1,System.Drawing.Color.Blue);
+            using var image=new ScreenEyedropper.ScreenImage(new System.Drawing.Rectangle(-1920,-120,2,2),bitmap);
+            Check(image.Sample(-1920,-120)==Colors.Red && image.Sample(-1919,-119)==Colors.Blue,"Physical pixel mapping failed");
+            Check(image.Sample(-1921,-120) is null && image.Sample(-1918,-119) is null,"Outside display pixel accepted");
+        });
+        Test("Color editor converts HSV and accepts only complete RGB hex colors",()=>
+        {
+            foreach(var color in new[]{Colors.Red,Colors.Lime,Colors.Blue,Colors.Black,Colors.White,Color.FromRgb(34,170,238)})
+            {
+                var hsv=ColorValues.Hsv(color);var round=Effects.Hsv(hsv.Hue,hsv.Saturation,hsv.Value);
+                Check(Math.Abs(round.R-color.R)<=1 && Math.Abs(round.G-color.G)<=1 && Math.Abs(round.B-color.B)<=1,"HSV conversion drifted");
+                Check(ColorValues.TryHex(ColorValues.Hex(color),out var parsed) && parsed==color,"Hex round-trip failed");
+            }
+            Check(ColorValues.TryHex(" 22aaee ",out var selected) && selected==Color.FromRgb(34,170,238),"Hex shorthand input failed");
+            Check(!ColorValues.TryHex("#AABBCCDD",out _) && !ColorValues.TryHex("#12",out _),"Incomplete or alpha hex accepted");
+        });
         Test("MSI frame preserves all unselected bytes and never saves flash",()=>
         {
             byte[] baseline=Enumerable.Range(0,185).Select(x=>(byte)(x%256)).ToArray();baseline[0]=0x52;

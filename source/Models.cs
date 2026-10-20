@@ -23,6 +23,7 @@ public sealed class StudioState
     public string Effect { get; set; } = "Aurora";
     public string Color { get; set; } = "#68E0C2";
     public string SecondaryColor { get; set; } = "#A38BFA";
+    public Dictionary<string,List<string>> EffectPalettes { get; set; } = new();
     public double Brightness { get; set; } = .7;
     public double Speed { get; set; } = .4;
     public List<LightItem> Layout { get; set; } = Defaults();
@@ -42,6 +43,14 @@ public sealed class StudioState
         Speed=double.IsFinite(Speed)?Math.Clamp(Speed,0,1):.4;
         if (!Effects.ValidColor(Color)) Color="#68E0C2";
         if (!Effects.ValidColor(SecondaryColor)) SecondaryColor="#A38BFA";
+        EffectPalettes??=new();
+        foreach(var name in new List<string>(EffectPalettes.Keys))
+        {
+            if(!Effects.Names.Contains(name) || EffectPalettes[name] is null){EffectPalettes.Remove(name);continue;}
+            var colors=EffectPalettes[name].FindAll(Effects.ValidColor);
+            if(colors.Count>8)colors=colors.GetRange(0,8);
+            if(colors.Count==0)EffectPalettes.Remove(name);else EffectPalettes[name]=colors;
+        }
         if (Layout is null || Layout.Count==0 || Layout.Count>100) Layout=Defaults();
         Layout.RemoveAll(item=>item is null);
         if(Layout.Count==0)Layout=Defaults();
@@ -147,11 +156,55 @@ public static class Effects
     public static Color Parse(string text) => Color.FromRgb(Convert.ToByte(text.Substring(1,2),16),Convert.ToByte(text.Substring(3,2),16),Convert.ToByte(text.Substring(5,2),16));
     [ThreadStatic] static string? lastPrimary,lastSecondary;
     [ThreadStatic] static Color primaryColor,secondaryColor;
+    static readonly System.Runtime.CompilerServices.ConditionalWeakTable<StudioState,PaletteCache> paletteCache=new();
+    sealed class PaletteCache { public List<string>? Source;public Color[] Colors=Array.Empty<Color>(); }
+    public static List<string> Palette(StudioState s)
+    {
+        if(s.EffectPalettes.TryGetValue(s.Effect,out var colors))return new(colors);
+        return s.Effect switch
+        {
+            "Rainbow"=>new(){"#FF0000","#FFFF00","#00FF00","#00FFFF","#0000FF","#FF00FF"},
+            "Ember"=>new(){"#FF300C","#FFBE2D"},
+            "Solid" or "Breathing"=>new(){s.Color},
+            _=>new(){s.Color,s.SecondaryColor}
+        };
+    }
+    public static void SetPalette(StudioState s,IEnumerable<string> colors)
+    {
+        var copy=new List<string>(colors);
+        if(copy.Count is <1 or >8 || copy.Exists(c=>!ValidColor(c)))throw new ArgumentException("Choose between 1 and 8 valid colors.");
+        // Replace lists rather than mutating them so the hot rendering path can reuse parsed RGB stops.
+        s.EffectPalettes[s.Effect]=copy;
+    }
+    public static Color PaletteAt(IReadOnlyList<Color> colors,double position,bool loop=false)
+    {
+        if(colors.Count==1)return colors[0];
+        double p=loop?(position%1+1)%1:Math.Clamp(position,0,1);
+        double slot=p*(loop?colors.Count:colors.Count-1);int index=Math.Min((int)slot,colors.Count-1);
+        return Mix(colors[index],colors[loop?(index+1)%colors.Count:Math.Min(index+1,colors.Count-1)],slot-index);
+    }
     public static Color Sample(StudioState s,double x,double y,double seconds,Color? screen=null)
     {
         if(lastPrimary!=s.Color){primaryColor=Parse(s.Color);lastPrimary=s.Color;}
         if(lastSecondary!=s.SecondaryColor){secondaryColor=Parse(s.SecondaryColor);lastSecondary=s.SecondaryColor;}
         var a=primaryColor; var b=secondaryColor; double t=seconds*(.05+s.Speed*1.5); Color c;
+        if(s.EffectPalettes.TryGetValue(s.Effect,out var custom))
+        {
+            var cache=paletteCache.GetOrCreateValue(s);
+            if(!ReferenceEquals(cache.Source,custom)){cache.Colors=custom.ConvertAll(Parse).ToArray();cache.Source=custom;}
+            var stops=cache.Colors;
+            c=s.Effect switch
+            {
+                "Rainbow"=>PaletteAt(stops,x*.8+y*.2+t*.18,true),
+                "Solid"=>stops[0],
+                "Breathing"=>Scale(PaletteAt(stops,t*.12,true),.12+.88*(.5+.5*Math.Sin(t*Math.PI*2))),
+                "Wave"=>PaletteAt(stops,.5+.5*Math.Sin((x*2+y-t)*Math.PI*2)),
+                "Ember"=>PaletteAt(stops,.5+.5*Math.Sin(x*17+y*11+t*3)*Math.Sin(x*9-t*4)),
+                "Screen ambience"=>ColorizeScreen(stops,screen??Colors.Black),
+                _=>PaletteAt(stops,Math.Clamp(.5+.35*Math.Sin(x*5+t)+.15*Math.Cos(y*7-t*.7),0,1))
+            };
+            return Scale(c,s.Brightness);
+        }
         switch(s.Effect)
         {
             case "Rainbow": c=Hsv((x*.8+y*.2+t*.18)%1,1,1); break;
@@ -163,6 +216,11 @@ public static class Effects
             default: c=Mix(a,b,Math.Clamp(.5+.35*Math.Sin(x*5+t)+.15*Math.Cos(y*7-t*.7),0,1)); break;
         }
         return Scale(c,s.Brightness);
+    }
+    static Color ColorizeScreen(Color[] stops,Color screen)
+    {
+        double level=(.2126*screen.R+.7152*screen.G+.0722*screen.B)/255;
+        return Scale(PaletteAt(stops,level),Math.Max(screen.R,Math.Max(screen.G,screen.B))/255.0);
     }
     public static Color Scale(Color c,double f) => Color.FromRgb((byte)Math.Clamp(c.R*f,0,255),(byte)Math.Clamp(c.G*f,0,255),(byte)Math.Clamp(c.B*f,0,255));
     public static Color Mix(Color a,Color b,double f) => Color.FromRgb((byte)(a.R+(b.R-a.R)*f),(byte)(a.G+(b.G-a.G)*f),(byte)(a.B+(b.B-a.B)*f));

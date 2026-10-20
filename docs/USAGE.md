@@ -1,6 +1,6 @@
-# Using Prism RGB 0.3.0
+# Using Prism RGB 0.4.0
 
-Extract the complete [v0.3.0 Windows x64 release](https://github.com/pyonpyonn/prism-rgb/releases/tag/v0.3.0) and open `Launch Prism RGB.cmd`. Use the new executable rather than an older extracted build. The .NET desktop runtime is bundled.
+Extract the complete [v0.4.0 Windows x64 release](https://github.com/pyonpyonn/prism-rgb/releases/tag/v0.4.0) and open `Launch Prism RGB.cmd`. Use the new executable rather than an older extracted build. The .NET desktop runtime is bundled.
 
 ## Connect and start
 
@@ -37,13 +37,37 @@ The combined 1–232 ARGB range uses the compact stream verified visually on the
 
 The GPU output exposes **Fan 1, Fan 2, Fan 3, Logo**. Expand **Choose individual fan and logo colors** to set overrides; otherwise each zone samples the current effect. These are four lighting zones on the tested card, not individually addressable LEDs within every fan ring. Fan speed is never modified. Stop clears GPU lighting because the original state is not readable as a complete scene.
 
-## Effects, profiles, and preview
+## Effect colors and eyedropper
 
-Aurora/Wave blend both palette colors; Solid/Breathing use the primary color; Rainbow and Ember use built-in palettes; Screen ambience uses a small primary-display average. Palette inputs accept `#RRGGBB`. Brightness applies to every effect and manual override.
+Select any effect in **Studio**, then use **Effect colors**:
+
+1. Select a numbered color swatch. **+** adds a color, up to eight. **Remove color** keeps at least one.
+2. **Edit color** opens the saturation/value area, hue slider, quick swatches, and exact hex/RGB fields. Hex accepts six digits with or without `#`; RGB values are 0–255. **Use color** applies; **Cancel** keeps the existing color. The color area also supports arrow keys and Shift for larger steps.
+3. **Eyedropper · pick from screen** lets you click a pixel on any connected display. A magnifier and hex value show the selected pixel. **Escape** or **right-click** cancels. The editor's eyedropper temporarily makes the dialog transparent, then returns to it for confirmation.
+4. **Color presets** offers Mint & lilac, Ocean, Sunset, Cherry blossom, Fire, Ice, Monochrome, and Full spectrum. **Reverse colors** reverses their order.
+5. **Restore original colors** resets only the current effect. Switching effects retains the other effects' edits. Save a profile to keep/export all custom effect palettes.
+
+![Color editor](images/color-editor.png)
+
+| Effect | Custom palette behavior |
+| --- | --- |
+| Aurora | Blends across every stop with the original motion |
+| Rainbow | Cycles smoothly through the chosen stops, including the last-to-first transition |
+| Solid | Uses the first stop; remove extra stops for a single-color palette |
+| Breathing | Cycles the colors while fading in and out |
+| Wave | Waves through the chosen gradient |
+| Ember | Keeps the flicker pattern with your colors instead of fixed orange/red |
+| Screen ambience | Maps desktop luminance through the palette and follows screen brightness; black stays black |
+
+Without edits, the original effect colors/behavior remain available, including full-spectrum Rainbow, warm Ember, and direct screen color. Brightness applies to every effect and manual override. Manual colors set under Devices remain fixed until cleared.
+
+The eyedropper takes one frozen image per display, retains them only in memory, and releases images, overlays and its temporary thread after selection/cancellation. It does not save screenshots or continue polling. Physical screen coordinates are used for pixel selection; negative monitor origins have automated coverage. Actual mixed-DPI/multiple-monitor and HDR color fidelity have not been verified on every configuration. Protected content may not be capturable.
+
+## Profiles and preview
 
 Hardware animation is capped at approximately 30 updates/second for the motherboard and 15 for GPU lighting. Preview rendering is capped at 8 and stops while hidden/minimized or on other pages. **Pause preview** freezes only the illustration; hardware continues. Screen ambience samples at most twice/second and does not map screen regions or multiple monitors. Samples remain in memory.
 
-The draggable virtual setup is illustrative. Real outputs use the Devices position/span controls. **Profiles** saves effect, palette, brightness, speed, and virtual layout. Device counts, direction, enabled outputs, placements, and individual overrides are separate local preferences, not exported scene profiles. Applying another profile leaves manual overrides active until cleared.
+The draggable virtual setup is illustrative. Real outputs use the Devices position/span controls. **Profiles** saves the selected effect, all custom effect palettes, brightness, speed, and virtual layout. Existing profiles without custom palettes still load with their original colors. Device counts, direction, enabled outputs, placements, and individual overrides are separate local preferences, not exported scene profiles. Applying another profile leaves manual overrides active until cleared.
 
 Profiles can be saved, replaced by name, deleted, and imported/exported as Prism JSON up to 1 MiB. Preferences live at `%LOCALAPPDATA%\PrismRGB\settings.json`; **Settings → Open profile folder** opens it. Quit before backing up/resetting settings. Old settings are migrated to use saved controller counts and a usable span when first enabling per-LED control.
 
@@ -53,7 +77,7 @@ Default Close clears/restores and quits. Optional tray mode hides the window whi
 
 | Problem | Check |
 | --- | --- |
-| 0.2.0 connects but produces no visible ARGB colors | Use 0.3.0; the old color-field-only path did not supply the required stream/routing. |
+| 0.2.0 connects but produces no visible ARGB colors | Use 0.4.0 or later; the old color-field-only path did not supply the required stream/routing. |
 | Connection blocked | Close competing RGB tools and verify the exact supported hardware. |
 | GPU unavailable | Check the footer, installed NVIDIA driver, exact card identifiers, and competing RGB apps. Motherboard output can still be used. |
 | Some LEDs stay dark or patterns repeat | Check the configured count, chain wiring/splitters, brightness, and manual overrides. |
@@ -74,4 +98,4 @@ With competing RGB software closed, these explicit tests change supported hardwa
 
 The ARGB test lasts about 40 seconds and shows red/green/blue followed by distinct moving pixel colors. The GPU test lasts about 15 seconds and shows red/green/blue. API success is reported separately from visible confirmation, which requires someone observing the lights.
 
-`--inspect-msi <result.json>` only reads descriptors/current configuration. `--self-test` uses fake controllers and read-only HID enumeration. `--ui-smoke <folder>` exercises interface controls with fake devices; `--render-preview <png>` renders the illustration. Use `--data-dir <folder>` for isolated diagnostic preferences. Build/test/package scripts and [performance measurement](PERFORMANCE.md) are documented in the root README.
+`--inspect-msi <result.json>` only reads descriptors/current configuration. `--self-test` uses fake controllers and read-only HID enumeration. `--ui-smoke <folder>` exercises interface/color controls and synthetic eyedropper images with fake devices; `--render-preview <png>` renders the illustration. `--verify-eyedropper <result.json>` briefly displays a known color target and verifies actual screen capture plus synthetic selection/cancellation, without lighting writes. Use `--data-dir <folder>` for isolated diagnostic preferences. Build/test/package scripts and [performance measurement](PERFORMANCE.md) are documented in the root README.

@@ -4,13 +4,13 @@
 
 A standalone Windows lighting app with **individual MSI ARGB LED control and Gigabyte RTX 4070 Ti lighting**. No OpenRGB, SignalRGB, SDK server, account, or background service is required. The portable x64 release bundles the .NET desktop runtime.
 
-**0.3.0 alpha fixes missing visible ARGB output in 0.2.0.** The older version changed header color fields without supplying the LED stream and complete routing configuration required by this setup. Controller readback alone did not establish visible lighting. The owner has now confirmed the compact ARGB stream and the separate GPU color test visually.
+**0.4.0 alpha adds a color editor and screen eyedropper.** Customize every library effect with up to eight colors, use palette presets, and save each effect's colors in profiles. It retains the working native motherboard/GPU control introduced in 0.3.0.
 
 ![Prism RGB Studio](docs/images/preview.png)
 
 ## Download and use
 
-1. Download **PrismRGB-Windows-x64.zip** from [v0.3.0 Releases](https://github.com/pyonpyonn/prism-rgb/releases/tag/v0.3.0).
+1. Download **PrismRGB-Windows-x64.zip** from [v0.4.0 Releases](https://github.com/pyonpyonn/prism-rgb/releases/tag/v0.4.0).
 2. Extract the complete archive and open **Launch Prism RGB.cmd**. Use this new folder instead of an older extracted copy.
 3. Exit other RGB controllers, including SignalRGB, MSI lighting tools, and RGB Fusion.
 4. Choose **Devices → Connect lighting**. The app connects the motherboard and queries the supported GPU if available. Connecting does not start color output.
@@ -33,16 +33,20 @@ Other USB/catalog entries are research references and do not supply native drive
 ## Effects and individual colors
 
 - Seven effects: Aurora, Rainbow, Solid, Breathing, Wave, Ember, Screen ambience.
-- Global brightness, speed, two-color palettes, draggable virtual preview, and local JSON scene profiles.
+- Separate 1–8 color palettes for every effect, including Rainbow and Ember; add/remove/reverse colors, eight presets, and restore original colors.
+- Color spectrum and hue controls, hex/RGB input, quick swatches, and a screen eyedropper with magnification. Escape/right-click cancels screen picking.
+- Global brightness, speed, draggable virtual preview, and local JSON scene profiles that retain every custom effect palette.
 - Header LED counts, scene position/span, reverse direction, and numbered per-LED color overrides.
 - Named **Fan 1 / Fan 2 / Fan 3 / Logo** GPU color overrides.
 - Optional tray behavior, read-only HID discovery, and a descriptive compatibility catalog.
 
 Expand **Choose colors for individual LEDs** under an ARGB header and click a numbered pixel. GPU controls use named lighting zones. **Return all LEDs to the effect** removes that output's overrides. Global brightness applies to manual colors too.
 
+In **Studio → Effect colors**, select a numbered swatch and choose **Edit color** or **Eyedropper · pick from screen**. Picking freezes the displays temporarily and captures only to memory. After a click or cancellation, the images/windows are disposed and the picker thread ends. No ongoing screen capture runs for the eyedropper. Solid uses the first color; custom Screen ambience maps screen brightness through the palette. [Full color-editing guide](docs/USAGE.md#effect-colors-and-eyedropper).
+
 ## Smooth output with low ongoing resource use
 
-Motherboard animation targets **up to 30 updates/second**, GPU lighting up to **15**, and preview rendering up to **8**. GPU I/O runs separately and coalesces pending colors so it cannot delay the motherboard stream. Unchanged controller packets are suppressed; Solid scenes sleep between changes. Hidden previews stop rendering. Tiny 32x18 desktop samples are captured only when needed, at most twice/second.
+Motherboard animation targets **up to 30 updates/second**, GPU lighting up to **15**, and preview rendering up to **8**. GPU I/O runs separately and coalesces pending colors so it cannot delay the motherboard stream. Unchanged controller packets are suppressed; Solid scenes sleep between changes. Hidden previews stop rendering. Screen ambience uses tiny 32x18 desktop samples only when needed, at most twice/second. The separate eyedropper captures full display images only for the active selection.
 
 See [measured CPU/GPU results](docs/PERFORMANCE.md). These are observations on one PC, not a universal guarantee. Software-rendered WPF avoids requesting accelerated app rendering; Windows composition may still use the GPU.
 
@@ -57,7 +61,7 @@ dotnet run --project source/PrismRGB.csproj -c Release
 ./scripts/package.ps1
 ```
 
-The ZIP and SHA-256 checksum are written to `dist/`. Windows CI runs the same **29 core checks and 15 interface checks**, using fake hardware without physical lighting writes. Tests cover routing, pixel bounds/order, GPU command sizes, cleanup, stopped idle timers, queued-frame shutdown, errors, and individual color controls. The C# app has no third-party NuGet dependency.
+The ZIP and SHA-256 checksum are written to `dist/`. Windows CI runs the same **34 core checks and 19 interface checks**, using fake hardware without physical lighting writes. Tests include all custom effect palettes, persistence/normalization, screen-coordinate mapping, actual color-dialog apply/cancel, eyedropper return/cancellation, and the existing native protocol, cleanup and idle checks. The C# app has no third-party NuGet dependency.
 
 ```powershell
 ./scripts/measure.ps1
