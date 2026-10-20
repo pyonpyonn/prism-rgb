@@ -140,6 +140,8 @@ public static class ScreenEyedropper
     {
         using var target=new Forms.Form{FormBorderStyle=Forms.FormBorderStyle.None,StartPosition=Forms.FormStartPosition.Manual,Bounds=new Rectangle(80,80,180,120),TopMost=true,BackColor=Color.FromArgb(35,117,203),ShowInTaskbar=false};
         target.Show();target.Refresh();Forms.Application.DoEvents();
+        // Showing/painting a GDI window can precede its first composed desktop frame.
+        DwmFlush();Thread.Sleep(150);Forms.Application.DoEvents();DwmFlush();
         var point=target.PointToScreen(new Point(50,50));using var snapshot=ScreenImage.Capture(new Rectangle(point.X,point.Y,1,1));
         bool matches=snapshot.Sample(point.X,point.Y)==Media.Color.FromRgb(35,117,203);target.Close();return matches;
     });
@@ -147,4 +149,5 @@ public static class ScreenEyedropper
     [DllImport("user32.dll",SetLastError=true)]static extern IntPtr SetThreadDpiAwarenessContext(IntPtr value);
     [DllImport("user32.dll")]static extern bool GetPhysicalCursorPos(out NativePoint point);
     [DllImport("user32.dll")]static extern bool SetWindowPos(IntPtr hwnd,IntPtr after,int x,int y,int width,int height,uint flags);
+    [DllImport("dwmapi.dll")]static extern int DwmFlush();
 }
