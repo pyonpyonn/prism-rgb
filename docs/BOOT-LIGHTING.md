@@ -1,6 +1,6 @@
 # Windows startup, closing, and boot lighting
 
-Prism 0.5.0 can start quietly after Windows sign-in and restore the saved scene. It can also leave its last colors on powered controllers when quitting. **It cannot run inside UEFI/BIOS, before Windows, or while Windows is shut down.** Lighting during those periods is controlled by the hardware and its power supply.
+Prism 0.5.1 can start quietly after Windows sign-in and restore the saved scene. It can also leave its last colors on powered controllers when quitting. **It cannot run inside UEFI/BIOS, before Windows, or while Windows is shut down.** Lighting during those periods is controlled by the hardware and its power supply.
 
 ## Start with Windows
 

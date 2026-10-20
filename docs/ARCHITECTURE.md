@@ -1,4 +1,4 @@
-# Native lighting architecture — 0.5.0
+# Native lighting architecture — 0.5.1
 
 Prism is a C# WPF/Windows Forms app targeting .NET 10, without a network backend, browser engine, vendor app dependency, or third-party NuGet package. The portable build bundles Microsoft's desktop runtime and notices. GPU access loads the installed system `nvapi64.dll`.
 

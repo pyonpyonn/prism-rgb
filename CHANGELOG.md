@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.1 — Preserve existing GPU placement
+
+- Preserve saved GPU color spans below 5% when reconnecting or restoring at sign-in. Default placement now applies only to newly discovered GPU outputs.
+- Extended hidden-startup checks to use fake motherboard and GPU transports with a saved narrow GPU span.
+
 ## 0.5.0 — Quiet Windows startup and retained exit colors
 
 - Added opt-in per-user Windows sign-in startup, hidden tray launch and saved-lighting restore with three bounded connection attempts.

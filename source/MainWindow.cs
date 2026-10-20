@@ -63,7 +63,7 @@ public sealed class MainWindow : Window
         var rail=new DockPanel{LastChildFill=true,Margin=new Thickness(0)};
         var railBox=new Border{Background=B("#151C20"),BorderBrush=B("#283338"),BorderThickness=new Thickness(0,0,1,0),Child=rail};root.Children.Add(railBox);
         var logo=V(T("◈  PRISM",25,"#DCEFE6",true),Small("YOUR LIGHT. YOUR SPACE."));logo.Margin=new Thickness(25,30,0,35);DockPanel.SetDock(logo,Dock.Top);rail.Children.Add(logo);
-        var bottom=V(Box(V(T("STANDALONE · LOW POWER",10,"#83E1C2",true),Gap(7),Small("Direct MSI USB control.\nYour profiles stay on this PC.")),"#1D2A2B",new Thickness(13)),Gap(12),Small("PRISM RGB   /   0.5.0"));bottom.Margin=new Thickness(16,0,16,22);DockPanel.SetDock(bottom,Dock.Bottom);rail.Children.Add(bottom);
+        var bottom=V(Box(V(T("STANDALONE · LOW POWER",10,"#83E1C2",true),Gap(7),Small("Direct MSI USB control.\nYour profiles stay on this PC.")),"#1D2A2B",new Thickness(13)),Gap(12),Small("PRISM RGB   /   0.5.1"));bottom.Margin=new Thickness(16,0,16,22);DockPanel.SetDock(bottom,Dock.Bottom);rail.Children.Add(bottom);
         var navigation=V();foreach(var (name,icon) in new[]{("Studio","◉"),("Devices","▦"),("Profiles","▤"),("Compatibility","⌕"),("Settings","⚙")})
         {
             var nameCopy=name;var button=Btn($"{icon}    {name}",()=>Navigate(nameCopy));button.Tag=name;button.HorizontalContentAlignment=HorizontalAlignment.Left;button.Background=Brushes.Transparent;button.Margin=new Thickness(12,3,12,3);navButtons.Add(button);navigation.Children.Add(button);
@@ -407,7 +407,7 @@ public sealed class MainWindow : Window
             Box(V(T("Closing and retained colors",18,"#E5EEE8",true),Gap(10),minimize,keep,Small("Keeping colors stops the animation and leaves its last frame on powered controllers. Stop & restore always clears colors and restores motherboard configuration. A controller reset or power loss can erase the retained frame."))),Gap(18),
             Box(V(T("BIOS boot and PC shutdown",18,"#E5EEE8",true),Gap(10),Small("Prism runs after Windows sign-in. It cannot run inside the BIOS or while the PC is shut down. Lighting then depends on the controller's own settings and whether the LEDs receive power. Retained colors are not a saved BIOS lighting profile; powered-off lighting is unverified on this setup."),Gap(10),Btn("Read boot lighting guide",()=>OpenReport("BOOT-LIGHTING.md")))),Gap(18),
             Box(V(T("Your workspace",18,"#E5EEE8",true),Gap(10),Small("Profiles and preferences are stored locally. Manual launches start with lighting off; Windows startup can restore it when enabled above."),Gap(12),Btn("Open profile folder",()=>{Directory.CreateDirectory(Storage.DirectoryPath);Process.Start(new ProcessStartInfo(Storage.DirectoryPath){UseShellExecute=true});}),Gap(12),Btn("Reset virtual layout",()=>{prefs.Studio.Layout=StudioState.Defaults();surface.State=prefs.Studio;ScheduleSave();SetNote("Virtual layout reset.");}))),Gap(18),
-            Box(V(T("About Prism RGB",18,"#E5EEE8",true),Gap(10),Small("Version 0.5.0 · Standalone Windows desktop\nDirect MSI control with independent effects and interface.\n\nLow-power mode is always on: up to 30 hardware updates/second with an 8 Hz preview, software-rendered preview, no hidden preview animation, and no repeated USB writes for unchanged colors. Solid lighting sleeps between changes. Screen ambience captures a small desktop sample twice/second. The eyedropper captures only during a color selection.\n\nIncluded: seven effects with custom palettes, color editor and screen eyedropper, draggable preview, profiles, USB discovery, individual MSI ARGB LEDs, per-LED color overrides, and Gigabyte RTX 4070 Ti lighting. Other devices require future native adapters."),Gap(12),Btn("Open inspection report",()=>OpenReport()))));
+            Box(V(T("About Prism RGB",18,"#E5EEE8",true),Gap(10),Small("Version 0.5.1 · Standalone Windows desktop\nDirect MSI control with independent effects and interface.\n\nLow-power mode is always on: up to 30 hardware updates/second with an 8 Hz preview, software-rendered preview, no hidden preview animation, and no repeated USB writes for unchanged colors. Solid lighting sleeps between changes. Screen ambience captures a small desktop sample twice/second. The eyedropper captures only during a color selection.\n\nIncluded: seven effects with custom palettes, color editor and screen eyedropper, draggable preview, profiles, USB discovery, individual MSI ARGB LEDs, per-LED color overrides, and Gigabyte RTX 4070 Ti lighting. Other devices require future native adapters."),Gap(12),Btn("Open inspection report",()=>OpenReport()))));
         return new ScrollViewer{Content=panel};
     }
     void OpenReport(string file="INSPECTION.md")
@@ -443,7 +443,7 @@ public sealed class MainWindow : Window
             await candidate.ConnectAsync();backend=candidate;
             for(int i=0;i<backend.Devices.Count;i++)
             {
-                var d=backend.Devices[i];var placement=prefs.Placements.FirstOrDefault(x=>x.Identity==d.Identity);
+                var d=backend.Devices[i];var placement=prefs.Placements.FirstOrDefault(x=>x.Identity==d.Identity);bool newPlacement=placement is null;
                 if(placement is null){placement=new(){Identity=d.Identity,X=.1,Y=.25+i*.15,Span=0};placement.Y=Math.Min(.9,placement.Y);prefs.Placements.Add(placement);}
                 d.Placement=placement;
                 if(d.Id is 2 or 3)
@@ -455,7 +455,7 @@ public sealed class MainWindow : Window
                     }
                     d.LedCount=Math.Clamp(placement.LedCount,1,120);
                 }
-                else if(d.Id==100 && placement.Span<.05)placement.Span=.65;
+                else if(d.Id==100 && newPlacement)placement.Span=.65;
             }
             ScheduleSave();SetNote($"Connected to {backend.Devices.Count} lighting outputs. {(backend as NativeLightingBackend)?.GpuStatus} Start lighting when ready.");
         }
@@ -615,7 +615,7 @@ public sealed class MainWindow : Window
             await Task.Delay(20000);process.Refresh();
             double core=(process.TotalProcessorTime-cpu).TotalSeconds/wall.Elapsed.TotalSeconds*100;
             if(hardware && !output)throw new IOException("Output stopped during the benchmark: "+note);
-            var result=new{Version="0.5.0",Scenario=mode,Effect=prefs.Studio.Effect,Brightness=prefs.Studio.Brightness,PaletteStops=prefs.Studio.EffectPalettes.TryGetValue(prefs.Studio.Effect,out var p)?p.Count:0,Seconds=wall.Elapsed.TotalSeconds,LogicalProcessors=Environment.ProcessorCount,CpuPercent=core/Environment.ProcessorCount,OneCorePercent=core,WorkingSetMiB=process.WorkingSet64/1048576.0,PreviewFrames=PreviewFrames-frames,OutputFrames=OutputFrames-outputs,UsbWrites=((backend as NativeLightingBackend)?.UsbWrites??0)-writes,I2cWrites=((backend as NativeLightingBackend)?.I2cWrites??0)-i2c,ScreenCaptures=ScreenCaptures-captures,Renderer="WPF SoftwareOnly",HardwareOutput=hardware};
+            var result=new{Version="0.5.1",Scenario=mode,Effect=prefs.Studio.Effect,Brightness=prefs.Studio.Brightness,PaletteStops=prefs.Studio.EffectPalettes.TryGetValue(prefs.Studio.Effect,out var p)?p.Count:0,Seconds=wall.Elapsed.TotalSeconds,LogicalProcessors=Environment.ProcessorCount,CpuPercent=core/Environment.ProcessorCount,OneCorePercent=core,WorkingSetMiB=process.WorkingSet64/1048576.0,PreviewFrames=PreviewFrames-frames,OutputFrames=OutputFrames-outputs,UsbWrites=((backend as NativeLightingBackend)?.UsbWrites??0)-writes,I2cWrites=((backend as NativeLightingBackend)?.I2cWrites??0)-i2c,ScreenCaptures=ScreenCaptures-captures,Renderer="WPF SoftwareOnly",HardwareOutput=hardware};
             File.WriteAllText(path,JsonSerializer.Serialize(result,new JsonSerializerOptions{WriteIndented=true}));
         }
         finally
@@ -736,17 +736,18 @@ public sealed class MainWindow : Window
         checks.Add("Startup and exit settings update isolated registration and preferences without touching real Windows startup");
         async Task<MainWindow> StartupWindow(FakeMsiTransport transport,bool keep=false,Func<bool>? conflicts=null)
         {
-            var child=new MainWindow(new FakeStartupRegistration(),()=>new MsiBackend(()=>transport,()=>false),conflicts??(()=>false));
+            var child=new MainWindow(new FakeStartupRegistration(),()=>new NativeLightingBackend(new MsiBackend(()=>transport,()=>false),()=>new GigabyteBackend(()=>new FakeGpuTransport(),()=>false)),conflicts??(()=>false));
             child.prefs.Studio=new(){Effect="Solid",Color="#204060",Brightness=.5};child.surface.State=child.prefs.Studio;
-            child.prefs.Placements=new();child.prefs.RestoreLightingOnStartup=true;child.prefs.StartInTray=true;child.prefs.KeepColorsOnExit=keep;
+            child.prefs.Placements=new(){new(){Identity="GPU:10DE:2782:1458:40C6",Span=.018617021276595994}};child.prefs.RestoreLightingOnStartup=true;child.prefs.StartInTray=true;child.prefs.KeepColorsOnExit=keep;
             await child.RunWindowsStartupAsync((_,_)=>Task.CompletedTask,false);return child;
         }
         var startupTransport=new FakeMsiTransport();var startupChild=await StartupWindow(startupTransport);
         for(int i=0;i<200 && startupTransport.Packets.Count<2;i++)await Task.Delay(10);
         if(startupChild.IsVisible || !startupChild.output || startupTransport.Packets.Count<2 || startupTransport.Packets[^1][5]!=16 || startupTransport.Packets[^1][6]!=32 || startupTransport.Packets[^1][7]!=48)throw new Exception($"Hidden startup did not restore the saved scene (visible={startupChild.IsVisible}, active={startupChild.output}, packets={startupTransport.Packets.Count}, status={startupChild.note}).");
+        if(startupChild.prefs.Placements.Single(p=>p.Identity=="GPU:10DE:2782:1458:40C6").Span!=.018617021276595994)throw new Exception("Startup overwrote a saved narrow GPU color span.");
         await startupChild.StopAsync();await startupChild.CloseForPreview();
         if(!startupTransport.Disposed || !startupTransport.Packets[^1].SequenceEqual(startupTransport.Original))throw new Exception("Startup scene did not restore on Stop.");
-        checks.Add("Windows startup restores the saved lighting through fake hardware while the main window stays hidden");
+        checks.Add("Hidden Windows startup restores saved lighting through fake hardware and preserves a narrow saved GPU color span");
         var cancelledTransport=new FakeMsiTransport();var cancelledChild=new MainWindow(new FakeStartupRegistration(),()=>new MsiBackend(()=>cancelledTransport,()=>false),()=>false);
         cancelledChild.prefs.RestoreLightingOnStartup=true;cancelledChild.prefs.StartInTray=true;
         var starting=cancelledChild.RunWindowsStartupAsync((_,token)=>Task.Delay(TimeSpan.FromSeconds(10),token),false);

@@ -1,6 +1,6 @@
-# Using Prism RGB 0.5.0
+# Using Prism RGB 0.5.1
 
-Extract the complete [v0.5.0 Windows x64 release](https://github.com/pyonpyonn/prism-rgb/releases/tag/v0.5.0) and open `Launch Prism RGB.cmd`. Use the new executable rather than an older extracted build. The .NET desktop runtime is bundled.
+Extract the complete [v0.5.1 Windows x64 release](https://github.com/pyonpyonn/prism-rgb/releases/tag/v0.5.1) and open `Launch Prism RGB.cmd`. Use the new executable rather than an older extracted build. The .NET desktop runtime is bundled.
 
 ## Connect and start
 
