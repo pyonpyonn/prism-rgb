@@ -4,6 +4,7 @@
 
 - Remove the boot task's five-second trigger delay and use normal process priority instead of background priority. Re-running setup updates the existing owned task.
 - Record helper process start and separate motherboard/GPU application times to identify scheduler or driver delays.
+- Fix atomic replacement of an existing boot snapshot during setup upgrades in PowerShell.
 - Extend boot checks to verify successful delivery timestamps. Normal output rates, static idle behavior, ownership guards and limited-rights execution remain unchanged.
 - The helper still requires Windows Task Scheduler and device drivers; fast/automatic sign-in may finish before they are ready. Initial BIOS lighting remains hardware-controlled.
 

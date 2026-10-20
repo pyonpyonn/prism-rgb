@@ -105,6 +105,7 @@ try {
     # A new staging name proves this exporter produced the snapshot. An older
     # executable that ignores the switch cannot accidentally reuse stale data.
     $staging = Join-Path ([IO.Path]::GetDirectoryName($snapshot)) ('boot-export-' + [Guid]::NewGuid().ToString('N') + '.json')
+    $previous = Join-Path ([IO.Path]::GetDirectoryName($snapshot)) ('boot-previous-' + [Guid]::NewGuid().ToString('N') + '.json')
     try {
         $start = [Diagnostics.ProcessStartInfo]::new()
         $start.FileName = $exePath
@@ -125,10 +126,15 @@ try {
         if ($null -eq $document -or $document.Version -ne 1 -or $document.Outputs -isnot [Array] -or $document.Outputs.Count -gt 5) {
             throw 'The exported file is not a supported boot lighting snapshot. The startup task and previous snapshot were not changed.'
         }
-        if ([IO.File]::Exists($snapshot)) { [IO.File]::Replace($staging, $snapshot, $null) }
+        # PowerShell can bind $null to an empty string for this .NET overload.
+        # A real backup path works on both Windows PowerShell and PowerShell 7.
+        if ([IO.File]::Exists($snapshot)) { [IO.File]::Replace($staging, $snapshot, $previous) }
         else { [IO.File]::Move($staging, $snapshot) }
     }
-    finally { if ([IO.File]::Exists($staging)) { [IO.File]::Delete($staging) } }
+    finally {
+        if ([IO.File]::Exists($staging)) { [IO.File]::Delete($staging) }
+        if ([IO.File]::Exists($previous)) { [IO.File]::Delete($previous) }
+    }
 
     $action = New-ScheduledTaskAction -Execute $exePath -Argument $arguments -WorkingDirectory $exeDirectory
     $trigger = New-ScheduledTaskTrigger -AtStartup
