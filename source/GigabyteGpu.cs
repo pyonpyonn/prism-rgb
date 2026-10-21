@@ -10,7 +10,7 @@ using System.Windows.Media;
 
 namespace PrismRGB;
 
-public static class GigabyteProtocol
+public static partial class GigabyteProtocol
 {
     public static bool Supports(uint device,uint subsystem)=>device==0x278210DE && subsystem==0x40C61458;
     public static bool Identity(byte[] data)=>data.Length==4 && data[0]==0xAB && data[1] is 0x10 or 0x11 or 0x12 or 0x14;
@@ -85,6 +85,7 @@ public interface IGpuLightingTransport : IDisposable
 public interface IGpuHardwareSaveTransport : IGpuLightingTransport
 {
     void WriteStaticSetting(byte[] packet);
+    void WriteWaveSetting(byte[] packet)=>throw new NotSupportedException("Wave hardware settings are unavailable on this transport.");
     void CommitStaticConfiguration();
 }
 
@@ -167,11 +168,12 @@ public sealed class NvidiaGigabyteTransport : IGpuHardwareSaveTransport
     }
     public void Write(byte[] packet){GigabyteProtocol.Validate(packet);Transfer(packet,false);}
     public void WriteStaticSetting(byte[] packet){GigabyteProtocol.ValidateStaticHardwareSetting(packet);Transfer(packet,false);}
+    public void WriteWaveSetting(byte[] packet){GigabyteProtocol.ValidateWaveHardwareSetting(packet);Transfer(packet,false);}
     public void CommitStaticConfiguration()=>Transfer(GigabyteProtocol.HardwareSaveCommand(),false);
     public void Dispose(){if(disposed)return;disposed=true;if(initialized)unload();NativeLibrary.Free(library);}
 }
 
-public sealed class GigabyteBackend : ILightingBackend
+public sealed partial class GigabyteBackend : ILightingBackend
 {
     readonly Func<IGpuLightingTransport> open;readonly Func<bool> conflict;readonly SemaphoreSlim gate=new(1,1);
     IGpuLightingTransport? transport;Color[]? previous;readonly Dictionary<byte,byte[]> packetCache=new();bool wrote,modeReady,disposed;

@@ -1,6 +1,6 @@
-# Using Prism RGB 0.7.0
+# Using Prism RGB 0.8.0
 
-Extract the complete [v0.7.0 Windows x64 release](https://github.com/pyonpyonn/prism-rgb/releases/tag/v0.7.0) and open `Launch Prism RGB.cmd`. Use the new executable rather than an older extracted build. The .NET desktop runtime is bundled.
+Extract the complete [v0.8.0 Windows x64 release](https://github.com/pyonpyonn/prism-rgb/releases/tag/v0.8.0) and open `Launch Prism RGB.cmd`. Use the new executable rather than an older extracted build. The .NET desktop runtime is bundled.
 
 ## Connect and start
 
@@ -113,3 +113,7 @@ Quit the normal Prism instance and competing RGB software before running these e
 The ARGB test lasts about 40 seconds and shows red/green/blue followed by distinct moving pixel colors. The GPU test lasts about 15 seconds and shows red/green/blue. API success is reported separately from visible confirmation, which requires someone observing the lights.
 
 `--inspect-msi <result.json>` only reads descriptors/current configuration. `--self-test` uses fake controllers and read-only HID enumeration. `--ui-smoke <folder>` exercises interface/color controls and synthetic eyedropper images with fake devices; `--render-preview <png>` renders the illustration. `--verify-eyedropper <result.json>` briefly displays a known color target and verifies actual screen capture plus synthetic selection/cancellation, without lighting writes. Use `--data-dir <folder>` for isolated diagnostic preferences. Build/test/package scripts and [performance measurement](PERFORMANCE.md) are documented in the root README.
+
+## Native boot motion
+
+Use **Settings → Boot animation from a Wave profile** to select a saved Wave profile, preview its native hardware approximation without a memory save, and choose Slow/Balanced/Fast boot motion. Save explicitly once to retain it on the controllers; the full selected profile resumes in Windows. MSI receives two colour fields, GPU Tricolor up to three non-black colours. Native timing and dark gaps are firmware-controlled. [Full boot-animation guide](BOOT-LIGHTING.md#native-boot-animation-from-a-wave-profile).

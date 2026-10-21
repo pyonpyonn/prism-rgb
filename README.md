@@ -4,13 +4,13 @@
 
 A standalone Windows lighting app with **individual MSI ARGB LED control and Gigabyte RTX 4070 Ti lighting**. No OpenRGB, SignalRGB, SDK server, account, or background service is required. The portable x64 release bundles the .NET desktop runtime.
 
-**0.7.0 alpha adds an explicit static boot colour hardware save** for the supported MSI motherboard and Gigabyte GPU. Choose **Settings → Static boot colour → Save to hardware** to store one colour on both controllers. The save leaves that colour active and pauses Prism effects. Delivery can be checked in Windows; retention during a real power-off/boot still needs observation on the device. Windows startup resumes your animated scene.
+**0.8.0 alpha adds native boot animations from a saved Wave profile.** In Settings, preview the motherboard's two-colour wave and the GPU's custom Tricolor, choose a separate boot motion speed, then save to hardware once. The GPU omits black palette stops for boot. These firmware effects have their own timing and dark gaps; the full Prism profile resumes in Windows. Static boot colour saves remain available.
 
 ![Prism RGB Studio](docs/images/preview.png)
 
 ## Download and use
 
-1. Download **PrismRGB-Windows-x64.zip** from [v0.7.0 Releases](https://github.com/pyonpyonn/prism-rgb/releases/tag/v0.7.0).
+1. Download **PrismRGB-Windows-x64.zip** from [v0.8.0 Releases](https://github.com/pyonpyonn/prism-rgb/releases/tag/v0.8.0).
 2. Extract the complete archive and open **Launch Prism RGB.cmd**. Use this new folder instead of an older extracted copy.
 3. Exit other RGB controllers, including SignalRGB, MSI lighting tools, and RGB Fusion.
 4. Choose **Devices → Connect lighting**. The app connects the motherboard and queries the supported GPU if available. Connecting does not start color output.
@@ -41,6 +41,7 @@ Other USB/catalog entries are research references and do not supply native drive
 - Optional Windows sign-in startup, quiet tray launch, automatic saved-scene restore, single-instance activation, and retained last colors on Quit.
 - Optional static boot lighting before sign-in, bounded device-readiness retries, and automatic handoff to the normal app.
 - Explicit one-time static colour saves to the supported controllers' hardware memory, with separate motherboard/GPU results and no automatic persistent-write retries.
+- Native boot motion from a saved Wave profile: temporary preview without a memory save, Slow/Balanced/Fast speed, MSI's first two profile colours and GPU Tricolor using up to three lit colours. The boot helper preserves saved native motion until Windows Prism starts.
 - Read-only HID discovery and a descriptive compatibility catalog.
 
 Expand **Choose colors for individual LEDs** under an ARGB header and click a numbered pixel. GPU controls use named lighting zones. **Return all LEDs to the effect** removes that output's overrides. Global brightness applies to manual colors too.
@@ -66,7 +67,7 @@ dotnet run --project source/PrismRGB.csproj -c Release
 ./scripts/package.ps1
 ```
 
-The ZIP and SHA-256 checksum are written to `dist/`. Windows CI runs 54 core and 29 interface checks using fake hardware without physical lighting writes. Tests include explicit hardware-save packets, no automatic commit retries, partial failures, UI save ownership, boot snapshots/readiness retries, retained one-shot delivery, controller handoff/cancellation, transient GPU recovery, hidden startup, palettes/dialogs and native protocol/idle checks. Startup UI checks use fake registration and do not modify Windows startup. Boot setup scripts support `-WhatIf`. The C# app has no third-party NuGet dependency.
+The ZIP and SHA-256 checksum are written to `dist/`. Windows CI runs 55 core and 30 interface checks using fake hardware without physical lighting writes. Tests include explicit hardware-save packets, no automatic commit retries, partial failures, UI save ownership, boot snapshots/readiness retries, retained one-shot delivery, controller handoff/cancellation, transient GPU recovery, hidden startup, palettes/dialogs and native protocol/idle checks. Startup UI checks use fake registration and do not modify Windows startup. Boot setup scripts support `-WhatIf`. The C# app has no third-party NuGet dependency.
 
 ```powershell
 ./scripts/measure.ps1

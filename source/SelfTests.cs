@@ -25,6 +25,7 @@ public static class SelfTests
     }
     public static async Task<int> RunAsync()
     {
+        await TestAsync("Native boot waves use bounded modes, one commit, exact Windows profile and preserve autonomous animation",HardwareWaveChecks.VerifyAsync);
         await TestAsync("MSI static hardware saves are validated, verified and never automatically retried",MsiHardwareSaveChecks.VerifyAsync);
         await TestAsync("Gigabyte native static hardware saves commit once with strict identity and packet guards",GpuHardwareSaveChecks.VerifyAsync);
         await TestAsync("Explicit boot hardware save isolates device failures and releases ownership without retries",async()=>

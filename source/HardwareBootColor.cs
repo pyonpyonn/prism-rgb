@@ -15,6 +15,8 @@ public sealed class HardwareBootDeviceResult
 public sealed class HardwareBootSaveResult
 {
     public string Color {get;set;}="";
+    public string Effect {get;set;}="Static";
+    public string ProfileName {get;set;}="";
     public DateTimeOffset Finished {get;set;}
     public HardwareBootDeviceResult Motherboard {get;set;}=new();
     public HardwareBootDeviceResult Gpu {get;set;}=new();

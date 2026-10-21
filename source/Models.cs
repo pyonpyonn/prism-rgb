@@ -95,6 +95,10 @@ public sealed class Preferences
     public bool RestoreLightingOnStartup { get; set; }
     public bool KeepColorsOnExit { get; set; }
     public string? HardwareBootColor { get; set; }
+    public string HardwareBootEffect { get; set; }="Static";
+    public string HardwareBootWaveProfile { get; set; }="";
+    public bool HardwareBootWaveSaved { get; set; }
+    public string HardwareBootMotionSpeed {get;set;}="Balanced";
 }
 
 public static class Storage
@@ -108,6 +112,9 @@ public static class Storage
             var p=JsonSerializer.Deserialize<Preferences>(File.ReadAllText(Path.Combine(DirectoryPath,"settings.json")),Options) ?? new();
             p.Studio ??=new(); p.Studio.Normalize(); p.Profiles ??=new(); p.Placements ??=new();
             if(!Effects.ValidColor(p.HardwareBootColor))p.HardwareBootColor=null;
+            if(p.HardwareBootEffect is not ("Static" or "Wave"))p.HardwareBootEffect="Static";
+            p.HardwareBootWaveProfile??="";
+            if(p.HardwareBootMotionSpeed is not ("Slow" or "Balanced" or "Fast"))p.HardwareBootMotionSpeed="Balanced";
             p.Profiles.RemoveAll(item=>item is null);p.Placements.RemoveAll(item=>item is null);
             foreach (var s in p.Profiles) { s.Name=string.IsNullOrWhiteSpace(s.Name)?"Saved profile":s.Name; s.State ??=new(); s.State.Normalize(); }
             foreach(var d in p.Placements)

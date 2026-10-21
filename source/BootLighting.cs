@@ -85,6 +85,7 @@ public sealed class BootOutputFrame
 public sealed class BootSnapshot
 {
     public int Version {get;set;}=1;
+    public bool PreserveHardwareWave {get;set;}
     public List<BootOutputFrame> Outputs {get;set;}=new();
 }
 
@@ -98,6 +99,7 @@ public sealed class BootLightingResult
     public DateTimeOffset? GpuAppliedAt {get;set;}
     public DateTimeOffset Finished {get;set;}
     public bool MotherboardApplied {get;set;}
+    public bool HardwareWavePreserved {get;set;}
     public bool GpuApplied {get;set;}
     public int MotherboardAttempts {get;set;}
     public int GpuAttempts {get;set;}
@@ -197,7 +199,7 @@ public static class BootLighting
         // than attempting screen capture or storing desktop-derived information.
         if(state.Effect=="Screen ambience")
         {state.Color=Effects.Palette(state)[0];state.Effect="Solid";Effects.SetPalette(state,new[]{state.Color});}
-        var snapshot=new BootSnapshot();
+        var snapshot=new BootSnapshot{PreserveHardwareWave=preferences.HardwareBootWaveSaved};
         foreach(uint id in new uint[]{0,1,2,3,100})
         {
             string identity=id==100?"GPU:10DE:2782:1458:40C6":$"MSI:1462:7C95:{id}";
@@ -244,6 +246,9 @@ public static class BootLighting
         Validate(snapshot);
         if(options.Budget<=TimeSpan.Zero || options.Budget>TimeSpan.FromMinutes(2))throw new ArgumentException("Boot lighting needs a bounded startup budget.");
         var result=new BootLightingResult();
+        // A successfully saved native wave already runs without Windows. Do not
+        // replace it with a static frame while waiting for normal Prism startup.
+        if(snapshot.PreserveHardwareWave){result.HardwareWavePreserved=true;return result;}
         if(ControllerLease.HandoffRequested(options.LeaseDirectory)){result.Handoff=true;return result;}
         using var lease=ControllerLease.TryAcquire(options.LeaseDirectory);
         if(lease is null){result.OwnershipBusy=true;return result;}

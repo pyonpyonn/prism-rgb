@@ -1,0 +1,23 @@
+{
+  "Version": "0.8.0",
+  "Date": "2026-10-21",
+  "CoreChecksPassed": 55,
+  "InterfaceChecksPassed": 30,
+  "ProfilePalette": [
+    "#FF0D00",
+    "#FF6401"
+  ],
+  "BlackAndDarkBrownRemovedAtOwnerRequest": true,
+  "MotherboardMode": "Color Wave23 red/orange, speed2",
+  "GpuMode": "Tricolor11 red/orange/intermediate, speed5",
+  "GpuTricolorVisuallyConfirmedByOwner": true,
+  "MotherboardReadbackVerifiedBeforeSave": true,
+  "HardwareSaveAcceptedForBothDevices": true,
+  "PersistentCommitsPerDevice": 1,
+  "PreviewPersistentCommits": 0,
+  "PlacementsAndStartupFlagsPreserved": true,
+  "BootHelperPreservesHardwareAnimation": true,
+  "ColdBootAnimationRetentionVerified": false,
+  "FirmwareMayHaveDarkGaps": true,
+  "ContinuousRedOrangeWaveRunsInWindows": true
+}

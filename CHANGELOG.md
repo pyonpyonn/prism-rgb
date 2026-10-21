@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.8.0 — Native boot colour motion and Wave profile handoff
+
+- Add temporary preview and an explicit hardware save for MSI native Color Wave and Gigabyte Tricolor, with separate Slow/Balanced/Fast boot speed controls.
+- Read colours from a saved Wave profile: two motherboard colour fields and up to three non-black GPU colours. Initialize all GPU palette slots and retain a valid off/zero-brightness scene.
+- Keep source profiles unchanged when selecting a boot scene. Successful saves select a cloned full profile for normal Windows startup; preview does not change the scene or save controller memory.
+- Preserve a saved hardware animation in the Windows boot helper instead of replacing it with a static frame. No ongoing boot animation work runs in Prism.
+- Keep persistent commits explicit, serialized and single-attempt, with identity/readback guards and independent device results. Exclude the MSI Lava preset that did not light the tested board.
+- Native firmware controls its own motion, timing and dark gaps. The exact software Wave runs in Windows; successful delivery does not establish cold-boot retention without a physical test.
+
 ## 0.7.0 — Save a static boot colour to hardware
 
 - Add Settings colour selection and an explicit Save to hardware action for the exact supported MSI motherboard and Gigabyte RTX 4070 Ti Gaming OC.

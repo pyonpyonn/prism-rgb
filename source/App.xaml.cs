@@ -18,6 +18,40 @@ public partial class App : Application
         RenderOptions.ProcessRenderMode=RenderMode.SoftwareOnly;
         int dataDir=Array.IndexOf(e.Args,"--data-dir");
         if(dataDir>=0 && dataDir+1<e.Args.Length)Storage.DirectoryPath=Path.GetFullPath(e.Args[dataDir+1]);
+        int saveWave=Array.IndexOf(e.Args,"--save-hardware-boot-wave"),previewWave=Array.IndexOf(e.Args,"--preview-hardware-boot-wave");
+        if(saveWave>=0 || previewWave>=0)
+        {
+            ShutdownMode=ShutdownMode.OnExplicitShutdown;int index=saveWave>=0?saveWave:previewWave;
+            if(index+2>=e.Args.Length){Shutdown(2);return;}
+            try
+            {
+                int motionIndex=Array.IndexOf(e.Args,"--boot-motion-speed");
+                string? motion=motionIndex<0?null:motionIndex+1<e.Args.Length?e.Args[motionIndex+1]:"";
+                var preferences=Storage.Load();var request=HardwareWaveRequest.FromProfile(preferences,e.Args[index+1],motion);request.Validate();
+                object result;bool success;
+                if(saveWave>=0)
+                {
+                    var saved=await HardwareBootWave.SaveAsync(request);result=saved;success=saved.Success;
+                    if(success)
+                    {
+                        HardwareWaveRequest.ApplySaved(preferences,request);Storage.Save(preferences);
+                        if(File.Exists(BootLighting.DefaultSnapshotPath))BootLighting.SaveSnapshot(preferences,BootLighting.DefaultSnapshotPath);
+                    }
+                }
+                else
+                {
+                    var nativePreview=await HardwareBootWave.PreviewAsync(request);result=nativePreview;success=nativePreview.Success;
+                }
+                BootLighting.WriteAtomic(e.Args[index+2],System.Text.Json.JsonSerializer.Serialize(result,new System.Text.Json.JsonSerializerOptions{WriteIndented=true}));
+                Shutdown(success?0:1);
+            }
+            catch(Exception ex)
+            {
+                try{BootLighting.WriteAtomic(e.Args[index+2],System.Text.Json.JsonSerializer.Serialize(new{Error=ex.Message}));}catch{}
+                Shutdown(1);
+            }
+            return;
+        }
         int saveHardware=Array.IndexOf(e.Args,"--save-hardware-boot-color");
         if(saveHardware>=0)
         {
@@ -30,7 +64,13 @@ public partial class App : Application
             {
                 var result=await HardwareBootColor.SaveAsync(color,new HardwareBootSaveOptions{MotherboardRequested=target!="gpu",GpuRequested=target!="motherboard"});
                 BootLighting.WriteAtomic(e.Args[saveHardware+2],System.Text.Json.JsonSerializer.Serialize(result,new System.Text.Json.JsonSerializerOptions{WriteIndented=true}));
-                if(result.Success){var preferences=Storage.Load();preferences.HardwareBootColor=ColorValues.Hex(color);Storage.Save(preferences);}
+                if(result.Success)
+                {
+                    var preferences=Storage.Load();preferences.HardwareBootColor=ColorValues.Hex(color);
+                    if(target=="both"){preferences.HardwareBootEffect="Static";preferences.HardwareBootWaveSaved=false;}
+                    Storage.Save(preferences);
+                    if(File.Exists(BootLighting.DefaultSnapshotPath))BootLighting.SaveSnapshot(preferences,BootLighting.DefaultSnapshotPath);
+                }
                 Shutdown(result.Success?0:1);
             }
             catch{Shutdown(1);}return;

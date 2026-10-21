@@ -1,6 +1,24 @@
 # Windows startup, closing, and boot lighting
 
-Prism 0.7.0 can explicitly save a static colour to the supported controllers' hardware memory. It can also apply a volatile frame before Windows sign-in once Task Scheduler and drivers are available, and resume animations at sign-in. **Prism itself cannot run inside UEFI/BIOS or while Windows is shut down.** Lighting during those periods is controlled by saved hardware settings, firmware and power availability.
+Prism 0.8.0 can explicitly save a static colour or a supported native animation to controller memory. It can also apply a volatile frame before Windows sign-in once Task Scheduler and drivers are available, and resume the full Prism scene at sign-in. **Prism itself cannot run inside UEFI/BIOS or while Windows is shut down.** Lighting during those periods is controlled by saved hardware settings, firmware and power availability.
+
+## Native boot animation from a Wave profile
+
+1. Save your Wave effect in **Profiles**, then open **Settings → Boot animation from a Wave profile** and select it. The source profile remains separate from the hardware representation.
+2. Choose **Slow**, **Balanced** or **Fast** for boot motion. Hardware speed units differ from Prism's software animation speed, so this setting is independent of the Windows profile.
+3. Click **Preview boot motion · no memory save**. Prism pauses/drains normal output, releases ownership, applies the native modes and disconnects without clearing them. Preview changes volatile lighting only; the previous saved hardware boot setting stays intact. Reconnect under Devices to resume the normal effect.
+4. If the preview is suitable, click **Save built-in boot waves** once. MSI readback must match before one flash-save report; GPU configuration receives one save command. Neither uncertain commit is retried automatically. Successful saves select a clone of the full profile for Windows and enable saved-scene restore. Enable **Start Prism when I sign in to Windows** separately if it is not already enabled.
+5. Shut down and power on when ready; observe each device during the initial logo. Saving a native effect still needs its own power-cycle verification. The normal app resumes the full profile after Windows sign-in, including automatic sign-in.
+
+The motherboard uses native **Color Wave**, receiving the first two profile colours. The GPU uses native **Tricolor**, receiving up to three non-black colours; a two-colour palette gets an intermediate third shade. Remaining transmitted slots are initialized. Black palette stops are omitted for boot motion only, except an all-black/zero-brightness profile remains off. This avoids requesting whole-zone black intervals in the GPU palette; firmware may still have dark parts in its effect.
+
+These are built-in firmware animations, not a stored copy of Prism's renderer. Their shape, timing, interpolation and dark gaps can differ from the Windows effect. MSI exposes only two native colour fields per header; arbitrary multi-stop per-pixel Wave code cannot be uploaded through this lighting protocol. A red/orange-only software profile stays lit in Windows; its native boot counterpart can still contain firmware-controlled dark gaps.
+
+After both saves succeed, an existing boot snapshot records `PreserveHardwareWave`. The Windows boot helper then exits without opening or writing either controller, leaving the native animation running until the regular app takes over. Saving static colour successfully clears this marker and restores the earlier static-frame helper behaviour. Neither preview nor ordinary scene edits commit controller memory.
+
+![Boot profile preview, speed and explicit save controls](images/boot-wave.png)
+
+The screenshot uses isolated settings and simulated hardware saves.
 
 ## Save a static boot colour to hardware
 

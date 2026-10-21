@@ -134,7 +134,7 @@ public interface ILightingBackend : IAsyncDisposable
     Task RestoreAsync();
 }
 
-public static class MsiProtocol
+public static partial class MsiProtocol
 {
     public const string Board="B550M PRO-VDH WIFI (MS-7C95)";
     public static bool Supports(string board,HidDevice d)=>board.Equals(Board,StringComparison.OrdinalIgnoreCase) && d.VendorId==0x1462 && d.ProductId==0x7C95 && d.FeatureLength==725 && d.UsagePage==1 && d.Usage==0 && d.Report52Length==185 && d.Report53Length==725;
@@ -264,6 +264,7 @@ public interface IMsiTransport : IDisposable
 public interface IMsiHardwareSaveTransport
 {
     void SaveStatic(byte[] packet);
+    void SaveWave(byte[] packet)=>throw new NotSupportedException("Wave hardware saves are unavailable on this transport.");
 }
 
 public sealed class NativeMsiTransport : IMsiTransport,IMsiHardwareSaveTransport
@@ -294,6 +295,7 @@ public sealed class NativeMsiTransport : IMsiTransport,IMsiHardwareSaveTransport
         // A failed call can still have reached flash: this command must never be retried here.
         Send(packet);
     }
+    public void SaveWave(byte[] packet){MsiProtocol.ValidateWaveSave(packet);Send(packet);}
     void Send(byte[] packet)
     {
         // Allocate the collection maximum, and transfer the selected report's actual length.
@@ -303,7 +305,7 @@ public sealed class NativeMsiTransport : IMsiTransport,IMsiHardwareSaveTransport
     public void Dispose()=>handle.Dispose();
 }
 
-public sealed class MsiBackend : ILightingBackend
+public sealed partial class MsiBackend : ILightingBackend
 {
     readonly Func<IMsiTransport> open;
     readonly Func<bool> conflict;
