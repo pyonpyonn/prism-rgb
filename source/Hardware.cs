@@ -187,6 +187,62 @@ public static class MsiProtocol
         if(first+second>232){packet[31]=packet[42]=0x25;packet[82]=0xB1;}
         return packet;
     }
+    // Native static mode is separate from report 0x53 streaming. In particular,
+    // the onboard master must stop routing the direct stream through the headers.
+    public static byte[] StaticConfiguration(byte[] original,Color color)
+    {
+        var packet=Frame(original,new Dictionary<uint,Color[]>());
+        foreach(int offset in ZoneOffsets.Concat(new[]{74,84,94,104,114,124,134}))
+        {
+            packet[offset]=1;
+            packet[offset+1]=packet[offset+5]=color.R;
+            packet[offset+2]=packet[offset+6]=color.G;
+            packet[offset+3]=packet[offset+7]=color.B;
+            packet[offset+4]=0x28; // Native brightness 10/10; color already includes the chosen level.
+            packet[offset+8]=(byte)(offset==74?0x81:0x80);
+            packet[offset+9]=0;
+        }
+        packet[41]=(byte)Math.Clamp((int)packet[41],1,120);
+        packet[52]=(byte)Math.Clamp((int)packet[52],1,120);
+        return packet;
+    }
+    public static byte[] StaticSavePacket(byte[] configuration)
+    {
+        var packet=(byte[])configuration.Clone();
+        if(packet.Length!=185)throw new InvalidDataException("Unexpected MSI static configuration.");
+        packet[184]=1;ValidateStaticSave(packet);return packet;
+    }
+    public static void ValidateStaticSave(byte[] packet)
+    {
+        if(packet.Length!=185 || packet[0]!=0x52 || packet[184]!=1)
+            throw new InvalidDataException("Only an explicit MSI static configuration can be saved.");
+        var color=Color.FromRgb(packet[2],packet[3],packet[4]);
+        var expected=StaticConfiguration(packet,color);expected[184]=1;
+        if(!packet.AsSpan().SequenceEqual(expected))
+            throw new InvalidDataException("Streaming, mixed modes and sync routing cannot be saved as a static boot color.");
+    }
+    public static bool MatchesStaticConfiguration(byte[] expected,byte[] observed)
+    {
+        // Firmware may normalize unused fields. Confirm every static field Prism sets,
+        // including native mode/routing, both color triplets, brightness and LED counts.
+        return expected.Length==185 && observed.Length==185 && expected[0]==0x52 && observed[0]==0x52
+            && ZoneOffsets.Concat(new[]{74,84,94,104,114,124,134}).SelectMany(offset=>Enumerable.Range(offset,10)).All(index=>StaticReadbackByteMatches(expected,observed,index))
+            && expected[41]==observed[41] && expected[52]==observed[52];
+    }
+    static bool StaticReadbackByteMatches(byte[] expected,byte[] observed,int index)
+    {
+        // On this 7C95 controller, byte129 reads back as zero in native static mode.
+        // It is the unused secondary red of onboard slot124, not its active RGB color.
+        // Permit only that observed normalization; the save packet itself stays canonical.
+        return expected[index]==observed[index] || (index==129 && expected[124]==1 && observed[124]==1 && observed[129]==0);
+    }
+    public static string StaticMismatchDetails(byte[] expected,byte[] observed)
+    {
+        if(expected.Length!=185 || observed.Length!=185)return $"report lengths expected {expected.Length}, observed {observed.Length}";
+        var indices=new[]{0,41,52}.Concat(ZoneOffsets.Concat(new[]{74,84,94,104,114,124,134}).SelectMany(offset=>Enumerable.Range(offset,10))).Distinct().OrderBy(index=>index);
+        var changed=indices.Where(index=>!StaticReadbackByteMatches(expected,observed,index)).Select(index=>$"{index}:{expected[index]:X2}/{observed[index]:X2}").ToArray();
+        return "byte expected/observed "+string.Join(", ",changed.Take(24))+(changed.Length>24?$"; {changed.Length-24} more fields differ":"");
+    }
     public static byte[] CompactFrame(Color[] first,Color[] second,Color rgb1,Color rgb2)
     {
         if(first.Length<1 || first.Length>120 || second.Length<1 || second.Length>120 || first.Length+second.Length>232)throw new InvalidDataException("Compact ARGB capacity exceeded.");
@@ -204,7 +260,13 @@ public interface IMsiTransport : IDisposable
     void Write(byte[] packet);
 }
 
-public sealed class NativeMsiTransport : IMsiTransport
+// The frame writer has no access to persistent saves through IMsiTransport.Write.
+public interface IMsiHardwareSaveTransport
+{
+    void SaveStatic(byte[] packet);
+}
+
+public sealed class NativeMsiTransport : IMsiTransport,IMsiHardwareSaveTransport
 {
     readonly SafeFileHandle handle;
     public NativeMsiTransport()
@@ -224,6 +286,16 @@ public sealed class NativeMsiTransport : IMsiTransport
     public void Write(byte[] packet)
     {
         MsiProtocol.ValidateWrite(packet);
+        Send(packet);
+    }
+    public void SaveStatic(byte[] packet)
+    {
+        MsiProtocol.ValidateStaticSave(packet);
+        // A failed call can still have reached flash: this command must never be retried here.
+        Send(packet);
+    }
+    void Send(byte[] packet)
+    {
         // Allocate the collection maximum, and transfer the selected report's actual length.
         var buffer=new byte[725];packet.CopyTo(buffer,0);
         if(!Hid.HidD_SetFeature(handle,buffer,packet.Length))throw new IOException("The MSI controller rejected the lighting report (Windows error "+Marshal.GetLastWin32Error()+").");
@@ -325,6 +397,39 @@ public sealed class MsiBackend : ILightingBackend
         if(restored.Length!=185 || restored[0]!=0x52 || !MsiProtocol.ZoneOffsets.Select((o,i)=>(Offset:o,Length:i<2?10:11)).All(z=>original.AsSpan(z.Offset,z.Length).SequenceEqual(restored.AsSpan(z.Offset,z.Length))))
             throw new IOException("The controller did not confirm restoration of all four header colors and modes.");
         wrote=false;lastPacket=null;lastDirect.Clear();activeCounts.Clear();
+    });
+    public Task SaveStaticToHardwareAsync(Color color)=>Locked(()=>
+    {
+        if(faulted || transport is null || original is null)throw new IOException("Controller is unavailable. Disconnect and reconnect.");
+        CheckConflict(true);
+        if(transport is not IMsiHardwareSaveTransport persistent)
+            throw new NotSupportedException("This MSI transport cannot save a static boot color.");
+        // Read the live configuration so unrelated, unsupported fields remain intact.
+        var current=MsiProtocol.Frame(transport.Read(),new Dictionary<uint,Color[]>());
+        var selected=MsiProtocol.StaticConfiguration(current,color);
+        wrote=true;lastPacket=null;lastDirect.Clear();activeCounts.Clear();
+        try
+        {
+            // The native controller expects its previous report followed by its new report.
+            // Both preparation reports are volatile. Flash is committed exactly once below.
+            transport.Write(current);Writes++;
+            transport.Write(selected);Writes++;
+            Thread.Sleep(250);
+            var observed=transport.Read();
+            if(observed.Length!=185 || observed[0]!=0x52)
+                throw new IOException("MSI did not return a static lighting configuration; hardware save was not attempted.");
+            if(!MsiProtocol.MatchesStaticConfiguration(selected,observed))
+                throw new IOException("MSI did not confirm the selected static configuration; hardware save was not attempted. "+MsiProtocol.StaticMismatchDetails(selected,observed));
+            try{persistent.SaveStatic(MsiProtocol.StaticSavePacket(selected));Writes++;}
+            catch(Exception ex)
+            {
+                throw new IOException("MSI hardware save was not confirmed. It may have reached the controller; Prism will not retry it automatically.",ex);
+            }
+            Thread.Sleep(250);
+            // Stop/restore after this explicit save should return to the user's new static color.
+            original=selected;wrote=false;
+        }
+        catch{faulted=true;throw;}
     });
     public async ValueTask DisposeAsync()
     {

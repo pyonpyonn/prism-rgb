@@ -70,6 +70,8 @@ public static class Diagnostics
             log.Add("Read report 0x52: "+original.Length+" bytes.");
             log.Add("ARGB configured lengths: "+original[41]+", "+original[52]);
             log.Add("Mode fields: "+string.Join(",",MsiProtocol.ZoneOffsets.Select(o=>original[o])));success=true;
+            foreach(int offset in MsiProtocol.ZoneOffsets.Concat(new[]{74,84,94,104,114,124,134}))
+                log.Add($"Static zone {offset}: "+Convert.ToHexString(original.AsSpan(offset,10)));
         }
         catch(Exception ex){log.Add(ex.Message);}
         File.WriteAllText(path,JsonSerializer.Serialize(new{Success=success,LightingWritesRequested=false,Log=log},new JsonSerializerOptions{WriteIndented=true}));return Task.FromResult(success?0:1);

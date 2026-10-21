@@ -56,3 +56,9 @@ Broad hardware support, sleep/resume, every possible physical strip/splitter arr
 - [REA Windows native analysis](https://github.com/morluto/rea/blob/main/docs/windows-ghidra-p0.md)
 - [SignalRGB plugin documentation](https://docs.signalrgb.com/developer/plugins/)
 - [Microsoft HID feature reports](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/hidsdi/nf-hidsdi-hidd_getfeature)
+
+## 0.7.0 static hardware-save research
+
+The exact MSI7C95 controller exposes a configuration save flag, and the exact Gigabyte1458:40C6 adapter exposes an AA save command. Prism0.7.0 adds independent narrow packet construction for native static colour and an explicit user-triggered save only. The original OpenRGB controller implementations are linked in the [boot guide](BOOT-LIGHTING.md#save-a-static-boot-colour-to-hardware) as protocol research; their GPL source is not copied or bundled. The inspected SignalRGB shutdown plugins use volatile colours and do not establish persistent retention. No controller readback or successful driver return proves visibility or cold-boot retention.
+
+On 2026-10-21 the exact supported PC accepted one persistent save command on each controller for static `#F70C00`. An initial MSI preparation was blocked before committing because unused onboard secondary-red byte129 reads back as zero; the adapter now permits only that static-only normalization while keeping active fields strict. A motherboard-only retry avoided repeating the successful GPU commit. Existing scenes/profiles/device settings and startup flags were preserved. Physical visibility and power-cycle retention await the owner’s observation. [Sanitized validation record](hardware-save-validation.json).

@@ -45,12 +45,47 @@ public static class GigabyteProtocol
         bool color=(packet[0] is >=0xB0 and <=0xB3 or >=0xBC and <=0xBF) && packet[1]==1;
         if(!mode && !color)throw new InvalidDataException("Unsupported Gigabyte lighting command.");
     }
+    // Native static mode uses a different routing flag from Prism's streaming mode.
+    // These packets only prepare the volatile configuration; the separate AA command commits it.
+    public static List<byte[]> StaticHardwareSettings(Color color)
+    {
+        var result=new List<byte[]>();
+        for(int zone=1;zone<=4;zone++)
+        {
+            result.Add(new byte[]{0x88,1,2,0x63,0,(byte)zone,0,0});
+            result.Add(zone switch
+            {
+                1 or 2=>new byte[]{0xB0,1,color.R,color.G,color.B,color.R,color.G,color.B},
+                3=>new byte[]{0xB1,1,color.R,color.G,color.B,0,0,0},
+                _=>new byte[]{0x40,color.R,color.G,color.B,4,0,0,0}
+            });
+        }
+        return result;
+    }
+    public static void ValidateStaticHardwareSetting(byte[] packet)
+    {
+        if(packet.Length!=8)throw new InvalidDataException("GPU static settings must contain eight bytes.");
+        bool mode=packet[0]==0x88 && packet[1]==1 && packet[2]==2 && packet[3]==0x63 && packet[4]==0 && packet[5] is >=1 and <=4 && packet[6]==0 && packet[7]==0;
+        bool paired=packet[0]==0xB0 && packet[1]==1 && packet.AsSpan(2,3).SequenceEqual(packet.AsSpan(5,3));
+        bool right=packet[0]==0xB1 && packet[1]==1 && packet[5]==0 && packet[6]==0 && packet[7]==0;
+        bool logo=packet[0]==0x40 && packet[4]==4 && packet[5]==0 && packet[6]==0 && packet[7]==0;
+        if(!mode && !paired && !right && !logo)throw new InvalidDataException("Unsupported GPU static hardware setting.");
+    }
+    public static byte[] HardwareSaveCommand()=>new byte[]{0xAA,0,0,0,0,0,0,0};
 }
 
 public interface IGpuLightingTransport : IDisposable
 {
     byte[] QueryIdentity();
     void Write(byte[] packet);
+}
+
+// Deliberately absent from the ordinary frame writer: committing nonvolatile memory
+// is only available to the explicit hardware-save operation.
+public interface IGpuHardwareSaveTransport : IGpuLightingTransport
+{
+    void WriteStaticSetting(byte[] packet);
+    void CommitStaticConfiguration();
 }
 
 public sealed class NvidiaLightingException : IOException
@@ -61,7 +96,7 @@ public sealed class NvidiaLightingException : IOException
     public NvidiaLightingException(int status):base($"NVIDIA GPU lighting I/O failed ({status})."){Status=status;}
 }
 
-public sealed class NvidiaGigabyteTransport : IGpuLightingTransport
+public sealed class NvidiaGigabyteTransport : IGpuHardwareSaveTransport
 {
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate IntPtr Query(uint id);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)] delegate int Simple();
@@ -131,6 +166,8 @@ public sealed class NvidiaGigabyteTransport : IGpuLightingTransport
         var response=new byte[4];Transfer(response,true);return response;
     }
     public void Write(byte[] packet){GigabyteProtocol.Validate(packet);Transfer(packet,false);}
+    public void WriteStaticSetting(byte[] packet){GigabyteProtocol.ValidateStaticHardwareSetting(packet);Transfer(packet,false);}
+    public void CommitStaticConfiguration()=>Transfer(GigabyteProtocol.HardwareSaveCommand(),false);
     public void Dispose(){if(disposed)return;disposed=true;if(initialized)unload();NativeLibrary.Free(library);}
 }
 
@@ -150,12 +187,13 @@ public sealed class GigabyteBackend : ILightingBackend
     {
         await gate.WaitAsync(token);try{if(disposed)throw new ObjectDisposedException(nameof(GigabyteBackend));await Task.Run(()=>action(token),token);}finally{gate.Release();}
     }
-    async Task SendAsync(byte[] packet,CancellationToken token)
+    Task SendAsync(byte[] packet,CancellationToken token)=>SendVolatileAsync(packet,p=>transport!.Write(p),token);
+    async Task SendVolatileAsync(byte[] packet,Action<byte[]> writePacket,CancellationToken token)
     {
         for(int attempt=0;;attempt++)
         {
             token.ThrowIfCancellationRequested();
-            try{transport!.Write(packet);Writes++;return;}
+            try{writePacket(packet);Writes++;return;}
             catch(NvidiaLightingException ex)
             {
                 TransferFailures++;
@@ -211,6 +249,23 @@ public sealed class GigabyteBackend : ILightingBackend
         try{await WriteColorsAsync(values,cancellation);previous=(Color[])values.Clone();}
         catch{previous=null;throw;}
     },token);
+    public Task SaveStaticToHardwareAsync(Color color)=>Locked(async token=>
+    {
+        if(conflict())throw new IOException("Close competing RGB software before saving the GPU boot colour.");
+        if(transport is not IGpuHardwareSaveTransport hardware)throw new NotSupportedException("This GPU transport does not support explicit hardware saves.");
+        if(!GigabyteProtocol.Identity(hardware.QueryIdentity()))throw new InvalidDataException("GPU identity changed; the boot colour was not saved.");
+        previous=null;packetCache.Clear();modeReady=false;wrote=true;
+        foreach(var packet in GigabyteProtocol.StaticHardwareSettings(color))
+            await SendVolatileAsync(packet,hardware.WriteStaticSetting,token);
+        // A successful driver return acknowledges delivery, not retention across loss of power.
+        // Never retry this commit: an I/O error may happen after the controller accepted it.
+        try{hardware.CommitStaticConfiguration();Writes++;}
+        catch(Exception ex)
+        {
+            if(ex is NvidiaLightingException)TransferFailures++;
+            throw new IOException("GPU hardware-save delivery is uncertain. It was attempted once and was not retried; check the colour after a full power-off before saving again.",ex);
+        }
+    });
     public Task RestoreAsync()=>Locked(async token=>
     {
         if(!wrote)return;

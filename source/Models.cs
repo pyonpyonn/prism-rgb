@@ -94,6 +94,7 @@ public sealed class Preferences
     public bool StartInTray { get; set; } = true;
     public bool RestoreLightingOnStartup { get; set; }
     public bool KeepColorsOnExit { get; set; }
+    public string? HardwareBootColor { get; set; }
 }
 
 public static class Storage
@@ -106,6 +107,7 @@ public static class Storage
         {
             var p=JsonSerializer.Deserialize<Preferences>(File.ReadAllText(Path.Combine(DirectoryPath,"settings.json")),Options) ?? new();
             p.Studio ??=new(); p.Studio.Normalize(); p.Profiles ??=new(); p.Placements ??=new();
+            if(!Effects.ValidColor(p.HardwareBootColor))p.HardwareBootColor=null;
             p.Profiles.RemoveAll(item=>item is null);p.Placements.RemoveAll(item=>item is null);
             foreach (var s in p.Profiles) { s.Name=string.IsNullOrWhiteSpace(s.Name)?"Saved profile":s.Name; s.State ??=new(); s.State.Normalize(); }
             foreach(var d in p.Placements)

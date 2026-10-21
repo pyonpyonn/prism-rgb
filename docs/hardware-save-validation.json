@@ -1,0 +1,21 @@
+{
+  "Version": "0.7.0",
+  "Date": "2026-10-21",
+  "StaticBootColor": "#F70C00",
+  "SelectedFrom": "Current effect first palette colour scaled by scene brightness",
+  "Motherboard": "MSI B550M PRO-VDH WIFI (MS-7C95), 1462:7C95",
+  "Gpu": "Gigabyte RTX 4070 Ti Gaming OC, 10DE:2782 / 1458:40C6",
+  "CoreChecksPassed": 54,
+  "InterfaceChecksPassed": 29,
+  "MotherboardHardwareSaveCommandAccepted": true,
+  "GpuHardwareSaveCommandAccepted": true,
+  "PersistentCommitAttemptsPerDevice": 1,
+  "MotherboardInitialPreparationBlockedBeforeCommit": true,
+  "MotherboardReadbackNormalization": "Unused secondary red byte129 reads back as0 in native static; active fields remain strict",
+  "GpuCommitRepeatedDuringMotherboardRetry": false,
+  "ExistingSceneProfilesPlacementsAndStartupFlagsPreserved": true,
+  "PowerCyclePerformed": false,
+  "RetentionVerified": false,
+  "VisibleStaticColorRequiresUserObservation": true,
+  "RuntimeWritesRemainVolatile": true
+}

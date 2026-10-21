@@ -1,6 +1,19 @@
 # Windows startup, closing, and boot lighting
 
-Prism 0.6.1 can apply saved static colors **before Windows sign-in**, once Windows Task Scheduler and the lighting drivers are available. The boot task has no added startup delay. Normal sign-in startup then resumes the animated scene. It can also leave its last colors on powered controllers when quitting. **Prism cannot run inside UEFI/BIOS, before Windows, or while Windows is shut down.** Lighting during those periods is controlled by the hardware and its power supply.
+Prism 0.7.0 can explicitly save a static colour to the supported controllers' hardware memory. It can also apply a volatile frame before Windows sign-in once Task Scheduler and drivers are available, and resume animations at sign-in. **Prism itself cannot run inside UEFI/BIOS or while Windows is shut down.** Lighting during those periods is controlled by saved hardware settings, firmware and power availability.
+
+## Save a static boot colour to hardware
+
+1. Exit competing RGB software. In **Settings → Static boot colour**, choose a colour using the picker, hex/RGB input or eyedropper. The initial selection uses your current effect's first colour with current brightness; after saving a separate selection it remains independent of your effect palette.
+2. Click **Save to hardware** once. Prism stops/drains its output, prepares native static modes for both supported controllers, checks MSI readback, and sends one persistent save command to each. Results are shown separately. Saving settings or starting effects does not perform a hardware save.
+3. The static colour remains active with Prism output disconnected. Shut down normally when ready, then turn the PC on and observe the motherboard LEDs and GPU separately **during the initial BIOS/logo screen**, before Windows starts. Automatic Windows sign-in is fine. Windows Prism startup resumes your saved effect later.
+4. To check retention through loss of mains power, shut down first, switch off the PSU/unplug only after shutdown, wait for standby LEDs to go out, then restore power and boot. This is a separate observation from an ordinary shutdown/restart.
+
+"Hardware save command accepted" confirms the operating system accepted the transfer. It does not prove nonvolatile retention; only the physical power-cycle test can establish that. If a commit reports uncertain delivery, Prism does not retry it automatically. Check the observed colour before choosing to save again. MSI and GPU outcomes are independent, so one failure does not prevent the other attempt.
+
+Only a single native static colour is stored for all supported motherboard headers/onboard zones and the GPU's three fans/logo. Custom Prism animations and per-LED patterns still require Windows. This changes the controller lighting profile, not motherboard BIOS settings or firmware code. The controller must receive power to light LEDs; memory cannot provide standby power. Routine frame writes and the optional Windows boot task never request persistent storage.
+
+The protocol facts are documented by the original [MSI controller implementation](https://gitlab.com/CalcProgrammer1/OpenRGB/-/blob/master/Controllers/MSIMotherboardController/MSIMotherboard185Controller/MSIMotherboard185Controller.cpp) and [Gigabyte controller implementation](https://gitlab.com/CalcProgrammer1/OpenRGB/-/blob/master/Controllers/GigabyteRGBFusion2GPUController/GigabyteRGBFusion2GPUController.cpp). Prism constructs its own narrowly validated packets and does not bundle those GPL implementations or require OpenRGB.
 
 ## Before Windows sign-in
 
@@ -59,7 +72,7 @@ The MSI B550M PRO-VDH WIFI has a physical **LED_SW1** switch and BIOS RGB Light 
 
 Whether the ARGB headers or GPU remain lit in shutdown depends on their power rails, controller reset behavior and firmware. A driver or controller reset can replace a retained frame. Removing power clears volatile state. The card cannot display colors if its lighting loses power. MSI's USB charging/ErP instructions do not establish ARGB-header or GPU standby-lighting support.
 
-Prism keeps MSI's persistent-save flag disabled. It does not modify BIOS settings, flash controller firmware, or install a pre-boot driver. **BIOS/cold-boot and powered-off lighting have not been verified on this setup.** A reliable same-scene effect before Windows requires a verified hardware-memory feature; this adapter does not currently provide one.
+Routine Prism output keeps MSI's persistent-save flag disabled. The explicit hardware-save action above uses it once for the chosen native static configuration; the GPU uses its separate save command. Neither action modifies BIOS settings, flashes firmware code or installs a pre-boot driver. **BIOS/cold-boot and powered-off lighting still require physical verification on each setup.**
 
 ## Check the behavior on your PC
 

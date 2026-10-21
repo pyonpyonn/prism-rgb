@@ -1,6 +1,6 @@
-# Using Prism RGB 0.6.1
+# Using Prism RGB 0.7.0
 
-Extract the complete [v0.6.1 Windows x64 release](https://github.com/pyonpyonn/prism-rgb/releases/tag/v0.6.1) and open `Launch Prism RGB.cmd`. Use the new executable rather than an older extracted build. The .NET desktop runtime is bundled.
+Extract the complete [v0.7.0 Windows x64 release](https://github.com/pyonpyonn/prism-rgb/releases/tag/v0.7.0) and open `Launch Prism RGB.cmd`. Use the new executable rather than an older extracted build. The .NET desktop runtime is bundled.
 
 ## Connect and start
 
@@ -83,7 +83,7 @@ Under **Settings → Windows startup**, enable **Start Prism when I sign in to W
 
 Default Close clears/restores and quits. **Keep running in the system tray when I close the window** keeps effects running. **Keep the last colors when Prism quits** stops animation and leaves the last delivered frame while the controller remains powered, including best-effort Windows-session shutdown preparation. Stop & restore always clears/restores. `PrismRGB.exe --quit` also requests a graceful exit.
 
-Prism cannot run in BIOS or while the PC is off. Last-frame retention is volatile and does not establish cold-boot/shutdown lighting support. See the [boot lighting guide](BOOT-LIGHTING.md) for verified MSI controls, power/reset limitations, and a manual restart check. No BIOS settings or controller flash are changed. No installer or auto-updater is included.
+Use **Settings → Static boot colour → Save to hardware** to explicitly store a single native static colour on both supported controllers. The picker supports hex/RGB input and the screen eyedropper. Saving pauses output and reports motherboard/GPU results separately; reconnect to resume your scene. Routine animations and Windows startup do not save hardware memory. A full power-off test is still needed to confirm retention during BIOS boot. See the [hardware-save guide](BOOT-LIGHTING.md#save-a-static-boot-colour-to-hardware). BIOS settings and firmware code are unchanged. No installer or auto-updater is included.
 
 ## Troubleshooting
 

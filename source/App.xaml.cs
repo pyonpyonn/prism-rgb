@@ -18,6 +18,23 @@ public partial class App : Application
         RenderOptions.ProcessRenderMode=RenderMode.SoftwareOnly;
         int dataDir=Array.IndexOf(e.Args,"--data-dir");
         if(dataDir>=0 && dataDir+1<e.Args.Length)Storage.DirectoryPath=Path.GetFullPath(e.Args[dataDir+1]);
+        int saveHardware=Array.IndexOf(e.Args,"--save-hardware-boot-color");
+        if(saveHardware>=0)
+        {
+            ShutdownMode=ShutdownMode.OnExplicitShutdown;
+            if(saveHardware+2>=e.Args.Length || !ColorValues.TryHex(e.Args[saveHardware+1],out var color)){Shutdown(2);return;}
+            int targetIndex=Array.IndexOf(e.Args,"--hardware-save-device");
+            string target=targetIndex<0?"both":targetIndex+1<e.Args.Length?e.Args[targetIndex+1]:"";
+            if(target is not ("both" or "motherboard" or "gpu")){Shutdown(2);return;}
+            try
+            {
+                var result=await HardwareBootColor.SaveAsync(color,new HardwareBootSaveOptions{MotherboardRequested=target!="gpu",GpuRequested=target!="motherboard"});
+                BootLighting.WriteAtomic(e.Args[saveHardware+2],System.Text.Json.JsonSerializer.Serialize(result,new System.Text.Json.JsonSerializerOptions{WriteIndented=true}));
+                if(result.Success){var preferences=Storage.Load();preferences.HardwareBootColor=ColorValues.Hex(color);Storage.Save(preferences);}
+                Shutdown(result.Success?0:1);
+            }
+            catch{Shutdown(1);}return;
+        }
         int exportBoot=Array.IndexOf(e.Args,"--export-boot-frame"),bootFrame=Array.IndexOf(e.Args,"--boot-frame");
         if(exportBoot>=0 || bootFrame>=0)
         {

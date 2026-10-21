@@ -25,6 +25,22 @@ public static class SelfTests
     }
     public static async Task<int> RunAsync()
     {
+        await TestAsync("MSI static hardware saves are validated, verified and never automatically retried",MsiHardwareSaveChecks.VerifyAsync);
+        await TestAsync("Gigabyte native static hardware saves commit once with strict identity and packet guards",GpuHardwareSaveChecks.VerifyAsync);
+        await TestAsync("Explicit boot hardware save isolates device failures and releases ownership without retries",async()=>
+        {
+            string folder=Path.Combine(Directory.GetCurrentDirectory(),"work","hardware-save-test-"+Guid.NewGuid().ToString("N"));
+            int motherboard=0,gpu=0;
+            var options=new HardwareBootSaveOptions{LeaseDirectory=folder,SaveMotherboard=color=>{motherboard++;throw new IOException("uncertain commit");},SaveGpu=color=>{gpu++;Check(color==Colors.Coral,"Selected colour changed");return Task.CompletedTask;}};
+            var result=await HardwareBootColor.SaveAsync(Colors.Coral,options);
+            Check(!result.Success && !result.Motherboard.Saved && result.Gpu.Saved && motherboard==1 && gpu==1,"Partial failure retried or skipped other device");
+            Check(result.Motherboard.Message=="uncertain commit" && !result.PowerCycleVerified,"Uncertain retention was reported as verified");
+            using(var lease=ControllerLease.TryAcquire(folder))Check(lease is not null,"Save leaked ownership");
+            bool invalid=false;try{await HardwareBootColor.SaveAsync(Color.FromArgb(0,1,2,3),options);}catch(ArgumentException){invalid=true;}
+            Check(invalid && motherboard==1 && gpu==1,"Invalid input reached hardware");
+            var single=await HardwareBootColor.SaveAsync(Colors.Coral,new HardwareBootSaveOptions{LeaseDirectory=folder,MotherboardRequested=false,SaveMotherboard=_=>throw new Exception("Wrong device"),SaveGpu=_=>{gpu++;return Task.CompletedTask;}});
+            Check(single.Success && !single.Motherboard.Requested && !single.Motherboard.Saved && gpu==2,"Targeted save wrote an unrequested controller");
+        });
         await TestAsync("Boot snapshots, independent readiness retries, retained writes and cross-session handoff are bounded",()=>BootLighting.VerifyAsync(Path.Combine(Directory.GetCurrentDirectory(),"work","boot-test-"+Guid.NewGuid().ToString("N"))));
         Test("All effects obey zero brightness",()=>
         {

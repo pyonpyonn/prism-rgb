@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.0 — Save a static boot colour to hardware
+
+- Add Settings colour selection and an explicit Save to hardware action for the exact supported MSI motherboard and Gigabyte RTX 4070 Ti Gaming OC.
+- Prepare native static configurations and issue one persistent commit per controller. Normal animation, startup, shutdown, preference saves and GPU recovery remain volatile; uncertain persistent commits are never retried automatically.
+- Pause/drain output and hold the shared controller lease during saves, report device outcomes independently, then leave the static colour active without a restore/black frame.
+- Verify MSI static readback before requesting flash storage; use GPU native static routing rather than saving a streaming frame.
+- Add fake protocol, failure, ownership and interface coverage. A successful save call acknowledges delivery; BIOS/power-cycle retention and lighting without standby power still require physical observation.
+
 ## 0.6.1 — Start boot lighting without an added delay
 
 - Remove the boot task's five-second trigger delay and use normal process priority instead of background priority. Re-running setup updates the existing owned task.
