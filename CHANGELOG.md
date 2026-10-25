@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.1 — More continuous boot palettes and clearer device timing
+
+- Expand the built-in library from 7 to 21 presets with additional colour palettes, Slow/Fast fade variations, and steady colours. These use the existing tested modes; no new firmware animation modes are introduced.
+- Explain that the motherboard fades while the GPU runs its own colour cycle, with independent boot timing. Steady provides an identical fixed colour across devices.
+- Reject near-black fade endpoints at the request and native MSI packet layers, in addition to the preset picker. Check every preset at four brightness levels, every interpolated colour step, and all GPU palette-bank slots for accidental black.
+- Preserve the current animated boot selection, hardware memory and Windows scene during the update.
+
+
 ## 0.9.0 — Boot colour and effect preset library
 
 - Add Settings boot presets: Lava, Ocean, Cyberpunk, Forest, Sunset and Ice fades, plus Lava steady. Choose Continuous fade or Steady, edit two colours with pickers/hex fields/screen eyedroppers, and choose brightness and motion speed.

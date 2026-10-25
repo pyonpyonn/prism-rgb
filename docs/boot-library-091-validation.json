@@ -1,0 +1,24 @@
+{
+  "Version": "0.9.1",
+  "Date": "2026-10-25",
+  "BuiltInPresetCount": 21,
+  "NewPresets": 14,
+  "CoreChecksPassed": 56,
+  "InterfaceChecksPassed": 31,
+  "PaletteBrightnessCombinationsChecked": 84,
+  "InterpolatedPaletteSamplesChecked": 8484,
+  "GpuPaletteColourSlotsChecked": 2688,
+  "NoBlackSlotsOrInterpolatedColoursInChecks": true,
+  "LibraryNativeModesUnchanged": [
+    "MSI22 Fade",
+    "GPU11 Tricolor",
+    "Steady1"
+  ],
+  "NewFirmwareModesIntroduced": false,
+  "HardwareSaveRequestedByAgentDuringThisUpdate": false,
+  "TemporaryNativePreviewApplied": true,
+  "TemporaryNativePreviewOwnerVisualConfirmationReceived": false,
+  "NoNewClaimOfPhysicalVerificationForAllPalettes": true,
+  "IndependentBootTimingAcceptedByUser": true,
+  "WindowsSceneChangedByUpdate": false
+}

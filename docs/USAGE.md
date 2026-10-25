@@ -1,6 +1,6 @@
-# Using Prism RGB 0.9.0
+# Using Prism RGB 0.9.1
 
-Extract the complete [v0.9.0 Windows x64 release](https://github.com/pyonpyonn/prism-rgb/releases/tag/v0.9.0) and open `Launch Prism RGB.cmd`. Use the new executable rather than an older extracted build. The .NET desktop runtime is bundled.
+Extract the complete [v0.9.1 Windows x64 release](https://github.com/pyonpyonn/prism-rgb/releases/tag/v0.9.1) and open `Launch Prism RGB.cmd`. Use the new executable rather than an older extracted build. The .NET desktop runtime is bundled.
 
 ## Connect and start
 
@@ -119,8 +119,8 @@ The ARGB test lasts about 40 seconds and shows red/green/blue followed by distin
 
 Open **Settings → Boot lighting · continuous colours**:
 
-- **Preset library** includes Lava, Ocean, Cyberpunk, Forest, Sunset and Ice fades, plus Lava steady. Select a preset to edit an independent copy.
-- **Effect** offers Continuous fade and Steady. The boot library excludes wave modes that showed black gaps. Steady uses colour 1 continuously.
+- **Preset library** includes 21 colour, speed and steady presets, including the original palettes, Ember, Aurora, Royal, Rose, Gold, Mint, Crimson, Candy, Deep sea and Sunrise. Select a preset to edit an independent copy.
+- **Effect** offers Continuous colours with independent timing, and Steady with the same fixed colour on every light. The boot library excludes wave modes that showed black gaps. Steady uses colour 1 continuously.
 - Choose two colours with the pickers, hex fields or screen eyedroppers. **Use my current Studio colours** copies its first two lit colours without changing Studio. Black or overly dark choices disable preview/save until corrected.
 - Set brightness from 10–100% and choose Slow/Balanced/Fast fade motion.
 - **Save preset to my library** saves a named local preset, up to 32. An existing custom name is replaced. This does not write controller memory.

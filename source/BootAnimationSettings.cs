@@ -22,7 +22,8 @@ public sealed partial class MainWindow
     {
         var draft=prefs.BootAnimation;
         var presets=prefs.BootAnimationPresets.Concat(BootAnimationLibrary.BuiltIns).GroupBy(p=>p.Name,StringComparer.OrdinalIgnoreCase).Select(group=>group.First()).ToList();
-        var library=new ComboBox{ItemsSource=presets,DisplayMemberPath="Name",SelectedItem=presets.FirstOrDefault(p=>p.Name==draft.Name),IsEnabled=!busy};
+        if(!presets.Any(p=>string.Equals(p.Name,draft.Name,StringComparison.OrdinalIgnoreCase)))presets.Insert(0,draft.Clone());
+        var library=new ComboBox{ItemsSource=presets,DisplayMemberPath="Name",SelectedItem=presets.FirstOrDefault(p=>string.Equals(p.Name,draft.Name,StringComparison.OrdinalIgnoreCase)),IsEnabled=!busy};
         System.Windows.Automation.AutomationProperties.SetName(library,"Boot preset library");
         library.SelectionChanged+=(_,_)=>
         {
@@ -30,7 +31,8 @@ public sealed partial class MainWindow
         };
         var name=new TextBox{Text=draft.Name,MaxLength=60,IsEnabled=!busy};
         System.Windows.Automation.AutomationProperties.SetName(name,"Boot preset name");
-        var style=new ComboBox{ItemsSource=new[]{"Continuous fade","Steady"},SelectedItem=draft.Style=="Steady"?"Steady":"Continuous fade",IsEnabled=!busy};
+        const string animatedLabel="Continuous colours · independent animation timing",steadyLabel="Steady · same colour on every light";
+        var style=new ComboBox{ItemsSource=new[]{animatedLabel,steadyLabel},SelectedItem=draft.Style=="Steady"?steadyLabel:animatedLabel,IsEnabled=!busy};
         System.Windows.Automation.AutomationProperties.SetName(style,"Boot effect");
         var speedPicker=new ComboBox{ItemsSource=new[]{"Slow","Balanced","Fast"},SelectedItem=draft.MotionSpeed,IsEnabled=!busy};
         System.Windows.Automation.AutomationProperties.SetName(speedPicker,"Boot motion speed");
@@ -44,10 +46,11 @@ public sealed partial class MainWindow
         var sample=new Border{Height=28,CornerRadius=new CornerRadius(6),Margin=new Thickness(0,8,0,8)};
         var validation=Small("");
         Button preview=null!,save=null!,savePreset=null!;
+        string TimingHint()=>draft.Style=="Steady"?"Every output stays on colour 1. This keeps the colour identical across devices.":"Both colours stay lit: the motherboard fades and the GPU runs its own colour cycle. Their animations have independent timing before Windows.";
         void Update()
         {
             draft.Name=name.Text;draft.Color1=first.Text.ToUpperInvariant();draft.Color2=second.Text.ToUpperInvariant();
-            draft.Style=(string?)style.SelectedItem=="Steady"?"Steady":"Fade";
+            draft.Style=(string?)style.SelectedItem==steadyLabel?"Steady":"Fade";
             draft.MotionSpeed=(string?)speedPicker.SelectedItem??"Balanced";draft.Brightness=level.Value/100;
             levelLabel.Text=$"Boot brightness · {level.Value:F0}%";
             bool valid=true;
@@ -55,7 +58,7 @@ public sealed partial class MainWindow
             {
                 var colors=draft.EffectivePalette();
                 sample.Background=new LinearGradientBrush(Effects.Parse(colors[0]),Effects.Parse(draft.Style=="Steady"?colors[0]:colors[1]),0);
-                validation.Text=draft.Style=="Steady"?"Steady keeps colour 1 continuously lit.":"Continuous fade blends between two lit colours. No black colour stop or breathing effect.";
+                validation.Text=TimingHint();
             }
             catch(ArgumentException ex){valid=false;validation.Text=ex.Message;sample.Background=B("#293238");}
             if(preview is not null)preview.IsEnabled=valid && !busy;
@@ -112,12 +115,12 @@ public sealed partial class MainWindow
         name.TextChanged+=(_,_)=>Update();first.TextChanged+=(_,_)=>Update();second.TextChanged+=(_,_)=>Update();
         style.SelectionChanged+=(_,_)=>Update();speedPicker.SelectionChanged+=(_,_)=>Update();level.ValueChanged+=(_,_)=>Update();
         // Initial drawing and validation do not schedule a save or touch hardware.
-        try{var colors=draft.EffectivePalette();sample.Background=new LinearGradientBrush(Effects.Parse(colors[0]),Effects.Parse(draft.Style=="Steady"?colors[0]:colors[1]),0);validation.Text="Choose colours, preview, then save once to hardware. Windows Studio stays unchanged.";}
+        try{var colors=draft.EffectivePalette();sample.Background=new LinearGradientBrush(Effects.Parse(colors[0]),Effects.Parse(draft.Style=="Steady"?colors[0]:colors[1]),0);validation.Text=TimingHint();}
         catch(ArgumentException ex){validation.Text=ex.Message;preview.IsEnabled=save.IsEnabled=savePreset.IsEnabled=false;}
         speedPicker.IsEnabled=!busy && draft.Style=="Fade";
         return Box(V(T("Boot lighting · continuous colours",18,"#E5EEE8",true),Gap(10),
             Small("These presets use the tested gap-free fade or steady mode. The GPU receives the same palette. Before Windows the controllers have independent clocks; Prism synchronizes normal effects after sign-in."),Gap(10),
-            Small("Preset library"),library,Gap(8),Small("Effect"),style,Gap(8),
+            Small($"Preset library · {BootAnimationLibrary.BuiltIns.Count} built-in choices"),library,Gap(8),Small("Effect"),style,Gap(8),
             Pick("Choose boot colour 1",first),first,Dropper("Eyedropper · boot colour 1",first),Pick("Choose boot colour 2",second),second,Dropper("Eyedropper · boot colour 2",second),sample,validation,Gap(8),
             levelLabel,level,Small("Motion speed"),speedPicker,current,Gap(10),Small("Preset name"),name,savePreset,Gap(10),preview,save,Gap(8),
             Small(prefs.HardwareBootWaveSaved?$"Last accepted hardware preset: {prefs.HardwareBootPresetSavedName}. Choosing another preset does not replace it until Save.":"No boot library preset has been saved to both controllers yet."),Gap(8),

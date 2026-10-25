@@ -4,7 +4,7 @@
 
 A standalone Windows lighting app with **individual MSI ARGB LED control and Gigabyte RTX 4070 Ti lighting**. No OpenRGB, SignalRGB, SDK server, account, or background service is required. The portable x64 release bundles the .NET desktop runtime.
 
-**0.9.0 alpha adds a boot colour and effect preset library.** In **Settings → Boot lighting · continuous colours**, choose Lava, Ocean, Cyberpunk, Forest, Sunset, Ice or your own palette. Use **Continuous fade** or **Steady**, edit both colours with the picker, hex fields or eyedropper, and preview before saving once to hardware. Black and overly dark choices are blocked. Boot changes preserve your current Windows scene and profiles. The GPU receives the matching palette; the two hardware clocks can still drift before Windows.
+**0.9.1 alpha expands the boot library to 21 colour, speed and steady presets.** In **Settings → Boot lighting · continuous colours**, choose Lava, Ocean, Cyberpunk, Forest, Sunset, Ice, Ember, Aurora, Royal, Rose, Gold, Mint, Crimson, Candy, Deep sea, Sunrise and steady-colour options. Use **Continuous colours** or **Steady**, edit both colours with the picker, hex fields or eyedropper, and preview before saving once to hardware. Black and overly dark choices are blocked. Boot changes preserve your current Windows scene and profiles. The GPU receives the matching palette; the two hardware clocks can still drift before Windows.
 
 ![Prism RGB Studio](docs/images/preview.png)
 
@@ -12,7 +12,7 @@ A standalone Windows lighting app with **individual MSI ARGB LED control and Gig
 
 ## Download and use
 
-1. Download **PrismRGB-Windows-x64.zip** from [v0.9.0 Releases](https://github.com/pyonpyonn/prism-rgb/releases/tag/v0.9.0).
+1. Download **PrismRGB-Windows-x64.zip** from [v0.9.1 Releases](https://github.com/pyonpyonn/prism-rgb/releases/tag/v0.9.1).
 2. Extract the complete archive and open **Launch Prism RGB.cmd**. Use this new folder instead of an older extracted copy.
 3. Exit other RGB controllers, including SignalRGB, MSI lighting tools, and RGB Fusion.
 4. Choose **Devices → Connect lighting**. The app connects the motherboard and queries the supported GPU if available. Connecting does not start color output.

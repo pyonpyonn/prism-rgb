@@ -17,15 +17,45 @@ internal static class BootAnimationLibraryChecks
     public static Task VerifyAsync()
     {
         var defaults=BootAnimationLibrary.BuiltIns;
-        Check(defaults.Count>=7 && defaults.Select(preset=>preset.Name).Distinct(StringComparer.OrdinalIgnoreCase).Count()==defaults.Count,"Built-in boot names are missing or duplicated.");
+        Check(defaults.Count>=19 && defaults.Select(preset=>preset.Name).Distinct(StringComparer.OrdinalIgnoreCase).Count()==defaults.Count,"Built-in boot names are missing or duplicated.");
+        Check(defaults.Take(2).Select(preset=>preset.Name).SequenceEqual(new[]{"Lava fade","Ocean fade"}),"The existing first preset choices changed order.");
+        Check(defaults.Select(preset=>preset.Style).Distinct().OrderBy(style=>style).SequenceEqual(new[]{"Fade","Steady"}),"The boot library lost a supported effect style.");
+        Check(defaults.Select(preset=>preset.MotionSpeed).Distinct().OrderBy(speed=>speed).SequenceEqual(new[]{"Balanced","Fast","Slow"}),"The boot library lost its three supported speed choices.");
         foreach(var preset in defaults)
         {
             preset.Validate();Check(preset.Style is "Fade" or "Steady","An unverified gapped mode entered the boot library.");
             Check(preset.EffectivePalette().Length==2 && preset.EffectivePalette().All(color=>color!="#000000"),"A built-in palette has a black stop.");
+            var dimmed=preset.Clone();dimmed.Brightness=.1;dimmed.Validate();
+            Check(dimmed.EffectivePalette().Select(Effects.Parse).All(color=>Math.Max(color.R,Math.Max(color.G,color.B))>=8),"A built-in colour became too dark at minimum boot brightness.");
+            foreach(double brightness in new[]{.1,.25,.5,1.0})
+            {
+                var selectedPreset=preset.Clone();selectedPreset.Brightness=brightness;
+                var selectedPreferences=new Preferences{BootAnimation=selectedPreset};
+                var native=BootAnimationLibrary.CreateRequest(selectedPreferences);
+                var colors=native.Palette.Select(Effects.Parse).ToArray();
+                for(int step=0;step<=100;step++)
+                {
+                    var mixed=Effects.Mix(colors[0],colors[1],step/100.0);
+                    Check(mixed.R!=0 || mixed.G!=0 || mixed.B!=0,"A palette transition introduced black between lit endpoints.");
+                }
+                var gpuPalette=HardwareBootWave.BuildGpuPalette(colors);
+                Check(gpuPalette.Length==8 && gpuPalette.All(c=>c.R!=0 || c.G!=0 || c.B!=0),"GPU boot palette contains a black slot.");
+                var banks=GigabyteProtocol.WaveHardwareSettings(gpuPalette,native.GpuSpeed).Where(p=>p[0]!=0x88).ToArray();
+                Check(banks.Length==16 && banks.All(p=>(p[2]!=0 || p[3]!=0 || p[4]!=0) && (p[5]!=0 || p[6]!=0 || p[7]!=0)),"A transmitted GPU colour bank has an uninitialized black slot.");
+            }
         }
         string originalName=defaults[0].Name,originalColor=defaults[0].Color1;
         defaults[0].Name="Edited picker copy";defaults[0].Color1="#000000";
         Check(BootAnimationLibrary.BuiltIns[0].Name==originalName && BootAnimationLibrary.BuiltIns[0].Color1==originalColor,"Editing a selected preset changed the built-in library.");
+        var selection=new Preferences{BootAnimation=BootAnimationLibrary.BuiltIns.Single(preset=>preset.Name=="Crimson fast fade").Clone()};
+        var fastRequest=BootAnimationLibrary.CreateRequest(selection);
+        Check(fastRequest.MotionKind=="Fade" && fastRequest.MotionSpeed=="Fast","Selecting a fast fade lost its stored style or speed.");
+        selection.BootAnimation.MotionSpeed="Slow";selection.BootAnimation.Style="Steady";
+        var originalFast=BootAnimationLibrary.BuiltIns.Single(preset=>preset.Name=="Crimson fast fade");
+        Check(originalFast.MotionSpeed=="Fast" && originalFast.Style=="Fade","Editing selected style or speed changed the built-in preset.");
+        selection.BootAnimation=BootAnimationLibrary.BuiltIns.Single(preset=>preset.Name=="Warm white steady").Clone();
+        var steadyRequest=BootAnimationLibrary.CreateRequest(selection);
+        Check(steadyRequest.MotionKind=="Steady" && steadyRequest.MotionSpeed=="Balanced","Selecting a steady preset retained the previous fade style or speed.");
 
         Reject(()=>new BootAnimationPreset{Name=" "}.Validate());
         Reject(()=>new BootAnimationPreset{Name="bad\nname"}.Validate());

@@ -1,12 +1,12 @@
 # Windows startup, closing, and boot lighting
 
-Prism 0.9.0 can explicitly save a static colour or a supported native animation to controller memory. It can also apply a volatile frame before Windows sign-in once Task Scheduler and drivers are available, and resume the full Prism scene at sign-in. **Prism itself cannot run inside UEFI/BIOS or while Windows is shut down.** Lighting during those periods is controlled by saved hardware settings, firmware and power availability.
+Prism 0.9.1 can explicitly save a static colour or a supported native animation to controller memory. It can also apply a volatile frame before Windows sign-in once Task Scheduler and drivers are available, and resume the full Prism scene at sign-in. **Prism itself cannot run inside UEFI/BIOS or while Windows is shut down.** Lighting during those periods is controlled by saved hardware settings, firmware and power availability.
 
 ## Boot colour and effect preset library
 
-Open **Settings → Boot lighting · continuous colours**. The library offers Lava, Ocean, Cyberpunk, Forest, Sunset and Ice fades, plus Lava steady. Each selection is an editable copy; changing it does not alter a built-in preset.
+Open **Settings → Boot lighting · continuous colours**. The library has 21 built-in choices: the original palettes plus Ember, Aurora, Royal, Rose, Gold, Mint, Crimson, Candy, Deep sea and Sunrise fades, Slow/Fast variations and additional steady colours. Each selection is an editable copy; changing it does not alter a built-in preset.
 
-1. Choose a library preset, then choose **Continuous fade** or **Steady**. The library excludes the native wave and breathing modes that showed black gaps. Steady continuously uses colour 1.
+1. Choose a library preset, then choose **Continuous colours** or **Steady**. The library excludes the native wave and breathing modes that showed black gaps. Steady continuously uses colour 1.
 2. Choose both colours using the colour pickers, `#RRGGBB` fields or screen eyedroppers. **Use my current Studio colours** copies the first two lit Studio colours into the boot draft; it does not alter Studio. Black and overly dark choices are rejected, including colours that become too dark at the selected brightness.
 3. Set boot brightness from **10% to 100%**. For fades, choose **Slow**, **Balanced** or **Fast**. These hardware speed units differ from the Windows scene speed.
 4. Give the palette a name and choose **Save preset to my library** to keep it on this PC. Up to 32 custom presets can be saved; saving an existing name replaces that custom preset. Choosing, editing or saving a library preset does not change controller memory.
@@ -14,7 +14,7 @@ Open **Settings → Boot lighting · continuous colours**. The library offers La
 6. Choose **Save boot lighting to hardware** once to store the selection. MSI readback must match before one persistent save; the GPU receives its own single save command. Neither uncertain commit is retried automatically. This keeps your current Windows Studio scene and saved profiles unchanged.
 7. When ready, shut down and power on; observe each device during the initial logo. Saving an effect still needs a physical power-cycle check. Windows Prism later resumes its existing scene after sign-in, including automatic sign-in.
 
-Continuous fade uses the motherboard's tested native colour-transition mode and the GPU's matching custom-colour mode. Both receive the selected lit palette; the GPU receives an intermediate shade as well. No black stop is requested. The red/orange preview was accepted visually on the tested PC. Other library colours use the same modes, but every palette/device combination has not been physically verified.
+Continuous colours uses the motherboard's tested native colour-transition mode and the GPU's independent Tricolor cycle. These are different animations, so they do not show an identical colour at every moment. Both receive the selected lit palette; the GPU receives an intermediate shade as well. No black stop is requested. The red/orange preview was accepted visually on the tested PC. Other library colours use the same modes, but every palette/device combination has not been physically verified.
 
 The two controllers run their own clocks before Windows, so they can drift in colour timing. This is not a stored copy of Prism's renderer or a guarantee of exact phase synchronization. For a uniform synchronized fade while Windows runs, choose **Color fade** in Studio with two lit colours; Prism samples one shared scene time for all outputs. Boot preset edits do not select that Windows effect automatically.
 

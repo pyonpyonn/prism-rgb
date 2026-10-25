@@ -58,7 +58,21 @@ public static class BootAnimationLibrary
         new(){Name="Forest fade",Color1="#16E020",Color2="#A6FF14"},
         new(){Name="Sunset fade",Color1="#FF3500",Color2="#FF0080"},
         new(){Name="Ice fade",Color1="#54BFFF",Color2="#D8F4FF"},
-        new(){Name="Lava steady",Style="Steady",Color1="#FF3000",Color2="#FF6401"}
+        new(){Name="Lava steady",Style="Steady",Color1="#FF3000",Color2="#FF6401"},
+        new(){Name="Ember slow fade",Color1="#FF1800",Color2="#FF9800",MotionSpeed="Slow"},
+        new(){Name="Aurora fade",Color1="#00FF99",Color2="#8866FF"},
+        new(){Name="Royal slow fade",Color1="#8A20FF",Color2="#2048FF",MotionSpeed="Slow"},
+        new(){Name="Rose fade",Color1="#FF3080",Color2="#FF9670"},
+        new(){Name="Gold fade",Color1="#FFAA00",Color2="#FFF04A"},
+        new(){Name="Mint fade",Color1="#00FFC0",Color2="#66FF80"},
+        new(){Name="Crimson fast fade",Color1="#FF1428",Color2="#FF4088",MotionSpeed="Fast"},
+        new(){Name="Candy fast fade",Color1="#FF44CC",Color2="#44DDFF",MotionSpeed="Fast"},
+        new(){Name="Deep sea slow fade",Color1="#164CFF",Color2="#00C898",MotionSpeed="Slow"},
+        new(){Name="Sunrise fade",Color1="#FF5860",Color2="#FFC040"},
+        new(){Name="Warm white steady",Style="Steady",Color1="#FFE4BC",Color2="#FFF4DC"},
+        new(){Name="Ice blue steady",Style="Steady",Color1="#6ACFFF",Color2="#D8F4FF"},
+        new(){Name="Emerald steady",Style="Steady",Color1="#18E880",Color2="#70FFBC"},
+        new(){Name="Violet steady",Style="Steady",Color1="#AA55FF",Color2="#D099FF"}
     };
 
     // Pickers receive independent values, so editing or saving one cannot change

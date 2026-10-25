@@ -27,7 +27,7 @@ public sealed class HardwareWaveRequest
         if(Palette.Length>0 && !Palette[0].Equals(Color,StringComparison.OrdinalIgnoreCase))throw new ArgumentException("The first boot colour must match the selected palette.");
         if(MotionSpeed is not ("Slow" or "Balanced" or "Fast"))throw new ArgumentException("Choose a supported boot motion speed.");
         if(MotionKind is not ("Wave" or "Fade" or "Steady"))throw new ArgumentException("Choose supported boot motion.");
-        if(MotionKind is "Fade" or "Steady" && (Palette.Length!=2 || Palette.Any(c=>Effects.Parse(c)==Colors.Black)))throw new ArgumentException("Continuous boot lighting needs two lit colours.");
+        if(MotionKind is "Fade" or "Steady" && (Palette.Length!=2 || Palette.Select(Effects.Parse).Any(c=>Math.Max(c.R,Math.Max(c.G,c.B))<8)))throw new ArgumentException("Continuous boot lighting needs two colours that remain visibly lit.");
     }
     public static HardwareWaveRequest FromProfile(Preferences preferences,string name,string? motionSpeed=null)
     {
@@ -63,7 +63,7 @@ public static partial class MsiProtocol
 {
     public static byte[] FadeConfiguration(byte[] original,Color color,int speed,Color secondary)
     {
-        if(color==Colors.Black || secondary==Colors.Black)throw new InvalidDataException("Continuous fades need two lit colours.");
+        if(color.A!=255 || secondary.A!=255 || Math.Max(color.R,Math.Max(color.G,color.B))<8 || Math.Max(secondary.R,Math.Max(secondary.G,secondary.B))<8)throw new InvalidDataException("Continuous fades need two visibly lit RGB colours.");
         var packet=WaveConfiguration(original,color,speed,secondary);
         foreach(int offset in ZoneOffsets.Append(74))packet[offset]=22;
         return packet;

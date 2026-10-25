@@ -53,6 +53,8 @@ internal static class HardwareWaveChecks
         Check(fade[31]==22 && fade[42]==22 && fade[74]==22 && fade[184]==0,"Fade did not select the owner-verified native mode.");
         Reject(()=>MsiProtocol.ValidateWaveSave(fadeSave));
         Reject(()=>MsiProtocol.FadeConfiguration(original,Colors.Black,1,color));
+        Reject(()=>MsiProtocol.FadeConfiguration(original,Color.FromRgb(7,0,0),1,color));
+        Reject(()=>new HardwareWaveRequest{MotionKind="Fade",Color="#070000",Palette=new[]{"#070000","#FF6401"}}.Validate());
         Reject(()=>MsiProtocol.ValidateWrite(fadeSave));
         var fadeFake=new MsiFake(original);
         await using(var fadeBackend=new MsiBackend(()=>fadeFake,()=>false))
