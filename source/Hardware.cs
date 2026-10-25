@@ -265,6 +265,7 @@ public interface IMsiHardwareSaveTransport
 {
     void SaveStatic(byte[] packet);
     void SaveWave(byte[] packet)=>throw new NotSupportedException("Wave hardware saves are unavailable on this transport.");
+    void SaveFade(byte[] packet)=>throw new NotSupportedException("Fade hardware saves are unavailable on this transport.");
 }
 
 public sealed class NativeMsiTransport : IMsiTransport,IMsiHardwareSaveTransport
@@ -296,6 +297,7 @@ public sealed class NativeMsiTransport : IMsiTransport,IMsiHardwareSaveTransport
         Send(packet);
     }
     public void SaveWave(byte[] packet){MsiProtocol.ValidateWaveSave(packet);Send(packet);}
+    public void SaveFade(byte[] packet){MsiProtocol.ValidateFadeSave(packet);Send(packet);}
     void Send(byte[] packet)
     {
         // Allocate the collection maximum, and transfer the selected report's actual length.
@@ -400,11 +402,13 @@ public sealed partial class MsiBackend : ILightingBackend
             throw new IOException("The controller did not confirm restoration of all four header colors and modes.");
         wrote=false;lastPacket=null;lastDirect.Clear();activeCounts.Clear();
     });
-    public Task SaveStaticToHardwareAsync(Color color)=>Locked(()=>
+    public Task SaveStaticToHardwareAsync(Color color)=>ApplyStaticAsync(color,true);
+    public Task PreviewStaticAsync(Color color)=>ApplyStaticAsync(color,false);
+    Task ApplyStaticAsync(Color color,bool persist)=>Locked(()=>
     {
         if(faulted || transport is null || original is null)throw new IOException("Controller is unavailable. Disconnect and reconnect.");
         CheckConflict(true);
-        if(transport is not IMsiHardwareSaveTransport persistent)
+        if(persist && transport is not IMsiHardwareSaveTransport)
             throw new NotSupportedException("This MSI transport cannot save a static boot color.");
         // Read the live configuration so unrelated, unsupported fields remain intact.
         var current=MsiProtocol.Frame(transport.Read(),new Dictionary<uint,Color[]>());
@@ -422,7 +426,8 @@ public sealed partial class MsiBackend : ILightingBackend
                 throw new IOException("MSI did not return a static lighting configuration; hardware save was not attempted.");
             if(!MsiProtocol.MatchesStaticConfiguration(selected,observed))
                 throw new IOException("MSI did not confirm the selected static configuration; hardware save was not attempted. "+MsiProtocol.StaticMismatchDetails(selected,observed));
-            try{persistent.SaveStatic(MsiProtocol.StaticSavePacket(selected));Writes++;}
+            if(!persist)return;
+            try{((IMsiHardwareSaveTransport)transport).SaveStatic(MsiProtocol.StaticSavePacket(selected));Writes++;}
             catch(Exception ex)
             {
                 throw new IOException("MSI hardware save was not confirmed. It may have reached the controller; Prism will not retry it automatically.",ex);

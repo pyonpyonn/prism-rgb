@@ -34,6 +34,43 @@ internal static class HardwareWaveChecks
 
         var original=new byte[185];original[0]=0x52;original[41]=original[52]=60;
         var color=Color.FromRgb(255,13,0);
+        preferences.HardwareBootMotionKind="Fade";
+        var fadeRequest=HardwareWaveRequest.FromProfile(preferences,"LAVA WAVE");fadeRequest.Validate();
+        HardwareWaveRequest.ApplySaved(preferences,fadeRequest);
+        Check(preferences.Studio.Effect=="Color fade" && preferences.HardwareBootEffect=="Fade" && fadeRequest.Palette.SequenceEqual(new[]{"#7F0600","#7F3200"}),"Fade retained black stops or lost brightness.");
+        Check(JsonSerializer.Serialize(preferences.Profiles)==profileBefore,"Selecting fade damaged the source wave profile.");
+        var dimState=new StudioState{Effect="Wave",Brightness=.5};Effects.SetPalette(dimState,new[]{"#010000","#FF0D00","#FF6401"});
+        var dimPrefs=new Preferences{HardwareBootMotionKind="Fade",Profiles=new(){new(){Name="dim",State=dimState}}};
+        var dimRequest=HardwareWaveRequest.FromProfile(dimPrefs,"dim");
+        Check(dimRequest.Palette.SequenceEqual(new[]{"#7F0600","#7F3200"}) && Effects.Palette(dimRequest.WindowsState!).SequenceEqual(new[]{"#FF0D00","#FF6401"}),"Quantization selected different fade endpoints for boot and Windows.");
+        for(int tick=0;tick<300;tick++)
+        {
+            var sample=Effects.Sample(preferences.Studio,0,0,tick*.1);
+            Check(sample==Effects.Sample(preferences.Studio,1,1,tick*.1) && sample.R==127 && sample.G>=6 && sample.G<=50,"Windows fade is spatially out of sync or darkens between lit endpoints.");
+        }
+        var fade=MsiProtocol.FadeConfiguration(original,color,1,Color.FromRgb(255,100,1));
+        var fadeSave=MsiProtocol.FadeSavePacket(fade);MsiProtocol.ValidateFadeSave(fadeSave);
+        Check(fade[31]==22 && fade[42]==22 && fade[74]==22 && fade[184]==0,"Fade did not select the owner-verified native mode.");
+        Reject(()=>MsiProtocol.ValidateWaveSave(fadeSave));
+        Reject(()=>MsiProtocol.FadeConfiguration(original,Colors.Black,1,color));
+        Reject(()=>MsiProtocol.ValidateWrite(fadeSave));
+        var fadeFake=new MsiFake(original);
+        await using(var fadeBackend=new MsiBackend(()=>fadeFake,()=>false))
+        {
+            await fadeBackend.ConnectAsync();await fadeBackend.PreviewFadeAsync(color,1,Color.FromRgb(255,100,1));
+            Check(fadeFake.Commits==0,"Fade preview committed memory.");
+            await fadeBackend.SaveFadeToHardwareAsync(color,1,Color.FromRgb(255,100,1));
+            Check(fadeFake.Commits==1 && !fadeBackend.NeedsRestore,"Fade did not commit once and retain the accepted native baseline.");
+        }
+        var badFade=new MsiFake(original){BadReadback=true};
+        await using(var fadeBackend=new MsiBackend(()=>badFade,()=>false))
+        {
+            await fadeBackend.ConnectAsync();try{await fadeBackend.SaveFadeToHardwareAsync(color,1,Color.FromRgb(255,100,1));}catch(IOException){}
+            Check(badFade.Commits==0,"Fade saved despite failed readback.");
+        }
+        var fadeBoot=await BootLighting.ApplyAsync(BootLighting.CreateSnapshot(preferences),new(){MotherboardFactory=()=>throw new Exception("Fade boot must not open a controller"),GpuFactory=()=>throw new Exception("Fade boot must not open a controller")});
+        Check(fadeBoot.HardwareWavePreserved && fadeBoot.ExitCode==0,"The boot helper overwrote the saved fade.");
+        preferences.HardwareBootMotionKind="Wave";HardwareWaveRequest.ApplySaved(preferences,request);
         var wave=MsiProtocol.WaveConfiguration(MsiProtocol.StreamingConfiguration(original,60,60),color,0);
         Check(wave[31]==23 && wave[42]==23 && wave[74]==23 && wave[78]==0xA8 && wave[82]==0x81 && wave[184]==0,"MSI retained direct streaming or unsupported JPIPE routing.");
         Check(wave[32]==255 && wave[33]==13 && wave[34]==0 && wave[41]==60 && wave[52]==60,"MSI wave lost the profile colour or configured header counts.");
@@ -122,6 +159,7 @@ internal static class HardwareWaveChecks
         public void Write(byte[] packet){MsiProtocol.ValidateWrite(packet);Writes++;if(packet.Length==185)state=(byte[])packet.Clone();}
         public void SaveStatic(byte[] packet)=>throw new Exception("Wave used static commit path.");
         public void SaveWave(byte[] packet){MsiProtocol.ValidateWaveSave(packet);Commits++;if(FailCommit)throw new IOException("Uncertain flash result");state=(byte[])packet.Clone();state[184]=0;}
+        public void SaveFade(byte[] packet){MsiProtocol.ValidateFadeSave(packet);Commits++;if(FailCommit)throw new IOException("Uncertain flash result");state=(byte[])packet.Clone();state[184]=0;}
         public void Dispose()=>Disposed=true;
     }
     sealed class GpuFake : IGpuHardwareSaveTransport

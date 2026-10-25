@@ -1,24 +1,24 @@
 # Windows startup, closing, and boot lighting
 
-Prism 0.8.0 can explicitly save a static colour or a supported native animation to controller memory. It can also apply a volatile frame before Windows sign-in once Task Scheduler and drivers are available, and resume the full Prism scene at sign-in. **Prism itself cannot run inside UEFI/BIOS or while Windows is shut down.** Lighting during those periods is controlled by saved hardware settings, firmware and power availability.
+Prism 0.9.0 can explicitly save a static colour or a supported native animation to controller memory. It can also apply a volatile frame before Windows sign-in once Task Scheduler and drivers are available, and resume the full Prism scene at sign-in. **Prism itself cannot run inside UEFI/BIOS or while Windows is shut down.** Lighting during those periods is controlled by saved hardware settings, firmware and power availability.
 
-## Native boot animation from a Wave profile
+## Boot colour and effect preset library
 
-1. Save your Wave effect in **Profiles**, then open **Settings → Boot animation from a Wave profile** and select it. The source profile remains separate from the hardware representation.
-2. Choose **Slow**, **Balanced** or **Fast** for boot motion. Hardware speed units differ from Prism's software animation speed, so this setting is independent of the Windows profile.
-3. Click **Preview boot motion · no memory save**. Prism pauses/drains normal output, releases ownership, applies the native modes and disconnects without clearing them. Preview changes volatile lighting only; the previous saved hardware boot setting stays intact. Reconnect under Devices to resume the normal effect.
-4. If the preview is suitable, click **Save built-in boot waves** once. MSI readback must match before one flash-save report; GPU configuration receives one save command. Neither uncertain commit is retried automatically. Successful saves select a clone of the full profile for Windows and enable saved-scene restore. Enable **Start Prism when I sign in to Windows** separately if it is not already enabled.
-5. Shut down and power on when ready; observe each device during the initial logo. Saving a native effect still needs its own power-cycle verification. The normal app resumes the full profile after Windows sign-in, including automatic sign-in.
+Open **Settings → Boot lighting · continuous colours**. The library offers Lava, Ocean, Cyberpunk, Forest, Sunset and Ice fades, plus Lava steady. Each selection is an editable copy; changing it does not alter a built-in preset.
 
-The motherboard uses native **Color Wave**, receiving the first two profile colours. The GPU uses native **Tricolor**, receiving up to three non-black colours; a two-colour palette gets an intermediate third shade. Remaining transmitted slots are initialized. Black palette stops are omitted for boot motion only, except an all-black/zero-brightness profile remains off. This avoids requesting whole-zone black intervals in the GPU palette; firmware may still have dark parts in its effect.
+1. Choose a library preset, then choose **Continuous fade** or **Steady**. The library excludes the native wave and breathing modes that showed black gaps. Steady continuously uses colour 1.
+2. Choose both colours using the colour pickers, `#RRGGBB` fields or screen eyedroppers. **Use my current Studio colours** copies the first two lit Studio colours into the boot draft; it does not alter Studio. Black and overly dark choices are rejected, including colours that become too dark at the selected brightness.
+3. Set boot brightness from **10% to 100%**. For fades, choose **Slow**, **Balanced** or **Fast**. These hardware speed units differ from the Windows scene speed.
+4. Give the palette a name and choose **Save preset to my library** to keep it on this PC. Up to 32 custom presets can be saved; saving an existing name replaces that custom preset. Choosing, editing or saving a library preset does not change controller memory.
+5. Choose **Preview boot lighting · no hardware save** to inspect it. Prism pauses/drains its normal output, applies the native settings and disconnects without clearing them. The previously saved hardware setting remains stored. Reconnect under Devices to resume your normal Windows effect.
+6. Choose **Save boot lighting to hardware** once to store the selection. MSI readback must match before one persistent save; the GPU receives its own single save command. Neither uncertain commit is retried automatically. This keeps your current Windows Studio scene and saved profiles unchanged.
+7. When ready, shut down and power on; observe each device during the initial logo. Saving an effect still needs a physical power-cycle check. Windows Prism later resumes its existing scene after sign-in, including automatic sign-in.
 
-These are built-in firmware animations, not a stored copy of Prism's renderer. Their shape, timing, interpolation and dark gaps can differ from the Windows effect. MSI exposes only two native colour fields per header; arbitrary multi-stop per-pixel Wave code cannot be uploaded through this lighting protocol. A red/orange-only software profile stays lit in Windows; its native boot counterpart can still contain firmware-controlled dark gaps.
+Continuous fade uses the motherboard's tested native colour-transition mode and the GPU's matching custom-colour mode. Both receive the selected lit palette; the GPU receives an intermediate shade as well. No black stop is requested. The red/orange preview was accepted visually on the tested PC. Other library colours use the same modes, but every palette/device combination has not been physically verified.
 
-After both saves succeed, an existing boot snapshot records `PreserveHardwareWave`. The Windows boot helper then exits without opening or writing either controller, leaving the native animation running until the regular app takes over. Saving static colour successfully clears this marker and restores the earlier static-frame helper behaviour. Neither preview nor ordinary scene edits commit controller memory.
+The two controllers run their own clocks before Windows, so they can drift in colour timing. This is not a stored copy of Prism's renderer or a guarantee of exact phase synchronization. For a uniform synchronized fade while Windows runs, choose **Color fade** in Studio with two lit colours; Prism samples one shared scene time for all outputs. Boot preset edits do not select that Windows effect automatically.
 
-![Boot profile preview, speed and explicit save controls](images/boot-wave.png)
-
-The screenshot uses isolated settings and simulated hardware saves.
+After both hardware saves succeed, an existing boot snapshot records `PreserveHardwareWave` (the compatibility field name also covers fades and steady lighting). The Windows boot helper then exits without opening or writing either controller. Native lighting continues until the regular app takes over. The separate static-colour save below restores the earlier static-frame helper behaviour. Ordinary scene edits and startup never commit hardware memory.
 
 ## Save a static boot colour to hardware
 
@@ -90,7 +90,7 @@ The MSI B550M PRO-VDH WIFI has a physical **LED_SW1** switch and BIOS RGB Light 
 
 Whether the ARGB headers or GPU remain lit in shutdown depends on their power rails, controller reset behavior and firmware. A driver or controller reset can replace a retained frame. Removing power clears volatile state. The card cannot display colors if its lighting loses power. MSI's USB charging/ErP instructions do not establish ARGB-header or GPU standby-lighting support.
 
-Routine Prism output keeps MSI's persistent-save flag disabled. The explicit hardware-save action above uses it once for the chosen native static configuration; the GPU uses its separate save command. Neither action modifies BIOS settings, flashes firmware code or installs a pre-boot driver. **BIOS/cold-boot and powered-off lighting still require physical verification on each setup.**
+Routine Prism output keeps MSI's persistent-save flag disabled. The explicit hardware-save actions above use it once for the chosen native configuration; the GPU uses its separate save command. Neither action modifies BIOS settings, flashes firmware code or installs a pre-boot driver. **BIOS/cold-boot and powered-off lighting still require physical verification on each setup.**
 
 ## Check the behavior on your PC
 

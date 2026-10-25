@@ -25,6 +25,7 @@ public static class SelfTests
     }
     public static async Task<int> RunAsync()
     {
+        await TestAsync("Boot preset library rejects dark gaps and unsafe effects, clones selections and preserves the Windows scene",BootAnimationLibraryChecks.VerifyAsync);
         await TestAsync("Native boot waves use bounded modes, one commit, exact Windows profile and preserve autonomous animation",HardwareWaveChecks.VerifyAsync);
         await TestAsync("MSI static hardware saves are validated, verified and never automatically retried",MsiHardwareSaveChecks.VerifyAsync);
         await TestAsync("Gigabyte native static hardware saves commit once with strict identity and packet guards",GpuHardwareSaveChecks.VerifyAsync);
@@ -64,7 +65,7 @@ public static class SelfTests
         {
             Check(Effects.Sample(new(){Effect="Screen ambience",Brightness=1},0,0,0,Colors.OrangeRed)==Colors.OrangeRed,"Screen sample ignored");
         });
-        Test("All seven effects accept a custom color and obey brightness",()=>
+        Test("All effects accept a custom color and obey brightness",()=>
         {
             foreach(var name in Effects.Names)
             {

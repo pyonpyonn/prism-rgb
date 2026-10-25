@@ -48,6 +48,12 @@ internal static class GpuHardwareSaveChecks
         Reject(()=>GigabyteProtocol.ValidateStaticHardwareSetting(new byte[]{0x40,1,2,3,5,0,0,0}));
 
         var transport=new SaveTransport();
+        var preview=new SaveTransport();
+        await using(var instance=new GigabyteBackend(()=>preview,()=>false))
+        {
+            await instance.ConnectAsync();await instance.PreviewStaticAsync(color);
+            Require(preview.CommitAttempts==0 && preview.StaticPackets.Count==8,"Steady preview committed GPU memory.");
+        }
         var backend=new GigabyteBackend(()=>transport,()=>false);
         await backend.ConnectAsync();
         var frame=new Dictionary<uint,Color[]>{{100,Enumerable.Repeat(Colors.Red,4).ToArray()}};

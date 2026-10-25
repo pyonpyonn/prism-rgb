@@ -96,6 +96,10 @@ public sealed class Preferences
     public bool KeepColorsOnExit { get; set; }
     public string? HardwareBootColor { get; set; }
     public string HardwareBootEffect { get; set; }="Static";
+    public BootAnimationPreset BootAnimation { get; set; }=new();
+    public List<BootAnimationPreset> BootAnimationPresets { get; set; }=new();
+    public string HardwareBootMotionKind { get; set; }="Wave";
+    public string HardwareBootPresetSavedName { get; set; }="";
     public string HardwareBootWaveProfile { get; set; }="";
     public bool HardwareBootWaveSaved { get; set; }
     public string HardwareBootMotionSpeed {get;set;}="Balanced";
@@ -112,7 +116,11 @@ public static class Storage
             var p=JsonSerializer.Deserialize<Preferences>(File.ReadAllText(Path.Combine(DirectoryPath,"settings.json")),Options) ?? new();
             p.Studio ??=new(); p.Studio.Normalize(); p.Profiles ??=new(); p.Placements ??=new();
             if(!Effects.ValidColor(p.HardwareBootColor))p.HardwareBootColor=null;
-            if(p.HardwareBootEffect is not ("Static" or "Wave"))p.HardwareBootEffect="Static";
+            if(p.HardwareBootEffect is not ("Static" or "Wave" or "Fade" or "Steady"))p.HardwareBootEffect="Static";
+            if(p.HardwareBootMotionKind is not ("Wave" or "Fade" or "Steady"))p.HardwareBootMotionKind="Wave";
+            p.BootAnimation??=new();p.BootAnimationPresets??=new();
+            p.BootAnimationPresets.RemoveAll(preset=>preset is null);
+            if(p.BootAnimationPresets.Count>32)p.BootAnimationPresets=p.BootAnimationPresets.GetRange(0,32);
             p.HardwareBootWaveProfile??="";
             if(p.HardwareBootMotionSpeed is not ("Slow" or "Balanced" or "Fast"))p.HardwareBootMotionSpeed="Balanced";
             p.Profiles.RemoveAll(item=>item is null);p.Placements.RemoveAll(item=>item is null);
@@ -162,7 +170,7 @@ public static class OutputColors
 
 public static class Effects
 {
-    public static readonly List<string> Names = new() { "Aurora", "Rainbow", "Solid", "Breathing", "Wave", "Ember", "Screen ambience" };
+    public static readonly List<string> Names = new() { "Aurora", "Rainbow", "Solid", "Breathing", "Wave", "Ember", "Screen ambience", "Color fade" };
     public static bool ValidColor(string? text) => text is not null && System.Text.RegularExpressions.Regex.IsMatch(text,"^#[0-9a-fA-F]{6}$");
     // Hex parsing avoids WPF's type converter and its allocations for every LED sample.
     public static Color Parse(string text) => Color.FromRgb(Convert.ToByte(text.Substring(1,2),16),Convert.ToByte(text.Substring(3,2),16),Convert.ToByte(text.Substring(5,2),16));
@@ -211,6 +219,7 @@ public static class Effects
                 "Solid"=>stops[0],
                 "Breathing"=>Scale(PaletteAt(stops,t*.12,true),.12+.88*(.5+.5*Math.Sin(t*Math.PI*2))),
                 "Wave"=>PaletteAt(stops,.5+.5*Math.Sin((x*2+y-t)*Math.PI*2)),
+                "Color fade"=>PaletteAt(stops,.5-.5*Math.Cos(t*Math.PI*2)),
                 "Ember"=>PaletteAt(stops,.5+.5*Math.Sin(x*17+y*11+t*3)*Math.Sin(x*9-t*4)),
                 "Screen ambience"=>ColorizeScreen(stops,screen??Colors.Black),
                 _=>PaletteAt(stops,Math.Clamp(.5+.35*Math.Sin(x*5+t)+.15*Math.Cos(y*7-t*.7),0,1))
@@ -223,6 +232,7 @@ public static class Effects
             case "Solid": c=a; break;
             case "Breathing": c=Scale(a,.12+.88*(.5+.5*Math.Sin(t*Math.PI*2))); break;
             case "Wave": c=Mix(a,b,.5+.5*Math.Sin((x*2+y-t)*Math.PI*2)); break;
+            case "Color fade": c=Mix(a,b,.5-.5*Math.Cos(t*Math.PI*2)); break;
             case "Ember": c=Mix(Color.FromRgb(255,48,12),Color.FromRgb(255,190,45),.5+.5*Math.Sin(x*17+y*11+t*3)*Math.Sin(x*9-t*4)); break;
             case "Screen ambience": c=screen ?? Colors.Black; break;
             default: c=Mix(a,b,Math.Clamp(.5+.35*Math.Sin(x*5+t)+.15*Math.Cos(y*7-t*.7),0,1)); break;

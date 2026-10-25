@@ -44,6 +44,12 @@ internal static class MsiHardwareSaveChecks
         Require(!MsiProtocol.MatchesStaticConfiguration(selected,wrongMode),"Readback normalization hid a native mode mismatch.");
 
         var normalizing=new Fake(streamed){NormalizeUnusedReadback=true,NormalizeStaticSecondaryRed=true};
+        var preview=new Fake(streamed){NormalizeUnusedReadback=true,NormalizeStaticSecondaryRed=true};
+        await using(var backend=new MsiBackend(()=>preview,()=>false))
+        {
+            await backend.ConnectAsync();await backend.PreviewStaticAsync(color);
+            Require(preview.Commits==0 && preview.Writes.Count==2 && preview.Writes.All(p=>p[184]==0),"Steady preview committed motherboard memory.");
+        }
         await using(var backend=new MsiBackend(()=>normalizing,()=>false))
         {
             await backend.ConnectAsync();Require(normalizing.Writes.Count==0 && normalizing.Commits==0,"Connecting saved hardware state.");

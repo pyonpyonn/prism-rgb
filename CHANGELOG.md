@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.9.0 — Boot colour and effect preset library
+
+- Add Settings boot presets: Lava, Ocean, Cyberpunk, Forest, Sunset and Ice fades, plus Lava steady. Choose Continuous fade or Steady, edit two colours with pickers/hex fields/screen eyedroppers, and choose brightness and motion speed.
+- Save up to 32 named custom boot presets locally. Preset selection, editing and library saves do not write controller memory. Preview changes live lighting without a persistent save; Save boot lighting writes once per controller.
+- Exclude the native wave modes that showed black gaps. Continuous boot palettes reject black and colours that become too dark at the selected brightness. The red/orange MSI fade and GPU custom-colour preview were accepted visually on the tested PC; other palettes use the same native modes.
+- Preserve the current Windows scene and saved profiles when saving boot lighting. The Windows boot helper preserves the stored native fade or steady setting until normal Prism output resumes.
+- Add Color fade to Studio. It blends palette colours without a breathing brightness envelope and samples the same scene time at every output position.
+- Keep identity/readback guards and explicit single-attempt persistent commits. Independent hardware clocks can drift before Windows; exact boot phase synchronization is not claimed. Cold-boot retention of the new fade remains to be checked physically.
+
 ## 0.8.0 — Native boot colour motion and Wave profile handoff
 
 - Add temporary preview and an explicit hardware save for MSI native Color Wave and Gigabyte Tricolor, with separate Slow/Balanced/Fast boot speed controls.

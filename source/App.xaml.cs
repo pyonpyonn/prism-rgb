@@ -18,6 +18,33 @@ public partial class App : Application
         RenderOptions.ProcessRenderMode=RenderMode.SoftwareOnly;
         int dataDir=Array.IndexOf(e.Args,"--data-dir");
         if(dataDir>=0 && dataDir+1<e.Args.Length)Storage.DirectoryPath=Path.GetFullPath(e.Args[dataDir+1]);
+        int savePreset=Array.IndexOf(e.Args,"--save-boot-preset"),previewPreset=Array.IndexOf(e.Args,"--preview-boot-preset");
+        if(savePreset>=0 || previewPreset>=0)
+        {
+            ShutdownMode=ShutdownMode.OnExplicitShutdown;int index=savePreset>=0?savePreset:previewPreset;
+            if(index+1>=e.Args.Length){Shutdown(2);return;}
+            string resultPath=Path.GetFullPath(e.Args[index+1]);
+            if(File.Exists(resultPath)){Shutdown(2);return;}
+            try
+            {
+                var preferences=Storage.Load();var request=BootAnimationLibrary.CreateRequest(preferences);
+                object result;bool success;
+                if(savePreset>=0)
+                {
+                    var saved=await HardwareBootWave.SaveAsync(request);result=saved;success=saved.Success;
+                    if(success)
+                    {
+                        HardwareWaveRequest.ApplySaved(preferences,request);Storage.Save(preferences);
+                        if(File.Exists(BootLighting.DefaultSnapshotPath))BootLighting.SaveSnapshot(preferences,BootLighting.DefaultSnapshotPath);
+                    }
+                }
+                else{var applied=await HardwareBootWave.PreviewAsync(request);result=applied;success=applied.Success;}
+                BootLighting.WriteAtomic(resultPath,System.Text.Json.JsonSerializer.Serialize(result,new System.Text.Json.JsonSerializerOptions{WriteIndented=true}));
+                Shutdown(success?0:1);
+            }
+            catch(Exception ex){try{BootLighting.WriteAtomic(resultPath,System.Text.Json.JsonSerializer.Serialize(new{Error=ex.Message}));}catch{}Shutdown(1);}
+            return;
+        }
         int saveWave=Array.IndexOf(e.Args,"--save-hardware-boot-wave"),previewWave=Array.IndexOf(e.Args,"--preview-hardware-boot-wave");
         if(saveWave>=0 || previewWave>=0)
         {
@@ -27,7 +54,10 @@ public partial class App : Application
             {
                 int motionIndex=Array.IndexOf(e.Args,"--boot-motion-speed");
                 string? motion=motionIndex<0?null:motionIndex+1<e.Args.Length?e.Args[motionIndex+1]:"";
-                var preferences=Storage.Load();var request=HardwareWaveRequest.FromProfile(preferences,e.Args[index+1],motion);request.Validate();
+                var preferences=Storage.Load();
+                int kindIndex=Array.IndexOf(e.Args,"--boot-motion-kind");
+                if(kindIndex>=0)preferences.HardwareBootMotionKind=kindIndex+1<e.Args.Length?e.Args[kindIndex+1]:"";
+                var request=HardwareWaveRequest.FromProfile(preferences,e.Args[index+1],motion);request.Validate();
                 object result;bool success;
                 if(saveWave>=0)
                 {

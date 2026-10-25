@@ -1,6 +1,6 @@
-# Using Prism RGB 0.8.0
+# Using Prism RGB 0.9.0
 
-Extract the complete [v0.8.0 Windows x64 release](https://github.com/pyonpyonn/prism-rgb/releases/tag/v0.8.0) and open `Launch Prism RGB.cmd`. Use the new executable rather than an older extracted build. The .NET desktop runtime is bundled.
+Extract the complete [v0.9.0 Windows x64 release](https://github.com/pyonpyonn/prism-rgb/releases/tag/v0.9.0) and open `Launch Prism RGB.cmd`. Use the new executable rather than an older extracted build. The .NET desktop runtime is bundled.
 
 ## Connect and start
 
@@ -62,6 +62,7 @@ Select any effect in **Studio**, then use **Effect colors**:
 | Solid | Uses the first stop; remove extra stops for a single-color palette |
 | Breathing | Cycles the colors while fading in and out |
 | Wave | Waves through the chosen gradient |
+| Color fade | Blends through the palette uniformly across output positions, without a breathing brightness envelope |
 | Ember | Keeps the flicker pattern with your colors instead of fixed orange/red |
 | Screen ambience | Maps desktop luminance through the palette and follows screen brightness; black stays black |
 
@@ -114,6 +115,16 @@ The ARGB test lasts about 40 seconds and shows red/green/blue followed by distin
 
 `--inspect-msi <result.json>` only reads descriptors/current configuration. `--self-test` uses fake controllers and read-only HID enumeration. `--ui-smoke <folder>` exercises interface/color controls and synthetic eyedropper images with fake devices; `--render-preview <png>` renders the illustration. `--verify-eyedropper <result.json>` briefly displays a known color target and verifies actual screen capture plus synthetic selection/cancellation, without lighting writes. Use `--data-dir <folder>` for isolated diagnostic preferences. Build/test/package scripts and [performance measurement](PERFORMANCE.md) are documented in the root README.
 
-## Native boot motion
+## Boot colour and effect presets
 
-Use **Settings → Boot animation from a Wave profile** to select a saved Wave profile, preview its native hardware approximation without a memory save, and choose Slow/Balanced/Fast boot motion. Save explicitly once to retain it on the controllers; the full selected profile resumes in Windows. MSI receives two colour fields, GPU Tricolor up to three non-black colours. Native timing and dark gaps are firmware-controlled. [Full boot-animation guide](BOOT-LIGHTING.md#native-boot-animation-from-a-wave-profile).
+Open **Settings → Boot lighting · continuous colours**:
+
+- **Preset library** includes Lava, Ocean, Cyberpunk, Forest, Sunset and Ice fades, plus Lava steady. Select a preset to edit an independent copy.
+- **Effect** offers Continuous fade and Steady. The boot library excludes wave modes that showed black gaps. Steady uses colour 1 continuously.
+- Choose two colours with the pickers, hex fields or screen eyedroppers. **Use my current Studio colours** copies its first two lit colours without changing Studio. Black or overly dark choices disable preview/save until corrected.
+- Set brightness from 10–100% and choose Slow/Balanced/Fast fade motion.
+- **Save preset to my library** saves a named local preset, up to 32. An existing custom name is replaced. This does not write controller memory.
+- **Preview boot lighting · no hardware save** pauses normal Prism output and applies only temporary native lighting. Reconnect under Devices to resume your Windows effect.
+- **Save boot lighting to hardware** explicitly stores the native setting once on each supported controller. Your current Windows scene and profiles remain unchanged. Shut down and power on when ready to verify retention.
+
+The GPU uses the matching lit palette. Before Windows, its clock and the motherboard clock run independently and can drift; exact boot phase synchronization is not promised. The red/orange continuous fade preview was accepted on the tested PC, while cold-boot retention of this new fade remains to be physically verified. Other palette/device combinations have not all been tested visually. [Full boot-lighting guide](BOOT-LIGHTING.md#boot-colour-and-effect-preset-library).

@@ -1,0 +1,28 @@
+{
+  "Version": "0.9.0",
+  "Date": "2026-10-25",
+  "CoreChecksPassed": 56,
+  "InterfaceChecksPassed": 31,
+  "BuiltInPresets": 7,
+  "CustomPresetLimit": 32,
+  "LibraryModes": [
+    "Fade22",
+    "Steady1"
+  ],
+  "DarkEndpointGuard": "Both scaled endpoints must have a channel >=8",
+  "LibraryChoicePersistentWrites": 0,
+  "PreviewPersistentWrites": 0,
+  "SavedPreset": "Lava fade",
+  "Palette": [
+    "#FF0D00",
+    "#FF6401"
+  ],
+  "MotherboardSaveAccepted": true,
+  "GpuSaveAccepted": true,
+  "PersistentCommitsPerController": 1,
+  "WindowsStudioProfilesPlacementsPreserved": true,
+  "BootHelperPreservesNativeEffect": true,
+  "RedOrangeVolatilePreviewOwnerAccepted": true,
+  "ColdPowerCycleRetentionVerified": false,
+  "ExactPreWindowsPhaseSynchronizationClaimed": false
+}

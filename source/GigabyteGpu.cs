@@ -251,7 +251,9 @@ public sealed partial class GigabyteBackend : ILightingBackend
         try{await WriteColorsAsync(values,cancellation);previous=(Color[])values.Clone();}
         catch{previous=null;throw;}
     },token);
-    public Task SaveStaticToHardwareAsync(Color color)=>Locked(async token=>
+    public Task SaveStaticToHardwareAsync(Color color)=>ApplyStaticAsync(color,true);
+    public Task PreviewStaticAsync(Color color)=>ApplyStaticAsync(color,false);
+    Task ApplyStaticAsync(Color color,bool persist)=>Locked(async token=>
     {
         if(conflict())throw new IOException("Close competing RGB software before saving the GPU boot colour.");
         if(transport is not IGpuHardwareSaveTransport hardware)throw new NotSupportedException("This GPU transport does not support explicit hardware saves.");
@@ -261,6 +263,7 @@ public sealed partial class GigabyteBackend : ILightingBackend
             await SendVolatileAsync(packet,hardware.WriteStaticSetting,token);
         // A successful driver return acknowledges delivery, not retention across loss of power.
         // Never retry this commit: an I/O error may happen after the controller accepted it.
+        if(!persist)return;
         try{hardware.CommitStaticConfiguration();Writes++;}
         catch(Exception ex)
         {
