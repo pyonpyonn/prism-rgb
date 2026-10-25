@@ -266,6 +266,7 @@ public interface IMsiHardwareSaveTransport
     void SaveStatic(byte[] packet);
     void SaveWave(byte[] packet)=>throw new NotSupportedException("Wave hardware saves are unavailable on this transport.");
     void SaveFade(byte[] packet)=>throw new NotSupportedException("Fade hardware saves are unavailable on this transport.");
+    void SaveFilledWave(byte[] packet)=>throw new NotSupportedException("Filled-wave hardware saves are unavailable on this transport.");
 }
 
 public sealed class NativeMsiTransport : IMsiTransport,IMsiHardwareSaveTransport
@@ -298,6 +299,7 @@ public sealed class NativeMsiTransport : IMsiTransport,IMsiHardwareSaveTransport
     }
     public void SaveWave(byte[] packet){MsiProtocol.ValidateWaveSave(packet);Send(packet);}
     public void SaveFade(byte[] packet){MsiProtocol.ValidateFadeSave(packet);Send(packet);}
+    public void SaveFilledWave(byte[] packet){MsiProtocol.ValidateFilledWaveSave(packet);Send(packet);}
     void Send(byte[] packet)
     {
         // Allocate the collection maximum, and transfer the selected report's actual length.

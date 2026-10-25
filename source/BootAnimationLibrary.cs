@@ -23,14 +23,17 @@ public sealed class BootAnimationPreset
     {
         if(string.IsNullOrWhiteSpace(Name) || Name.Trim().Length>64 || Name.Any(char.IsControl))
             throw new ArgumentException("Give the boot preset a name of up to 64 characters.");
-        if(Style is not ("Fade" or "Steady"))
-            throw new ArgumentException("Choose Fade or Steady for lighting without black gaps.");
+        if(Style is not ("Fade" or "Steady" or "RainbowWave"))
+            throw new ArgumentException("Choose a supported boot animation.");
         if(MotionSpeed is not ("Slow" or "Balanced" or "Fast"))
             throw new ArgumentException("Choose a supported boot speed.");
-        if(!Effects.ValidColor(Color1) || !Effects.ValidColor(Color2))
-            throw new ArgumentException("Choose two valid boot colours.");
         if(!double.IsFinite(Brightness) || Brightness<.1 || Brightness>1)
             throw new ArgumentException("Boot brightness must be between 10% and 100%.");
+        // Filled Wave uses the controller's fixed rainbow palette. Custom colour
+        // fields are inactive and must never affect that native animation.
+        if(Style=="RainbowWave")return;
+        if(!Effects.ValidColor(Color1) || !Effects.ValidColor(Color2))
+            throw new ArgumentException("Choose two valid boot colours.");
         foreach(var color in ScaledColors())
             if(Math.Max(color.R,Math.Max(color.G,color.B))<8)
                 throw new ArgumentException("Choose brighter boot colours so both remain lit at this brightness.");
@@ -44,7 +47,7 @@ public sealed class BootAnimationPreset
 
     public string[] EffectivePalette()
     {
-        Validate();return ScaledColors().Select(ColorValues.Hex).ToArray();
+        Validate();return Style=="RainbowWave"?new[]{"#FFFFFF","#FFFFFF"}:ScaledColors().Select(ColorValues.Hex).ToArray();
     }
 }
 
@@ -72,12 +75,14 @@ public static class BootAnimationLibrary
         new(){Name="Warm white steady",Style="Steady",Color1="#FFE4BC",Color2="#FFF4DC"},
         new(){Name="Ice blue steady",Style="Steady",Color1="#6ACFFF",Color2="#D8F4FF"},
         new(){Name="Emerald steady",Style="Steady",Color1="#18E880",Color2="#70FFBC"},
-        new(){Name="Violet steady",Style="Steady",Color1="#AA55FF",Color2="#D099FF"}
+        new(){Name="Violet steady",Style="Steady",Color1="#AA55FF",Color2="#D099FF"},
+        new(){Name="Wave · filled rainbow",Style="RainbowWave",Color1="#FFFFFF",Color2="#FFFFFF"}
     };
 
     // Pickers receive independent values, so editing or saving one cannot change
     // the built-in palette returned on the next visit to the library.
     public static IReadOnlyList<BootAnimationPreset> BuiltIns=>builtIns.Select(preset=>preset.Clone()).ToArray();
+    public static BootAnimationPreset FilledWave=>builtIns.Single(preset=>preset.Style=="RainbowWave").Clone();
 
     public static HardwareWaveRequest CreateRequest(Preferences preferences)
     {
@@ -87,7 +92,7 @@ public static class BootAnimationLibrary
         var request=new HardwareWaveRequest
         {
             ProfileName=preset.Name.Trim(),Color=palette[0],Palette=palette,
-            MotionKind=preset.Style,MotionSpeed=preset.MotionSpeed,Speed=.15,
+            MotionKind=preset.Style,MotionSpeed=preset.MotionSpeed,Speed=.15,BootBrightness=preset.Brightness,
             WindowsState=preferences.Studio.Clone()
         };
         request.Validate();return request;

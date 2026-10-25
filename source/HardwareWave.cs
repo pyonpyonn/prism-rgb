@@ -16,6 +16,7 @@ public sealed class HardwareWaveRequest
     public double Speed {get;init;}
     public string MotionSpeed {get;init;}="Balanced";
     public string MotionKind {get;init;}="Wave";
+    public double BootBrightness {get;init;}=1;
     public int MotherboardSpeed=>MotionSpeed switch{"Slow"=>0,"Balanced"=>1,"Fast"=>2,_=>throw new ArgumentException("Unsupported boot motion speed.")};
     public int GpuSpeed=>MotionSpeed switch{"Slow"=>1,"Balanced"=>3,"Fast"=>5,_=>throw new ArgumentException("Unsupported boot motion speed.")};
     internal StudioState? WindowsState {get;init;}
@@ -26,7 +27,9 @@ public sealed class HardwareWaveRequest
         if(Palette is null || Palette.Length>8 || Palette.Any(c=>!Effects.ValidColor(c)))throw new ArgumentException("Choose up to eight valid boot palette colours.");
         if(Palette.Length>0 && !Palette[0].Equals(Color,StringComparison.OrdinalIgnoreCase))throw new ArgumentException("The first boot colour must match the selected palette.");
         if(MotionSpeed is not ("Slow" or "Balanced" or "Fast"))throw new ArgumentException("Choose a supported boot motion speed.");
-        if(MotionKind is not ("Wave" or "Fade" or "Steady"))throw new ArgumentException("Choose supported boot motion.");
+        if(MotionKind is not ("Wave" or "Fade" or "Steady" or "RainbowWave"))throw new ArgumentException("Choose supported boot motion.");
+        if(!double.IsFinite(BootBrightness) || BootBrightness<.1 || BootBrightness>1)throw new ArgumentException("Boot brightness must remain between 10% and 100%.");
+        if(MotionKind=="RainbowWave" && (!Color.Equals("#FFFFFF",StringComparison.OrdinalIgnoreCase) || Palette.Length!=2 || Palette.Any(c=>!c.Equals("#FFFFFF",StringComparison.OrdinalIgnoreCase))))throw new ArgumentException("Filled Wave uses the fixed native rainbow. Custom palette colours cannot be applied to that animation.");
         if(MotionKind is "Fade" or "Steady" && (Palette.Length!=2 || Palette.Select(Effects.Parse).Any(c=>Math.Max(c.R,Math.Max(c.G,c.B))<8)))throw new ArgumentException("Continuous boot lighting needs two colours that remain visibly lit.");
     }
     public static HardwareWaveRequest FromProfile(Preferences preferences,string name,string? motionSpeed=null)
@@ -242,7 +245,9 @@ public static class HardwareBootWave
                 await using var backend=new MsiBackend();await backend.ConnectAsync();
                 int speed=request.MotherboardSpeed;
                 var secondary=palette.Length>1?palette[1]:color;
-                if(request.MotionKind=="Steady")
+                if(request.MotionKind=="RainbowWave")
+                {int level=Math.Clamp((int)Math.Round(request.BootBrightness*10),1,10);if(persist)await backend.SaveFilledWaveToHardwareAsync(speed,level);else await backend.PreviewFilledWaveAsync(speed,level);}
+                else if(request.MotionKind=="Steady")
                 {if(persist)await backend.SaveStaticToHardwareAsync(color);else await backend.PreviewStaticAsync(color);}
                 else if(request.MotionKind=="Fade")
                 {if(persist)await backend.SaveFadeToHardwareAsync(color,speed,secondary);else await backend.PreviewFadeAsync(color,speed,secondary);}
@@ -252,7 +257,9 @@ public static class HardwareBootWave
             {
                 await using var backend=new GigabyteBackend();await backend.ConnectAsync();
                 int speed=request.GpuSpeed;
-                if(request.MotionKind=="Steady")
+                if(request.MotionKind=="RainbowWave")
+                {int level=Math.Clamp((int)Math.Round(request.BootBrightness*99),1,99);if(persist)await backend.SaveFilledWaveToHardwareAsync(speed,level);else await backend.PreviewFilledWaveAsync(speed,level);}
+                else if(request.MotionKind=="Steady")
                 {if(persist)await backend.SaveStaticToHardwareAsync(color);else await backend.PreviewStaticAsync(color);}
                 else if(persist)await backend.SaveWaveToHardwareAsync(gpuPalette,speed);else await backend.PreviewWaveAsync(gpuPalette,speed);
             }

@@ -30,6 +30,9 @@ internal static class HardwareWaveChecks
         Reject(()=>new HardwareWaveRequest{Color="wrong"}.Validate());
         Reject(()=>new HardwareWaveRequest{Speed=double.NaN}.Validate());
         Reject(()=>new HardwareWaveRequest{MotionSpeed="Infinite"}.Validate());
+        Reject(()=>new HardwareWaveRequest{MotionKind="RainbowWave",Color="#FF0000",Palette=new[]{"#FF0000","#FF6401"}}.Validate());
+        Reject(()=>new HardwareWaveRequest{MotionKind="RainbowWave",Color="#FFFFFF",Palette=Array.Empty<string>()}.Validate());
+        new HardwareWaveRequest{MotionKind="RainbowWave",Color="#FFFFFF",Palette=new[]{"#FFFFFF","#FFFFFF"},BootBrightness=.1}.Validate();
         Reject(()=>new HardwareWaveRequest{Color="#FF0000",Palette=new[]{"#0000FF"}}.Validate());
 
         var original=new byte[185];original[0]=0x52;original[41]=original[52]=60;

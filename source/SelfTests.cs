@@ -25,6 +25,7 @@ public static class SelfTests
     }
     public static async Task<int> RunAsync()
     {
+        await TestAsync("Filled travelling waves use native MSI26/GPU7, preserve counts and isolate previews from single hardware commits",HardwareFilledWaveChecks.VerifyAsync);
         await TestAsync("Boot preset library rejects dark gaps and unsafe effects, clones selections and preserves the Windows scene",BootAnimationLibraryChecks.VerifyAsync);
         await TestAsync("Native boot waves use bounded modes, one commit, exact Windows profile and preserve autonomous animation",HardwareWaveChecks.VerifyAsync);
         await TestAsync("MSI static hardware saves are validated, verified and never automatically retried",MsiHardwareSaveChecks.VerifyAsync);

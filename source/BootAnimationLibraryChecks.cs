@@ -19,11 +19,11 @@ internal static class BootAnimationLibraryChecks
         var defaults=BootAnimationLibrary.BuiltIns;
         Check(defaults.Count>=19 && defaults.Select(preset=>preset.Name).Distinct(StringComparer.OrdinalIgnoreCase).Count()==defaults.Count,"Built-in boot names are missing or duplicated.");
         Check(defaults.Take(2).Select(preset=>preset.Name).SequenceEqual(new[]{"Lava fade","Ocean fade"}),"The existing first preset choices changed order.");
-        Check(defaults.Select(preset=>preset.Style).Distinct().OrderBy(style=>style).SequenceEqual(new[]{"Fade","Steady"}),"The boot library lost a supported effect style.");
+        Check(defaults.Select(preset=>preset.Style).Distinct().OrderBy(style=>style).SequenceEqual(new[]{"Fade","RainbowWave","Steady"}),"The boot library lost a supported effect style.");
         Check(defaults.Select(preset=>preset.MotionSpeed).Distinct().OrderBy(speed=>speed).SequenceEqual(new[]{"Balanced","Fast","Slow"}),"The boot library lost its three supported speed choices.");
         foreach(var preset in defaults)
         {
-            preset.Validate();Check(preset.Style is "Fade" or "Steady","An unverified gapped mode entered the boot library.");
+            preset.Validate();Check(preset.Style is "Fade" or "Steady" or "RainbowWave","An unverified gapped mode entered the boot library.");
             Check(preset.EffectivePalette().Length==2 && preset.EffectivePalette().All(color=>color!="#000000"),"A built-in palette has a black stop.");
             var dimmed=preset.Clone();dimmed.Brightness=.1;dimmed.Validate();
             Check(dimmed.EffectivePalette().Select(Effects.Parse).All(color=>Math.Max(color.R,Math.Max(color.G,color.B))>=8),"A built-in colour became too dark at minimum boot brightness.");
@@ -32,6 +32,11 @@ internal static class BootAnimationLibraryChecks
                 var selectedPreset=preset.Clone();selectedPreset.Brightness=brightness;
                 var selectedPreferences=new Preferences{BootAnimation=selectedPreset};
                 var native=BootAnimationLibrary.CreateRequest(selectedPreferences);
+                if(preset.Style=="RainbowWave")
+                {
+                    Check(native.MotionKind=="RainbowWave" && native.BootBrightness==brightness && native.Palette.SequenceEqual(new[]{"#FFFFFF","#FFFFFF"}),"Filled Wave used custom colours or lost native brightness.");
+                    continue;
+                }
                 var colors=native.Palette.Select(Effects.Parse).ToArray();
                 for(int step=0;step<=100;step++)
                 {
@@ -97,6 +102,13 @@ internal static class BootAnimationLibraryChecks
         Check(JsonSerializer.Serialize(request.WindowsState)==windowsBefore,"The boot request shares mutable Windows scene state.");
         preferences.BootAnimation.Style="Steady";
         Check(BootAnimationLibrary.CreateRequest(preferences).MotionKind=="Steady","Steady was silently converted into an animated mode.");
+        preferences.BootAnimation=BootAnimationLibrary.FilledWave;preferences.BootAnimation.Color1="#000000";preferences.BootAnimation.Color2="not a colour";preferences.BootAnimation.Brightness=.4;
+        var waveRequest=BootAnimationLibrary.CreateRequest(preferences);
+        Check(waveRequest.MotionKind=="RainbowWave" && waveRequest.BootBrightness==.4 && waveRequest.Palette.SequenceEqual(new[]{"#FFFFFF","#FFFFFF"}),"Fixed-rainbow Wave depended on inactive custom colour fields.");
+        Check(JsonSerializer.Serialize(waveRequest.WindowsState)==JsonSerializer.Serialize(preferences.Studio),"Selecting filled Wave changed the Windows scene.");
+        var waveCopy=BootAnimationLibrary.FilledWave;waveCopy.Style="Steady";waveCopy.Brightness=.1;
+        Check(BootAnimationLibrary.FilledWave.Style=="RainbowWave" && BootAnimationLibrary.FilledWave.Brightness==1,"Editing Wave changed its built-in default.");
+        Reject(()=>new BootAnimationPreset{Style="RainbowWave",Brightness=0}.Validate());
         return Task.CompletedTask;
     }
 }

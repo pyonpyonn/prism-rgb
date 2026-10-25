@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.10.0 — Real filled boot Wave and separate colour palettes
+
+- Add a travelling filled Wave using MSI native Rainbow Wave26 and Gigabyte native Wave7. This is an autonomous firmware animation with fixed rainbow colours; it is not the custom-colour Wave23 that showed black gaps.
+- Put the animation selector above a separate colour-palette chooser. The boot styles are Wave, Colour transition and Steady; the 21 library entries are colour palettes, not 21 different animation algorithms.
+- Disable palette selection, colour pickers, hex fields, eyedroppers, Studio-colour copying and custom-palette saving while Wave is selected. Keep boot brightness and native speed available.
+- Preserve Windows Studio/profiles and the boot-helper handoff. Preview remains volatile; a hardware save is explicit and single-attempt per controller. Native controller clocks remain independent.
+- Wave requires physical observation to confirm appearance and a separate power-cycle check to establish retention; successful protocol delivery alone proves neither.
+
+
 ## 0.9.1 — More continuous boot palettes and clearer device timing
 
 - Expand the built-in library from 7 to 21 presets with additional colour palettes, Slow/Fast fade variations, and steady colours. These use the existing tested modes; no new firmware animation modes are introduced.

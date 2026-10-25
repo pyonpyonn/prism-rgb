@@ -1,0 +1,23 @@
+{
+  "Version": "0.10.0",
+  "Date": "2026-10-25",
+  "ActualAnimation": "Filled travelling Wave",
+  "ColourMode": "Fixed native rainbow, explicitly accepted by owner",
+  "MotherboardNativeMode": 26,
+  "GpuNativeMode": 7,
+  "MotionSpeed": "Balanced",
+  "BootBrightness": 1,
+  "CoreChecksPassed": 57,
+  "InterfaceChecksPassed": 32,
+  "OwnerFullCyclePreviewConfirmed": true,
+  "OwnerObservation": "Both have moving waves without black gaps",
+  "PreviewPersistentCommits": 0,
+  "MotherboardHardwareSaveAccepted": true,
+  "GpuHardwareSaveAccepted": true,
+  "PersistentCommitsPerController": 1,
+  "WindowsSceneProfilesPlacementsPreserved": true,
+  "BootHelperPreservesNativeWave": true,
+  "CustomColourWave23Fixed": false,
+  "ColdPowerCycleRetentionVerified": false,
+  "ExactDevicePhaseSyncClaimed": false
+}

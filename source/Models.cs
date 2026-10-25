@@ -116,8 +116,8 @@ public static class Storage
             var p=JsonSerializer.Deserialize<Preferences>(File.ReadAllText(Path.Combine(DirectoryPath,"settings.json")),Options) ?? new();
             p.Studio ??=new(); p.Studio.Normalize(); p.Profiles ??=new(); p.Placements ??=new();
             if(!Effects.ValidColor(p.HardwareBootColor))p.HardwareBootColor=null;
-            if(p.HardwareBootEffect is not ("Static" or "Wave" or "Fade" or "Steady"))p.HardwareBootEffect="Static";
-            if(p.HardwareBootMotionKind is not ("Wave" or "Fade" or "Steady"))p.HardwareBootMotionKind="Wave";
+            if(p.HardwareBootEffect is not ("Static" or "Wave" or "Fade" or "Steady" or "RainbowWave"))p.HardwareBootEffect="Static";
+            if(p.HardwareBootMotionKind is not ("Wave" or "Fade" or "Steady" or "RainbowWave"))p.HardwareBootMotionKind="Wave";
             p.BootAnimation??=new();p.BootAnimationPresets??=new();
             p.BootAnimationPresets.RemoveAll(preset=>preset is null);
             if(p.BootAnimationPresets.Count>32)p.BootAnimationPresets=p.BootAnimationPresets.GetRange(0,32);

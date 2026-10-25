@@ -86,6 +86,7 @@ public interface IGpuHardwareSaveTransport : IGpuLightingTransport
 {
     void WriteStaticSetting(byte[] packet);
     void WriteWaveSetting(byte[] packet)=>throw new NotSupportedException("Wave hardware settings are unavailable on this transport.");
+    void WriteFilledWaveSetting(byte[] packet)=>throw new NotSupportedException("Filled-wave hardware settings are unavailable on this transport.");
     void CommitStaticConfiguration();
 }
 
@@ -169,6 +170,7 @@ public sealed class NvidiaGigabyteTransport : IGpuHardwareSaveTransport
     public void Write(byte[] packet){GigabyteProtocol.Validate(packet);Transfer(packet,false);}
     public void WriteStaticSetting(byte[] packet){GigabyteProtocol.ValidateStaticHardwareSetting(packet);Transfer(packet,false);}
     public void WriteWaveSetting(byte[] packet){GigabyteProtocol.ValidateWaveHardwareSetting(packet);Transfer(packet,false);}
+    public void WriteFilledWaveSetting(byte[] packet){GigabyteProtocol.ValidateFilledWaveHardwareSetting(packet);Transfer(packet,false);}
     public void CommitStaticConfiguration()=>Transfer(GigabyteProtocol.HardwareSaveCommand(),false);
     public void Dispose(){if(disposed)return;disposed=true;if(initialized)unload();NativeLibrary.Free(library);}
 }

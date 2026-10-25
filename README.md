@@ -4,15 +4,15 @@
 
 A standalone Windows lighting app with **individual MSI ARGB LED control and Gigabyte RTX 4070 Ti lighting**. No OpenRGB, SignalRGB, SDK server, account, or background service is required. The portable x64 release bundles the .NET desktop runtime.
 
-**0.9.1 alpha expands the boot library to 21 colour, speed and steady presets.** In **Settings → Boot lighting · continuous colours**, choose Lava, Ocean, Cyberpunk, Forest, Sunset, Ice, Ember, Aurora, Royal, Rose, Gold, Mint, Crimson, Candy, Deep sea, Sunrise and steady-colour options. Use **Continuous colours** or **Steady**, edit both colours with the picker, hex fields or eyedropper, and preview before saving once to hardware. Black and overly dark choices are blocked. Boot changes preserve your current Windows scene and profiles. The GPU receives the matching palette; the two hardware clocks can still drift before Windows.
+**0.10.0 alpha adds a real travelling boot Wave.** In **Settings → Boot lighting**, choose **Wave · filled rainbow**, **Colour transition** or **Steady**. Wave uses the controllers' built-in filled rainbow animation before Windows; its rainbow colours are fixed. Colour transition and Steady have a separate library of 21 editable colour palettes. Preview the selected motion before saving once to hardware. Your Windows scene and profiles stay unchanged. The controllers animate independently, so their boot timing can differ.
 
 ![Prism RGB Studio](docs/images/preview.png)
 
-![Boot colour and effect library](docs/images/boot-library.png)
+![Boot animation library](docs/images/boot-library.png)
 
 ## Download and use
 
-1. Download **PrismRGB-Windows-x64.zip** from [v0.9.1 Releases](https://github.com/pyonpyonn/prism-rgb/releases/tag/v0.9.1).
+1. Download **PrismRGB-Windows-x64.zip** from [v0.10.0 Releases](https://github.com/pyonpyonn/prism-rgb/releases/tag/v0.10.0).
 2. Extract the complete archive and open **Launch Prism RGB.cmd**. Use this new folder instead of an older extracted copy.
 3. Exit other RGB controllers, including SignalRGB, MSI lighting tools, and RGB Fusion.
 4. Choose **Devices → Connect lighting**. The app connects the motherboard and queries the supported GPU if available. Connecting does not start color output.
@@ -43,7 +43,8 @@ Other USB/catalog entries are research references and do not supply native drive
 - Optional Windows sign-in startup, quiet tray launch, automatic saved-scene restore, single-instance activation, and retained last colors on Quit.
 - Optional static boot lighting before sign-in, bounded device-readiness retries, and automatic handoff to the normal app.
 - Explicit one-time static colour saves to the supported controllers' hardware memory, with separate motherboard/GPU results and no automatic persistent-write retries.
-- Boot preset library with six fade palettes, a steady preset, two editable colours, screen eyedroppers, brightness and Slow/Balanced/Fast motion. Save up to 32 custom presets locally. Preview is temporary; hardware storage is an explicit separate action. The boot helper preserves saved native lighting until Windows Prism starts.
+- Actual boot animation selection: a filled travelling Wave with fixed rainbow colours, a custom-colour transition, or Steady lighting. Native boot styles are different from Studio's Windows-rendered effects.
+- Separate library of 21 colour palettes for Colour transition and Steady, with pickers, hex fields, screen eyedroppers and up to 32 custom palettes. Wave disables colour editing because its firmware palette is fixed. Boot brightness and native speed remain adjustable. Preview is temporary; hardware storage is an explicit separate action. The boot helper preserves saved native lighting until Windows Prism starts.
 - Read-only HID discovery and a descriptive compatibility catalog.
 
 Expand **Choose colors for individual LEDs** under an ARGB header and click a numbered pixel. GPU controls use named lighting zones. **Return all LEDs to the effect** removes that output's overrides. Global brightness applies to manual colors too.
